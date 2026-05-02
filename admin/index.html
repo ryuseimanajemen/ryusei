@@ -202,6 +202,45 @@
     </div>
   </div>
 
+  <div id="inviteScreen"
+    style="position:fixed;inset:0;background:rgba(3,7,18,.95);display:none;align-items:center;justify-content:center;z-index:60;padding:20px">
+    <div
+      style="width:100%;max-width:420px;background:#111827;border:1px solid #1f2937;border-radius:24px;padding:28px;position:relative">
+      <button onclick="closeInviteScreen()"
+        style="position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:8px;border:1px solid #374151;background:transparent;color:#6b7280;cursor:pointer;font-size:14px">✕</button>
+      <div style="text-align:center;margin-bottom:18px;color:#fff">
+        <div
+          style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:18px">
+          🔐</div>
+        <h2 style="font-size:20px;font-weight:900;margin-bottom:6px">Aktivasi Admin Baru</h2>
+        <p style="color:#9ca3af;font-size:13px">Masukkan kata sandi untuk menyelesaikan pembuatan akun admin.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;color:#fff">
+        <div>
+          <p style="font-size:12px;color:#9ca3af;margin-bottom:4px">Nama</p>
+          <p id="inviteNameLabel" style="font-weight:700;font-size:14px;color:#fff"></p>
+        </div>
+        <div>
+          <p style="font-size:12px;color:#9ca3af;margin-bottom:4px">Nomor WA / Telepon</p>
+          <p id="invitePhoneLabel" style="font-weight:700;font-size:14px;color:#fff"></p>
+        </div>
+        <div>
+          <p style="font-size:12px;color:#9ca3af;margin-bottom:4px">Email Admin Auto</p>
+          <p id="inviteEmailLabel" style="font-weight:700;font-size:14px;color:#fff;word-break:break-all"></p>
+        </div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px">Password Baru
+            *</label><input type="password" id="invitePass" class="form-input" placeholder="Kata sandi baru..." /></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px">Konfirmasi
+            Password *</label><input type="password" id="invitePassConfirm" class="form-input"
+            placeholder="Ulangi kata sandi..." /></div>
+        <p id="inviteErr" style="color:#f87171;font-size:12px;display:none"></p>
+        <button onclick="acceptInvite()" class="btn-grad" style="width:100%;justify-content:center">✅ Buat Akun
+          Admin</button>
+        <p id="inviteSuccess" style="color:#34d399;font-size:12px;display:none;text-align:center"></p>
+      </div>
+    </div>
+  </div>
+
   <!-- APP -->
   <div id="appShell" style="display:none;height:100vh;flex-direction:row;overflow:hidden">
 
@@ -323,9 +362,22 @@
     let _currentPage = null;
     function cleanupListeners() {
       // Detach all real-time listeners before switching page to avoid memory leaks
-      if (_evListener) { try { db.ref('events').off('value', _evListener); } catch (e) { }; _evListener = null; }
-      if (_partListener) { try { db.ref('registrations').off('value', _partListener); } catch (e) { }; _partListener = null; }
-      if (_judgeListener) { try { db.ref('judges').off('value', _judgeListener); } catch (e) { }; _judgeListener = null; }
+      if (_evListener) {
+        try { db.ref('events').off('value', _evListener); } catch (e) { };
+        _evListener = null;
+      }
+      if (_partListener) {
+        try { db.ref('registrations').off('value', _partListener); } catch (e) { };
+        _partListener = null;
+      }
+      if (_judgeListener) {
+        try { db.ref('judges').off('value', _judgeListener); } catch (e) { };
+        _judgeListener = null;
+      }
+      if (_inviteListener) {
+        try { db.ref('settings/adminInvites').off('value', _inviteListener); } catch (e) { };
+        _inviteListener = null;
+      }
     }
     function showPage(page) {
       if (_currentPage === page) return;
@@ -410,13 +462,18 @@
       loadEL();
     }
     let _evListener = null;
+    let _inviteListener = null;
     function loadEL() {
       if (_evListener) { db.ref('events').off('value', _evListener); _evListener = null; }
       _evListener = db.ref('events').on('value', s => {
         const evs = s.val() || {}; const div = document.getElementById('evL'); if (!div) return;
-        const arr = Object.entries(evs);
-        if (!arr.length) { div.innerHTML = '<div class="card-admin" style="padding:48px;text-align:center;color:var(--text2)"><div style="font-size:48px;margin-bottom:12px">🎭</div><p style="font-size:14px">Belum ada event. Tambah event baru!</p></div>'; return; }
-        div.innerHTML = arr.map(([k, v]) => `
+        db.ref('registrations').once('value').then(regSnap => {
+          const regs = regSnap.val() || {};
+          const arr = Object.entries(evs);
+          if (!arr.length) { div.innerHTML = '<div class="card-admin" style="padding:48px;text-align:center;color:var(--text2)"><div style="font-size:48px;margin-bottom:12px">🎭</div><p style="font-size:14px">Belum ada event. Tambah event baru!</p></div>'; return; }
+          div.innerHTML = arr.map(([k, v]) => {
+            const count = Object.values(regs).filter(r => r && r.eventId === k).length;
+            return `
     <div class="card-admin" style="padding:14px 16px;display:flex;align-items:center;gap:14px">
       <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(168,85,247,.2));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎭</div>
       <div style="flex:1;min-width:0">
@@ -424,13 +481,17 @@
           <p style="font-weight:700;font-size:14px">${v.title}</p>
           <span style="padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(34,197,94,.1);color:#16a34a">${v.status || 'active'}</span>
         </div>
-        <p style="font-size:12px;color:var(--text2)">${v.date || 'Belum ada tanggal'} · ${Object.keys(v.participants || {}).length} peserta</p>
+        <p style="font-size:12px;color:var(--text2)">${v.date || 'Belum ada tanggal'} · ${count} peserta</p>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
         <button onclick="oEM('${k}')" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);cursor:pointer;font-size:14px" title="Edit">✏️</button>
         <button onclick="delEv('${k}')" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);cursor:pointer;font-size:14px" title="Hapus">🗑️</button>
       </div>
-    </div>`).join('');
+    </div>`;
+          }).join('');
+        }).catch(() => {
+          div.innerHTML = '<div class="card-admin" style="padding:48px;text-align:center;color:var(--text2)"><div style="font-size:48px;margin-bottom:12px">⚠️</div><p style="font-size:14px">Gagal memuat jumlah peserta. Coba refresh.</p></div>';
+        });
       });
     }
     async function oEM(eid = '') {
@@ -731,18 +792,130 @@
       <button onclick="resetCfg()" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:13px;color:var(--text2)">↺ Reset Default</button>
     </div>
   </div>
+  <div class="card-admin" style="padding:22px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div style="width:38px;height:38px;border-radius:10px;background:rgba(59,130,246,.1);display:flex;align-items:center;justify-content:center;font-size:18px">✨</div>
+      <div><h3 style="font-weight:700;font-size:14px">Undang Admin Baru</h3><p style="font-size:12px;color:var(--text2)">Buat link undangan admin menggunakan nama dan nomor WA/telepon.</p></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">Nama Admin *</label><input type="text" id="inviteName" class="form-input" placeholder="Nama lengkap..."/></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">Nomor WA / Telepon *</label><input type="text" id="invitePhone" class="form-input" placeholder="+628123456789"/></div>
+      <button onclick="createAdminInvite()" class="btn-grad" style="width:fit-content">📩 Buat Link Undangan</button>
+    </div>
+    <div style="margin-top:18px">
+      <h4 style="font-size:13px;font-weight:700;margin-bottom:10px">Undangan Tersimpan</h4>
+      <div id="inviteList"></div>
+    </div>
+  </div>
   <div class="card-admin" style="padding:20px">
     <h3 style="font-weight:700;font-size:14px;margin-bottom:8px">Admin Account</h3>
     <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Tambah/ubah akun admin via Firebase Console → Authentication → Users</p>
-    <a href="https://console.firebase.google.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1px solid var(--border);border-radius:10px;color:var(--text2);text-decoration:none;font-size:12px;font-weight:600" onmouseover="this.style.borderColor='#ec4899';this.style.color='#ec4899'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">↗ Buka Firebase Console</a>
+    <a href="https://console.firebase.google.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1px solid var(--border);border-radius:10px;color:var(--text2);text-decoration:none;font-size:12px;font-weight:600" onmouseover="this.style.borderColor='#ec4899';this.style.color='#ec4899'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'>↗ Buka Firebase Console</a>
   </div></div>`;
+      setTimeout(() => { loadAdminInvites(); }, 50);
     }
     function saveCfg() {
       const keys = ['apiKey', 'authDomain', 'databaseURL', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
       const cfg = {}; keys.forEach(k => { cfg[k] = document.getElementById(`cf_${k}`).value.trim(); });
       localStorage.setItem('ryusei_fb_config', JSON.stringify(cfg)); alert('Disimpan! Reload...'); setTimeout(() => location.reload(), 600);
     }
+    let _inviteToken = null;
+    let _inviteData = null;
+
+    function saveCfg() { const keys = ['apiKey', 'authDomain', 'databaseURL', 'projectId', 'storageBucket', 'messagingSenderId', 'appId']; const cfg = {}; keys.forEach(k => { cfg[k] = document.getElementById(`cf_${k}`).value.trim(); }); localStorage.setItem('ryusei_fb_config', JSON.stringify(cfg)); alert('Disimpan! Reload...'); setTimeout(() => location.reload(), 600); }
     function resetCfg() { localStorage.removeItem('ryusei_fb_config'); alert('Reset default! Reload...'); setTimeout(() => location.reload(), 600); }
+
+    function createAdminInvite() {
+      const name = document.getElementById('inviteName')?.value.trim();
+      const phone = document.getElementById('invitePhone')?.value.trim();
+      if (!name || !phone) { alert('Nama dan nomor WA/telepon wajib diisi'); return; }
+      const token = `adm_${Math.random().toString(36).substr(2, 6)}_${Date.now()}`;
+      const email = `admin+${token}@ryusei.local`;
+      const payload = { name, phone, email, createdAt: Date.now(), used: false };
+      db.ref(`settings/adminInvites/${token}`).set(payload).then(() => {
+        loadAdminInvites();
+        alert('Link undangan admin dibuat. Copy link di daftar undangan.');
+      }).catch(e => { alert('Gagal membuat undangan: ' + e.message); });
+    }
+
+    function loadAdminInvites() {
+      db.ref('settings/adminInvites').once('value').then(snap => {
+        const list = document.getElementById('inviteList');
+        if (!list) return;
+        const invites = snap.val() || {};
+        const entries = Object.entries(invites).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+        if (!entries.length) { list.innerHTML = '<p style="font-size:12px;color:var(--text2)">Belum ada undangan admin</p>'; return; }
+        list.innerHTML = entries.map(([token, data]) => {
+          const status = data.used ? '✅ Digunakan' : '⏳ Menunggu';
+          const link = `${location.origin}${location.pathname}?invite=${encodeURIComponent(token)}`;
+          return `<div style="padding:12px 14px;border:1px solid var(--border);border-radius:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div style="flex:1;min-width:0">
+              <p style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${data.name} · ${data.phone}</p>
+              <p style="font-size:11px;color:var(--text2);word-break:break-all">${link}</p>
+              <p style="font-size:11px;color:${data.used ? '#34d399' : '#f59e0b'};margin-top:4px">${status}</p>
+            </div>
+            <button onclick="copyInviteLink('${link}')" style="padding:8px 10px;border:none;border-radius:10px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;cursor:pointer;font-size:12px">Salin</button>
+          </div>`;
+        }).join('');
+      }).catch(() => {
+        const list = document.getElementById('inviteList'); if (list) list.innerHTML = '<p style="font-size:12px;color:var(--text2)">Gagal memuat undangan</p>';
+      });
+    }
+
+    function copyInviteLink(link) { navigator.clipboard.writeText(link).then(() => alert('Link undangan disalin!')); }
+
+    function getInviteTokenFromUrl() { return new URLSearchParams(location.search).get('invite') || null; }
+    function handleInviteUrl() {
+      const token = getInviteTokenFromUrl();
+      if (!token) return;
+      _inviteToken = token;
+      db.ref(`settings/adminInvites/${token}`).once('value').then(snap => {
+        const data = snap.val();
+        if (!data || data.used) return;
+        _inviteData = data;
+        showInviteScreen(data, token);
+      }).catch(() => { });
+    }
+
+    function showInviteScreen(data, token) {
+      const screen = document.getElementById('inviteScreen');
+      if (!screen) return;
+      document.getElementById('inviteNameLabel').textContent = data.name || '—';
+      document.getElementById('invitePhoneLabel').textContent = data.phone || '—';
+      document.getElementById('inviteEmailLabel').textContent = data.email || `admin+${token}@ryusei.local`;
+      document.getElementById('invitePass').value = '';
+      document.getElementById('invitePassConfirm').value = '';
+      document.getElementById('inviteErr').style.display = 'none';
+      document.getElementById('inviteSuccess').style.display = 'none';
+      screen.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeInviteScreen() { const screen = document.getElementById('inviteScreen'); if (screen) screen.style.display = 'none'; document.body.style.overflow = ''; }
+
+    async function acceptInvite() {
+      const pass = document.getElementById('invitePass')?.value || '';
+      const pass2 = document.getElementById('invitePassConfirm')?.value || '';
+      const errEl = document.getElementById('inviteErr');
+      if (!pass || !pass2) { errEl.textContent = 'Password wajib diisi'; errEl.style.display = 'block'; return; }
+      if (pass !== pass2) { errEl.textContent = 'Password tidak cocok'; errEl.style.display = 'block'; return; }
+      if (!_inviteToken || !_inviteData) { errEl.textContent = 'Undangan tidak valid atau sudah digunakan'; errEl.style.display = 'block'; return; }
+      const email = _inviteData.email || `admin+${_inviteToken}@ryusei.local`;
+      try {
+        await auth.createUserWithEmailAndPassword(email, pass);
+        await db.ref(`settings/adminInvites/${_inviteToken}`).update({ used: true, usedAt: Date.now(), usedBy: email });
+        const success = document.getElementById('inviteSuccess');
+        if (success) { success.textContent = 'Akun admin berhasil dibuat. Silakan login dengan email dan password ini.'; success.style.display = 'block'; }
+        const err = document.getElementById('inviteErr'); if (err) err.style.display = 'none';
+        setTimeout(() => {
+          closeInviteScreen();
+          history.replaceState(null, '', location.pathname);
+          if (document.getElementById('loginEmail')) document.getElementById('loginEmail').value = email;
+        }, 1800);
+      } catch (e) {
+        errEl.textContent = e.message || 'Gagal membuat akun admin'; errEl.style.display = 'block';
+      }
+    }
     // ── MODAL ──
     function openM(title, body) { document.getElementById('mTitle').textContent = title; document.getElementById('mBody').innerHTML = body; document.getElementById('modal').style.display = 'flex'; document.body.style.overflow = 'hidden'; }
     function closeM() { document.getElementById('modal').style.display = 'none'; document.body.style.overflow = ''; }
@@ -829,6 +1002,8 @@
 
     // ── INIT ──
     (async () => {
+      // Handle invite URL first
+      handleInviteUrl();
       // 1. Coba localStorage
       const saved = localStorage.getItem('ryusei_fb_config');
       if (saved) { try { initFB(JSON.parse(saved)); return; } catch (e) { } }
