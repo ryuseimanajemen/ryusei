@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>尺YUSEI – Panduan Fitur Lengkap</title>
+  <link rel="icon" href="https://ryuseimanajemen.github.io/ryusei/assets/fav/apple-touch-icon.png" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Orbitron:wght@400;700;900&family=Space+Mono&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #06060f;
+      --surface: #0d0d1f;
+      --surface2: #111128;
+      --border: #1e1e3a;
+      --primary: #7c3aed;
+      --primary-g: #a855f7;
+      --accent: #f59e0b;
+      --neon: #e879f9;
+      --cyan: #22d3ee;
+      --green: #34d399;
+      --red: #f87171;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --glow: rgba(124, 58, 237, .4);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background ── */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 10% 20%, rgba(124, 58, 237, .12) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 60% at 90% 80%, rgba(232, 121, 249, .08) 0%, transparent 65%);
+    }
+
+    .grid-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(124, 58, 237, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124, 58, 237, .04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridDrift 25s linear infinite;
+    }
+
+    @keyframes gridDrift {
+      to {
+        background-position: 48px 48px;
+      }
+    }
+
+    .kanji-bg {
+      position: fixed;
+      font-family: 'Noto Serif JP', serif;
+      color: rgba(124, 58, 237, .05);
+      user-select: none;
+      pointer-events: none;
+      animation: floatKanji 20s ease-in-out infinite;
+    }
+
+    .kanji-bg.k1 {
+      font-size: 30vw;
+      top: -5%;
+      right: -5%;
+      animation-delay: 0s;
+    }
+
+    .kanji-bg.k2 {
+      font-size: 18vw;
+      bottom: 5%;
+      left: -3%;
+      animation-delay: -10s;
+    }
+
+    @keyframes floatKanji {
+
+      0%,
+      100% {
+        transform: rotate(-4deg);
+      }
+
+      50% {
+        transform: rotate(4deg) translateY(20px);
+      }
+    }
+
+    /* ── Layout ── */
+    .wrapper {
+      position: relative;
+      z-index: 10;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Top Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(6, 6, 15, .85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+    }
+
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: .9rem;
+      background: linear-gradient(135deg, #fff 0%, var(--primary-g) 60%, var(--neon) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-decoration: none;
+    }
+
+    .nav-brand img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all .2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+      background: rgba(124, 58, 237, .15);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(124, 58, 237, .15);
+      border: 1px solid rgba(124, 58, 237, .3);
+      border-radius: 99px;
+      padding: 6px 18px;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--primary-g);
+      margin-bottom: 28px;
+    }
+
+    .hero-badge span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary-g);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .2;
+      }
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fff 0%, var(--primary-g) 50%, var(--neon) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      background-size: 200% auto;
+      animation: shimmer 5s linear infinite;
+    }
+
+    @keyframes shimmer {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 40px;
+      line-height: 1.75;
+    }
+
+    .hero-sub strong {
+      color: var(--text);
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .stat-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Section titles ── */
+    .section {
+      margin-top: 72px;
+    }
+
+    .section-header {
+      margin-bottom: 32px;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--primary-g);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.3rem, 3vw, 1.9rem);
+      font-weight: 900;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: .9rem;
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    .divider-line {
+      height: 2px;
+      width: 56px;
+      margin-top: 14px;
+      background: linear-gradient(90deg, var(--primary), var(--neon));
+      border-radius: 2px;
+      box-shadow: 0 0 10px var(--primary-g);
+    }
+
+    /* ── Feature Cards ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(17, 17, 40, .95) 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: all .3s ease;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(124, 58, 237, .06) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(124, 58, 237, .35);
+      box-shadow: 0 0 40px rgba(124, 58, 237, .2), 0 20px 40px rgba(0, 0, 0, .4);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 18px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-desc {
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.7;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Icon color variants */
+    .ic-purple {
+      background: rgba(124, 58, 237, .2);
+      box-shadow: 0 0 20px rgba(124, 58, 237, .3);
+    }
+
+    .ic-pink {
+      background: rgba(232, 121, 249, .15);
+      box-shadow: 0 0 20px rgba(232, 121, 249, .25);
+    }
+
+    .ic-cyan {
+      background: rgba(34, 211, 238, .15);
+      box-shadow: 0 0 20px rgba(34, 211, 238, .2);
+    }
+
+    .ic-green {
+      background: rgba(52, 211, 153, .15);
+      box-shadow: 0 0 20px rgba(52, 211, 153, .2);
+    }
+
+    .ic-amber {
+      background: rgba(245, 158, 11, .15);
+      box-shadow: 0 0 20px rgba(245, 158, 11, .2);
+    }
+
+    .ic-red {
+      background: rgba(248, 113, 113, .15);
+      box-shadow: 0 0 20px rgba(248, 113, 113, .2);
+    }
+
+    /* ── Flow / Steps ── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .flow-item {
+      display: flex;
+      gap: 20px;
+      position: relative;
+    }
+
+    .flow-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 23px;
+      top: 52px;
+      bottom: -28px;
+      width: 2px;
+      background: linear-gradient(to bottom, rgba(124, 58, 237, .5), rgba(124, 58, 237, .05));
+    }
+
+    .flow-num {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-g));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: .85rem;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(124, 58, 237, .5);
+      position: relative;
+      z-index: 1;
+    }
+
+    .flow-body {
+      flex: 1;
+      padding-bottom: 36px;
+    }
+
+    .flow-body h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .flow-body p {
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.7;
+    }
+
+    .flow-body .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      background: rgba(124, 58, 237, .15);
+      border: 1px solid rgba(124, 58, 237, .25);
+      color: var(--primary-g);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: .72rem;
+      font-weight: 600;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .tag.green {
+      background: rgba(52, 211, 153, .1);
+      border-color: rgba(52, 211, 153, .25);
+      color: var(--green);
+    }
+
+    .tag.cyan {
+      background: rgba(34, 211, 238, .1);
+      border-color: rgba(34, 211, 238, .25);
+      color: var(--cyan);
+    }
+
+    .tag.amber {
+      background: rgba(245, 158, 11, .1);
+      border-color: rgba(245, 158, 11, .25);
+      color: var(--accent);
+    }
+
+    .tag.red {
+      background: rgba(248, 113, 113, .1);
+      border-color: rgba(248, 113, 113, .25);
+      color: var(--red);
+    }
+
+    /* ── Criteria Cards ── */
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+    }
+
+    .crit-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 18px;
+      text-align: center;
+      transition: all .3s;
+    }
+
+    .crit-card:hover {
+      border-color: rgba(124, 58, 237, .4);
+      transform: translateY(-3px);
+      box-shadow: 0 0 24px rgba(124, 58, 237, .15);
+    }
+
+    .crit-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .crit-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .crit-desc {
+      font-size: .78rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .crit-weight {
+      display: inline-block;
+      margin-top: 10px;
+      background: rgba(124, 58, 237, .15);
+      border-radius: 6px;
+      padding: 2px 10px;
+      font-size: .7rem;
+      color: var(--primary-g);
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+    }
+
+    /* ── Role Table ── */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .role-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      border-radius: 8px;
+      padding: 5px 14px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 14px;
+    }
+
+    .role-badge.admin {
+      background: rgba(248, 113, 113, .15);
+      color: var(--red);
+      border: 1px solid rgba(248, 113, 113, .3);
+    }
+
+    .role-badge.judge {
+      background: rgba(34, 211, 238, .15);
+      color: var(--cyan);
+      border: 1px solid rgba(34, 211, 238, .3);
+    }
+
+    .role-badge.peserta {
+      background: rgba(52, 211, 153, .15);
+      color: var(--green);
+      border: 1px solid rgba(52, 211, 153, .3);
+    }
+
+    .role-card h3 {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .access-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .access-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: .82rem;
+      color: var(--muted);
+    }
+
+    .access-list li .ico {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ── Info boxes ── */
+    .info-box {
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .info-box.purple {
+      background: rgba(124, 58, 237, .1);
+      border: 1px solid rgba(124, 58, 237, .25);
+    }
+
+    .info-box.cyan {
+      background: rgba(34, 211, 238, .08);
+      border: 1px solid rgba(34, 211, 238, .2);
+    }
+
+    .info-box.amber {
+      background: rgba(245, 158, 11, .08);
+      border: 1px solid rgba(245, 158, 11, .2);
+    }
+
+    .info-box.green {
+      background: rgba(52, 211, 153, .08);
+      border: 1px solid rgba(52, 211, 153, .2);
+    }
+
+    .info-box .ib-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .info-box .ib-body h4 {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .info-box .ib-body p {
+      font-size: .83rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .info-box .ib-body code {
+      background: rgba(255, 255, 255, .07);
+      border-radius: 5px;
+      padding: 1px 7px;
+      font-family: 'Space Mono', monospace;
+      font-size: .78rem;
+      color: var(--primary-g);
+    }
+
+    /* ── Tech Stack ── */
+    .tech-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .tech-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .tech-badge .tb-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ── CTA ── */
+    .cta-box {
+      margin-top: 72px;
+      background: linear-gradient(135deg, rgba(124, 58, 237, .15) 0%, rgba(232, 121, 249, .08) 100%);
+      border: 1px solid rgba(124, 58, 237, .3);
+      border-radius: 24px;
+      padding: 52px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-box::before {
+      content: '竜';
+      font-family: 'Noto Serif JP', serif;
+      position: absolute;
+      font-size: 16rem;
+      right: -40px;
+      top: -40px;
+      color: rgba(124, 58, 237, .05);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .cta-box h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      font-weight: 900;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .cta-box p {
+      color: var(--muted);
+      font-size: .9rem;
+      margin-bottom: 28px;
+      max-width: 450px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all .25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-g) 100%);
+      color: #fff;
+      box-shadow: 0 0 24px rgba(124, 58, 237, .5);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(168, 85, 247, .7);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      border-color: rgba(124, 58, 237, .4);
+      background: rgba(124, 58, 237, .1);
+      transform: translateY(-2px);
+    }
+
+    .arrow {
+      display: inline-block;
+      animation: arrowBounce 1.2s ease-in-out infinite;
+    }
+
+    @keyframes arrowBounce {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      50% {
+        transform: translateX(5px);
+      }
+    }
+
+    /* ── TOC Sidebar ── */
+    .layout {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+    }
+
+    .toc {
+      position: sticky;
+      top: 72px;
+      width: 210px;
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      display: none;
+    }
+
+    @media (min-width: 1000px) {
+      .toc {
+        display: block;
+      }
+    }
+
+    .toc-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .toc a {
+      display: block;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: .78rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: all .2s;
+      margin-bottom: 2px;
+    }
+
+    .toc a:hover {
+      color: var(--text);
+      background: rgba(124, 58, 237, .12);
+    }
+
+    .toc a.active {
+      color: var(--primary-g);
+      background: rgba(124, 58, 237, .12);
+      font-weight: 700;
+    }
+
+    .content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 60px;
+      padding: 28px 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: .78rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    footer a {
+      color: var(--primary-g);
+      text-decoration: none;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(124, 58, 237, .4);
+      border-radius: 99px;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 20px 18px;
+      }
+
+      .cta-box {
+        padding: 36px 22px;
+      }
+
+      .hero {
+        padding: 48px 0 40px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="bg-layer"></div>
+  <div class="grid-layer"></div>
+  <div class="kanji-bg k1">尺</div>
+  <div class="kanji-bg k2">尺yu</div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a class="nav-brand" href="https://ryuseimanajemen.github.io/ryusei/" target="_blank">
+        <img src="https://ryuseimanajemen.github.io/ryusei/assets/fav/apple-touch-icon.png"
+          onerror="this.style.display='none'" alt="Logo" />
+        RYUSEI
+      </a>
+      <div class="nav-links">
+        <a href="#fitur-utama">Fitur Utama</a>
+        <a href="#alur-kerja">Alur Kerja</a>
+        <a href="#penilaian">Penilaian</a>
+        <a href="#pengguna">Pengguna</a>
+        <a href="#admin">Dashboard Admin</a>
+        <a href="#teknologi">Teknologi</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrapper">
+    <div class="layout">
+
+      <!-- TOC -->
+      <aside class="toc" id="toc">
+        <div class="toc-title">Daftar Isi</div>
+        <a href="#ringkasan">📌 Ringkasan</a>
+        <a href="#fitur-utama">⚡ Fitur Utama</a>
+        <a href="#alur-kerja">🔄 Alur Kerja</a>
+        <a href="#pendaftaran">📝 Pendaftaran</a>
+        <a href="#penilaian">⚖️ Penilaian</a>
+        <a href="#leaderboard">🏆 Leaderboard</a>
+        <a href="#pengguna">👥 Peran Pengguna</a>
+        <a href="#admin">🛠️ Dashboard Admin</a>
+        <a href="#teknologi">💾 Teknologi</a>
+      </aside>
+
+      <main class="content">
+
+        <!-- HERO -->
+        <section class="hero" id="ringkasan">
+          <div class="hero-badge">
+            <span></span>
+            Panduan Fitur Lengkap
+          </div>
+          <h1>RYUSEI<br />Event Management</h1>
+          <p class="hero-sub">
+            Platform terpadu untuk mengelola <strong>event virtual Live streaming</strong> dengan sistem
+            penilaian real-time, manajemen peserta, dan dashboard admin lengkap — semua dalam satu
+            aplikasi.
+          </p>
+          <div class="hero-stats">
+            <div class="stat-pill">
+              <div class="dot" style="background:#a855f7"></div>Real-time Firebase
+            </div>
+            <div class="stat-pill">
+              <div class="dot" style="background:#34d399"></div>5 Kriteria Penilaian
+            </div>
+            <div class="stat-pill">
+              <div class="dot" style="background:#22d3ee"></div>Multi-Juri
+            </div>
+            <div class="stat-pill">
+              <div class="dot" style="background:#f59e0b"></div>Auto Leaderboard
+            </div>
+            <div class="stat-pill">
+              <div class="dot" style="background:#e879f9"></div>Mobile Responsive
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────── -->
+        <!-- FITUR UTAMA -->
+        <!-- ──────────────────────────────── -->
+        <section class="section" id="fitur-utama">
+          <div class="section-header">
+            <span class="section-label">// 01 — Fitur Utama</span>
+            <h2 class="section-title">Apa yang Bisa Dilakukan Ryusei?</h2>
+            <p class="section-desc">Semua fitur dirancang khusus untuk event virtual live streaming agar pengalaman
+              peserta, juri, dan panitia menjadi lebih terstruktur dan menyenangkan.</p>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="grid-2">
+
+            <div class="card">
+              <div class="card-icon ic-purple">⚡</div>
+              <div class="card-title">Skor Real-Time</div>
+              <p class="card-desc">
+                Skor dari semua juri langsung terupdate secara bersamaan tanpa perlu memuat ulang halaman.
+                Semua peserta bisa melihat perubahan skor secara langsung berkat Firebase RTDB.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-cyan">👨‍⚖️</div>
+              <div class="card-title">Multi-Juri</div>
+              <p class="card-desc">
+                Dukung banyak juri sekaligus. Setiap juri memiliki panel akses tersendiri dan
+                memberikan nilai secara terstruktur untuk setiap kriteria penilaian.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-amber">🏆</div>
+              <div class="card-title">Leaderboard Otomatis</div>
+              <p class="card-desc">
+                Ranking peserta diperbarui otomatis berdasarkan total nilai. Top 3 mendapatkan tampilan
+                medali emas, perak, dan perunggu beserta rincian skor per kriteria.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-green">✅</div>
+              <div class="card-title">Sistem Persetujuan Peserta</div>
+              <p class="card-desc">
+                Admin bisa menyetujui atau menolak pendaftaran peserta sebelum event dimulai.
+                Peserta yang ditolak tidak akan masuk ke daftar peserta aktif event.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-pink">🔑</div>
+              <div class="card-title">Kode Unik Peserta</div>
+              <p class="card-desc">
+                Setiap peserta yang mendaftar mendapatkan kode unik. Kode ini digunakan untuk mengecek
+                status pendaftaran tanpa perlu login atau membuat akun.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-purple">📱</div>
+              <div class="card-title">Mobile Friendly</div>
+              <p class="card-desc">
+                Tampilan dioptimalkan untuk semua ukuran layar. Peserta, juri, dan admin bisa
+                mengakses platform dari smartphone dengan nyaman.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-cyan">🎭</div>
+              <div class="card-title">Manajemen Banyak Event</div>
+              <p class="card-desc">
+                Buat dan kelola banyak event sekaligus dari satu dashboard. Setiap event memiliki
+                peserta, juri, dan leaderboard tersendiri yang terpisah satu sama lain.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-amber">🖼️</div>
+              <div class="card-title">CMS Landing Page</div>
+              <p class="card-desc">
+                Admin dapat mengubah tampilan halaman utama (landing page) langsung dari dashboard
+                tanpa perlu mengedit kode — mulai dari teks, gambar, hingga informasi kontak.
+              </p>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────── -->
+        <!-- ALUR KERJA -->
+        <!-- ──────────────────────────────── -->
+        <section class="section" id="alur-kerja">
+          <div class="section-header">
+            <span class="section-label">// 02 — Alur Kerja</span>
+            <h2 class="section-title">Bagaimana Event Berjalan?</h2>
+            <p class="section-desc">Dari persiapan hingga pengumuman pemenang — semua dilakukan di satu platform.</p>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="flow">
+
+            <!-- <div class="flow-item">
+              <div class="flow-num">1</div>
+              <div class="flow-body">
+                <h3>Setup Firebase & Konfigurasi Admin</h3>
+                <p>Admin pertama kali mengunggah file <code>firebase-config.json</code> dari Firebase Console. Sistem akan langsung terhubung ke database real-time. Admin baru mengaktifkan akun dengan mengisi nama, email, dan kata sandi.</p>
+                <div class="tags">
+                  <span class="tag">Firebase RTDB</span>
+                  <span class="tag cyan">Admin Setup</span>
+                </div>
+              </div>
+            </div> -->
+
+            <div class="flow-item">
+              <div class="flow-num">2</div>
+              <div class="flow-body">
+                <h3>Buat Event Baru</h3>
+                <p>Admin membuat event baru dari dashboard. Setiap event bisa dikonfigurasi dengan nama, deskripsi,
+                  jadwal, dan informasi event lainnya. Event yang sudah dibuat langsung muncul di halaman publik.</p>
+                <div class="tags">
+                  <span class="tag amber">Dashboard Admin</span>
+                  <span class="tag">Manajemen Event</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-item">
+              <div class="flow-num">3</div>
+              <div class="flow-body">
+                <h3>Peserta Mendaftar</h3>
+                <p>Peserta mengisi form pendaftaran di halaman publik: memilih event, memasukkan username, link
+                  profil/aplikasi, dan jam tampil. Setelah mendaftar, peserta mendapatkan kode unik untuk memantau
+                  status.</p>
+                <div class="tags">
+                  <span class="tag green">Form Publik</span>
+                  <span class="tag">Kode Unik</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-item">
+              <div class="flow-num">4</div>
+              <div class="flow-body">
+                <h3>Admin Menyetujui Pendaftaran</h3>
+                <p>Admin meninjau daftar peserta yang masuk dan memutuskan untuk menyetujui atau menolak. Hanya peserta
+                  yang disetujui yang akan tampil dalam sistem penilaian dan leaderboard.</p>
+                <div class="tags">
+                  <span class="tag red">Approval System</span>
+                  <span class="tag amber">Manajemen Peserta</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-item">
+              <div class="flow-num">5</div>
+              <div class="flow-body">
+                <h3>Juri Masuk & Memberi Nilai</h3>
+                <p>Juri login ke panel khusus juri menggunakan akun yang disiapkan admin. Setiap juri memberikan nilai
+                  pada 5 kriteria untuk masing-masing peserta. Nilai langsung tersimpan dan tersinkronisasi ke semua
+                  perangkat.</p>
+                <div class="tags">
+                  <span class="tag cyan">Panel Juri</span>
+                  <span class="tag">5 Kriteria</span>
+                  <span class="tag">Real-time Sync</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flow-item">
+              <div class="flow-num">6</div>
+              <div class="flow-body">
+                <h3>Leaderboard Diperbarui Otomatis</h3>
+                <p>Setiap nilai yang diinput langsung mengubah posisi di leaderboard. Top 3 peserta dengan skor
+                  tertinggi ditampilkan dengan medali. Semua orang bisa melihat ranking terbaru kapan saja.</p>
+                <div class="tags">
+                  <span class="tag green">Auto Leaderboard</span>
+                  <span class="tag">Live Update</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────── -->
+        <!-- PENDAFTARAN -->
+        <!-- ──────────────────────────────── -->
+        <section class="section" id="pendaftaran">
+          <div class="section-header">
+            <span class="section-label">// 03 — Pendaftaran Peserta</span>
+            <h2 class="section-title">Cara Daftar sebagai Peserta</h2>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="grid-2" style="margin-bottom: 24px;">
+            <div class="info-box purple">
+              <div class="ib-icon">📋</div>
+              <div class="ib-body">
+                <h4>Form Pendaftaran</h4>
+                <p>Tersedia di halaman publik. Isi semua kolom yang wajib diisi: pilih event, nama pengguna aplikasi,
+                  link profil, dan jam tampil (WIB).</p>
+              </div>
+            </div>
+            <div class="info-box green">
+              <div class="ib-icon">🔑</div>
+              <div class="ib-body">
+                <h4>Kode Unik Pendaftaran</h4>
+                <p>Setelah mendaftar, sistem memberi kode unik. Gunakan kode ini di fitur <code>Cek Status</code> untuk
+                  memantau apakah pendaftaran sudah disetujui admin.</p>
+              </div>
+            </div>
+            <div class="info-box cyan">
+              <div class="ib-icon">⏳</div>
+              <div class="ib-body">
+                <h4>Status Pendaftaran</h4>
+                <p>Ada tiga kemungkinan status: <strong>Menunggu</strong> (belum ditinjau admin),
+                  <strong>Disetujui</strong> (bisa ikut event), atau <strong>Ditolak</strong> (tidak lolos seleksi).</p>
+              </div>
+            </div>
+            <div class="info-box amber">
+              <div class="ib-icon">📎</div>
+              <div class="ib-body">
+                <h4>Data yang Dibutuhkan</h4>
+                <p>Pilih event · Username aplikasi · Link profil atau akun · Jam perform (WIB). Tidak perlu buat akun —
+                  cukup isi form dan simpan kode unik kamu.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────── -->
+        <!-- PENILAIAN -->
+        <!-- ──────────────────────────────── -->
+        <section class="section" id="penilaian">
+          <div class="section-header">
+            <span class="section-label">// 04 — Sistem Penilaian</span>
+            <h2 class="section-title">5 Kriteria Penilaian</h2>
+            <p class="section-desc">Setiap peserta dinilai berdasarkan lima aspek roleplay yang terstandarisasi. Nilai
+              dari semua juri digabungkan otomatis.</p>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="criteria-grid">
+            <div class="crit-card">
+              <div class="crit-icon">🤝</div>
+              <div class="crit-name">Interactivity</div>
+              <p class="crit-desc">Kemampuan berinteraksi dengan peserta lain dan merespons situasi secara aktif selama
+                roleplay berlangsung.</p>
+              <span class="crit-weight">Kriteria 1</span>
+            </div>
+            <div class="crit-card">
+              <div class="crit-icon">🌊</div>
+              <div class="crit-name">Immersion</div>
+              <p class="crit-desc">Seberapa dalam peserta "masuk" ke dalam karakter dan dunia fiksi — menjaga
+                konsistensi dan suasana cerita.</p>
+              <span class="crit-weight">Kriteria 2</span>
+            </div>
+            <div class="crit-card">
+              <div class="crit-icon">💡</div>
+              <div class="crit-name">Creativity</div>
+              <p class="crit-desc">Orisinalitas ide, cara bercerita, dan bagaimana peserta menambahkan warna unik pada
+                alur roleplay.</p>
+              <span class="crit-weight">Kriteria 3</span>
+            </div>
+            <div class="crit-card">
+              <div class="crit-icon">🎲</div>
+              <div class="crit-name">Improvisation</div>
+              <p class="crit-desc">Kemampuan beradaptasi dan berimprovisasi secara natural saat muncul situasi tidak
+                terduga dalam roleplay.</p>
+              <span class="crit-weight">Kriteria 4</span>
+            </div>
+            <div class="crit-card">
+              <div class="crit-icon">👗</div>
+              <div class="crit-name">Costume</div>
+              <p class="crit-desc">Kesesuaian kostum atau penampilan visual dengan karakter yang dibawakan selama event
+                virtual berlangsung.</p>
+              <span class="crit-weight">Kriteria 5</span>
+            </div>
+          </div>
+
+          <div class="info-box purple" style="margin-top: 24px;">
+            <div class="ib-icon">⚡</div>
+            <div class="ib-body">
+              <h4>Bagaimana Nilai Dihitung?</h4>
+              <p>Setiap juri memberikan nilai untuk kelima kriteria di atas per peserta. Sistem secara otomatis
+                menjumlahkan semua nilai dari semua juri dan menghitung rata-rata atau total keseluruhan untuk
+                menentukan posisi di leaderboard.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────── -->
+        <!-- LEADERBOARD -->
+        <!-- ──────────────────────────────── -->
+        <section class="section" id="leaderboard">
+          <div class="section-header">
+            <span class="section-label">// 05 — Leaderboard</span>
+            <h2 class="section-title">Papan Peringkat Otomatis</h2>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="info-box amber">
+              <div class="ib-icon">🥇</div>
+              <div class="ib-body">
+                <h4>Peringkat 1 — Medali Emas</h4>
+                <p>Peserta dengan total skor tertinggi ditampilkan di posisi teratas dengan ikon medali emas. Informasi
+                  detail skor per kriteria juga ditampilkan.</p>
+              </div>
+            </div>
+            <div class="info-box cyan">
+              <div class="ib-icon">🥈</div>
+              <div class="ib-body">
+                <h4>Peringkat 2 & 3 — Perak &amp; Perunggu</h4>
+                <p>Dua peserta berikutnya juga mendapat tampilan khusus dengan medali perak dan perunggu, sesuai total
+                  nilai mereka.</p>
+              </div>
+            </div>
+            <div class="info-box green">
+              <div class="ib-icon">🔄</div>
+              <div class="ib-body">
+                <h4>Update Otomatis Tanpa Reload</h4>
+                <p>Saat juri memasukkan nilai baru, posisi leaderboard langsung berubah secara otomatis. Tidak perlu
+                  menyegarkan halaman untuk melihat hasil terbaru.</p>
+              </div>
+            </div>
+            <div class="info-box purple">
+              <div class="ib-icon">🎭</div>
+              <div class="ib-body">
+                <h4>Filter per Event</h4>
+                <p>Leaderboard bisa difilter berdasarkan event tertentu. Pilih event dari dropdown dan papan peringkat
+                  langsung menampilkan data peserta event yang dipilih.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────── -->
+        <!-- PERAN PENGGUNA -->
+        <!-- ──────────────────────────────── -->
+        <section class="section" id="pengguna">
+          <div class="section-header">
+            <span class="section-label">// 06 — Peran Pengguna</span>
+            <h2 class="section-title">Siapa Saja yang Bisa Menggunakan?</h2>
+            <p class="section-desc">Ryusei memiliki tiga jenis pengguna dengan akses dan peran yang berbeda.</p>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="role-grid">
+
+            <div class="role-card">
+              <span class="role-badge admin">🛡️ Admin</span>
+              <h3>Panitia / Pengelola Event</h3>
+              <ul class="access-list">
+                <li><span class="ico">✅</span>Login ke dashboard admin</li>
+                <li><span class="ico">✅</span>Membuat dan mengelola event</li>
+                <li><span class="ico">✅</span>Menyetujui atau menolak peserta</li>
+                <li><span class="ico">✅</span>Membuat dan mengelola akun juri</li>
+                <li><span class="ico">✅</span>Melihat semua data penilaian</li>
+                <li><span class="ico">✅</span>Mengedit tampilan landing page</li>
+                <li><span class="ico">✅</span>Mengatur konfigurasi Firebase</li>
+              </ul>
+            </div>
+
+            <div class="role-card">
+              <span class="role-badge judge">⚖️ Juri</span>
+              <h3>Penilai Event</h3>
+              <ul class="access-list">
+                <li><span class="ico">✅</span>Login ke panel juri tersendiri</li>
+                <li><span class="ico">✅</span>Melihat daftar peserta per event</li>
+                <li><span class="ico">✅</span>Memberikan nilai 5 kriteria</li>
+                <li><span class="ico">✅</span>Mengubah nilai yang sudah diberikan</li>
+                <li><span class="ico">✅</span>Melihat leaderboard sementara</li>
+                <li><span class="ico">❌</span>Tidak bisa mengubah data event</li>
+                <li><span class="ico">❌</span>Tidak bisa menyetujui peserta</li>
+              </ul>
+            </div>
+
+            <div class="role-card">
+              <span class="role-badge peserta">🎭 Peserta</span>
+              <h3>Peserta Event</h3>
+              <ul class="access-list">
+                <li><span class="ico">✅</span>Mengisi form pendaftaran</li>
+                <li><span class="ico">✅</span>Mendapatkan kode unik</li>
+                <li><span class="ico">✅</span>Cek status pendaftaran</li>
+                <li><span class="ico">✅</span>Melihat leaderboard publik</li>
+                <li><span class="ico">✅</span>Melihat info event aktif</li>
+                <li><span class="ico">❌</span>Tidak perlu buat akun</li>
+                <li><span class="ico">❌</span>Tidak bisa memberikan nilai</li>
+              </ul>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────── -->
+        <!-- DASHBOARD ADMIN -->
+        <!-- ──────────────────────────────── -->
+        <section class="section" id="admin">
+          <div class="section-header">
+            <span class="section-label">// 07 — Dashboard Admin</span>
+            <h2 class="section-title">Fitur-Fitur di Panel Admin</h2>
+            <p class="section-desc">Panel admin adalah pusat kendali seluruh event. Berikut semua menu yang tersedia.
+            </p>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="grid-3">
+
+            <div class="card">
+              <div class="card-icon ic-purple">📊</div>
+              <div class="card-title">Dashboard</div>
+              <p class="card-desc">Ringkasan statistik keseluruhan: total event aktif, total peserta terdaftar, dan
+                jumlah juri. Akses cepat ke semua menu.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-cyan">🎭</div>
+              <div class="card-title">Manajemen Event</div>
+              <p class="card-desc">Buat, edit, dan hapus event. Atur nama, deskripsi, status aktif/nonaktif, dan semua
+                detail event dari satu halaman.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-green">👥</div>
+              <div class="card-title">Manajemen Peserta</div>
+              <p class="card-desc">Lihat semua peserta yang mendaftar, tinjau data mereka, lalu setujui atau tolak
+                pendaftaran sebelum event dimulai.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-pink">⚖️</div>
+              <div class="card-title">Manajemen Juri</div>
+              <p class="card-desc">Tambah juri baru, tetapkan ke event tertentu, dan kelola akun juri. Setiap juri
+                mendapat akses panel terpisah.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-amber">🏆</div>
+              <div class="card-title">Leaderboard Admin</div>
+              <p class="card-desc">Tampilan leaderboard khusus admin yang menyertakan rincian skor per juri dan per
+                kriteria untuk semua peserta.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-cyan">🖼️</div>
+              <div class="card-title">CMS Landing Page</div>
+              <p class="card-desc">Edit konten halaman publik langsung dari dashboard: teks hero, deskripsi platform,
+                informasi kontak, dan elemen visual.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-purple">⚙️</div>
+              <div class="card-title">Pengaturan</div>
+              <p class="card-desc">Konfigurasi umum aplikasi, pengaturan akun admin, dan opsi lanjutan untuk
+                menyesuaikan platform sesuai kebutuhan.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-red">🔥</div>
+              <div class="card-title">Setup Firebase</div>
+              <p class="card-desc">Upload file <code>firebase-config.json</code> untuk menghubungkan aplikasi ke
+                database Firebase milikmu sendiri. Cukup drag &amp; drop.</p>
+            </div>
+
+            <div class="card">
+              <div class="card-icon ic-green">🔐</div>
+              <div class="card-title">Manajemen Akun Admin</div>
+              <p class="card-desc">Tambah admin baru dengan aktivasi kata sandi. Admin dapat memiliki nama, nomor WA,
+                dan email yang berbeda-beda.</p>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ──────────────────────────────── -->
+        <!-- TEKNOLOGI -->
+        <!-- ──────────────────────────────── -->
+        <section class="section" id="teknologi">
+          <div class="section-header">
+            <span class="section-label">// 08 — Teknologi</span>
+            <h2 class="section-title">Dibangun dengan Apa?</h2>
+            <p class="section-desc">Ryusei menggunakan teknologi web modern yang ringan dan mudah di-deploy secara
+              gratis.</p>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="tech-row" style="margin-bottom: 28px;">
+            <div class="tech-badge">
+              <div class="tb-dot" style="background:#f97316"></div>HTML / CSS / JS
+            </div>
+            <div class="tech-badge">
+              <div class="tb-dot" style="background:#facc15"></div>Firebase RTDB
+            </div>
+            <div class="tech-badge">
+              <div class="tb-dot" style="background:#22d3ee"></div>Firebase Auth
+            </div>
+            <div class="tech-badge">
+              <div class="tb-dot" style="background:#a855f7"></div>GitHub Pages
+            </div>
+            <div class="tech-badge">
+              <div class="tb-dot" style="background:#34d399"></div>Vanilla JS
+            </div>
+            <div class="tech-badge">
+              <div class="tb-dot" style="background:#e879f9"></div>Responsive CSS
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="info-box cyan">
+              <div class="ib-icon">🔥</div>
+              <div class="ib-body">
+                <h4>Firebase Realtime Database</h4>
+                <p>Semua data event, peserta, nilai, dan juri disimpan di Firebase RTDB. Perubahan data langsung
+                  tersinkronisasi ke semua pengguna yang terhubung tanpa reload halaman.</p>
+              </div>
+            </div>
+            <div class="info-box green">
+              <div class="ib-icon">🌐</div>
+              <div class="ib-body">
+                <h4>GitHub Pages (Hosting Gratis)</h4>
+                <p>Aplikasi di-host di GitHub Pages secara gratis. Tidak perlu biaya server — cukup punya akun GitHub
+                  dan Firebase untuk menjalankan platform ini.</p>
+              </div>
+            </div>
+            <div class="info-box purple">
+              <div class="ib-icon">🔐</div>
+              <div class="ib-body">
+                <h4>Firebase Authentication</h4>
+                <p>Login admin dan juri diamankan dengan Firebase Auth menggunakan email dan password. Setiap sesi
+                  tervalidasi secara otomatis oleh Firebase.</p>
+              </div>
+            </div>
+            <!-- <div class="info-box amber">
+              <div class="ib-icon">📦</div>
+              <div class="ib-body">
+                <h4>Konfigurasi Mandiri</h4>
+                <p>Pengguna bisa menghubungkan Firebase mereka sendiri hanya dengan mengunggah file <code>firebase-config.json</code>. Tidak perlu mengubah kode sama sekali.</p>
+              </div>
+            </div> -->
+          </div>
+        </section>
+
+        <!-- CTA -->
+        <div class="cta-box">
+          <h2>Siap Mencoba Ryusei?</h2>
+          <p>Kunjungi platform langsung dan mulai kelola event roleplay virtualmu sekarang juga.</p>
+          <div class="btn-row">
+            <a class="btn btn-primary" href="https://ryuseimanajemen.github.io/ryusei/" target="_blank">
+              Buka Platform <span class="arrow">→</span>
+            </a>
+            <a class="btn btn-outline" href="https://ryuseimanajemen.github.io/ryusei/admin/" target="_blank">
+              Dashboard Admin ↗
+            </a>
+            <a class="btn btn-outline" href="https://github.com/ryuseimanajemen/ryusei" target="_blank">
+              GitHub Repo ↗
+            </a>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <footer>
+    <p>Panduan Fitur — <a href="https://ryuseimanajemen.github.io/ryusei/" target="_blank">RYUSEI Event & Agency
+        Management</a> &nbsp;·&nbsp; © 2025 Ryusei Management. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // ── Active TOC highlight ──
+    const sections = document.querySelectorAll('section[id], div.cta-box');
+    const tocLinks = document.querySelectorAll('.toc a');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(a => a.classList.remove('active'));
+          const active = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -60% 0px' });
+
+    document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+
+    // ── Entrance animations ──
+    const cards = document.querySelectorAll('.card, .crit-card, .role-card, .flow-item');
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          entry.target.style.animation = `fadeUp .5s cubic-bezier(.16,1,.3,1) ${(i % 4) * 80}ms both`;
+          cardObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    cards.forEach(c => cardObserver.observe(c));
+
+    // ── Inject keyframe ──
+    const style = document.createElement('style');
+    style.textContent = `@keyframes fadeUp { from { opacity:0; transform: translateY(24px); } to { opacity:1; transform: none; } }`;
+    document.head.appendChild(style);
+  </script>
+
+</body>
+
+</html>
