@@ -337,6 +337,8 @@
     let db = null, auth = null;
     let isSuperAdmin = false;
     let hasFirebaseConfig = false;
+    let _publishRef = null;
+    let _scoresRef = null;
     function sanitizeKey(key) { return key.replace(/[.#$\[\]]/g, '_'); }
     function applyAdminRole() {
       const restricted = !isSuperAdmin;
@@ -415,9 +417,13 @@
         try { db.ref('settings/adminInvites').off('value', _inviteListener); } catch (e) { };
         _inviteListener = null;
       }
-      if (_publishListener) {
-        try { db.ref(`events/${_publishListener}/published`).off('value'); } catch (e) { };
-        _publishListener = null;
+      if (_publishRef) {
+        try { _publishRef.off('value'); } catch (e) { };
+        _publishRef = null;
+      }
+      if (_scoresRef) {
+        try { _scoresRef.off('value'); } catch (e) { };
+        _scoresRef = null;
       }
     }
     function showPage(page) {
@@ -689,7 +695,7 @@
       await db.ref(`judges/${jid || db.ref('judges').push().key}`).set(data); closeM(); loadJL();
     }
     async function delJ(k) { if (!confirm('Hapus juri?')) return; await db.ref(`judges/${k}`).remove(); loadJL(); }
-    function cpJL(jid) { const base = location.pathname.replace(/\/admin(\/.*)?$/, '/'); const url = `${location.origin}${base}judge/?id=${jid}`; navigator.clipboard.writeText(url).then(() => alert('Link disalin!\n' + url)); }
+    function cpJL(jid) { const baseUrl = location.href.split('/admin')[0]; const url = `${baseUrl}/judge/?id=${jid}`; navigator.clipboard.writeText(url).then(() => alert('Link disalin!\n' + url)); }
     // ── SCORES ──
     function rScores() {
       const mc = document.getElementById('mainContent');
@@ -699,7 +705,9 @@
     function loadSB(eid) {
       if (!eid) { document.getElementById('publishArea').innerHTML = ''; document.getElementById('sb').innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px;font-size:13px">Pilih event</p>'; return; }
       const medals = ['🥇', '🥈', '🥉'];
-      db.ref(`events/${eid}/published`).on('value', snap => {
+      if (_publishRef) _publishRef.off('value');
+      _publishRef = db.ref(`events/${eid}/published`);
+      _publishRef.on('value', snap => {
         const published = !!snap.val();
         const pub = document.getElementById('publishArea');
         if (pub) {
@@ -709,7 +717,9 @@
           </div>`;
         }
       });
-      db.ref(`scores/${eid}`).on('value', async snap => {
+      if (_scoresRef) _scoresRef.off('value');
+      _scoresRef = db.ref(`scores/${eid}`);
+      _scoresRef.on('value', async snap => {
         const sc = snap.val() || {}; const rSnap = await db.ref('registrations').once('value'); const regs = rSnap.val() || {}; // registrations: once is OK, score changes trigger refresh
         const parts = {};
         Object.entries(sc).forEach(([jid, jv]) => { Object.entries(jv).forEach(([code, ps]) => { if (!parts[code]) { parts[code] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[code].t[c] = (parts[code].t[c] || 0) + (ps[c] || 0); }); parts[code].jc++; }); });
