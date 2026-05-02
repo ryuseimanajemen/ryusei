@@ -27,7 +27,7 @@
   - Upload gambar untuk hero icon (max 2MB, disimpan sebagai base64 di Firebase)
   - Field URL gambar eksternal alternatif
   - Field teks icon fallback (default: 竜)
-- Jika tidak ada gambar → tampil favicon `/assets/fav/apple-touch-icon.png`
+- Jika tidak ada gambar → tampil favicon `/ryusei/assets/fav/apple-touch-icon.png`
 - Jika favicon gagal load → tampil teks/kanji default
 
 ### 5. ✅ Upload Gambar Event
@@ -36,7 +36,7 @@
 - Jika lebih dari 2MB, gunakan URL external
 
 ### 6. ✅ Favicon di Semua Halaman
-- Semua halaman (index, admin, judge) kini menggunakan favicon dari `/assets/fav/`
+- Semua halaman (index, admin, judge) kini menggunakan favicon dari `/ryusei/assets/fav/`
 
 ---
 
