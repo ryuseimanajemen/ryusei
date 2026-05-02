@@ -1216,8 +1216,10 @@ async function sendChat() {
     console.error('Chat error:', e);
   }
 
+  setTimeout(() => {
   sendBtn.disabled = false;
   document.getElementById('chatInput').focus();
+}, 2000);
 }
 // ── END CHATBOT ────────────────────────────────────────────────
   </script>
@@ -1242,7 +1244,7 @@ async function sendChat() {
   <div id="chatWindow">
     <div id="chatHeader">
       <div style="display:flex;align-items:center;gap:10px">
-        <div id="chatAvatar">竜</div>
+        <div id="chatAvatar">尺</div>
         <div>
           <div style="font-weight:700;font-size:14px">Ryusei Assistant</div>
           <div style="font-size:11px;opacity:.75">● Online</div>
