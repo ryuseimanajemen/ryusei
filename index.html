@@ -474,7 +474,8 @@
           </h1>
           <p id="heroSubtitle"
             style="font-size:18px;color:var(--text2);margin:28px 0 36px;line-height:1.75;max-width:500px">Platform
-            Terpadu Untuk Manajemen Event Virtual Live Streaming, Pendaftaran Peserta, dan Sistem Penilaian Real-Time.</p>
+            Terpadu Untuk Manajemen Event Virtual Live Streaming, Pendaftaran Peserta, dan Sistem Penilaian Real-Time.
+          </p>
           <div style="display:flex;flex-wrap:wrap;gap:12px">
             <a href="#events" class="btn-primary">Lihat Event →</a>
             <a href="#register" class="btn-secondary">Daftar Sekarang</a>
@@ -711,6 +712,7 @@
 
   <script>
     let db = null;
+    let _lbScoresListener = null;
     // Theme
     const root = document.documentElement;
     const theme = localStorage.getItem('ryusei_theme') || 'dark';
@@ -965,18 +967,30 @@
       if (!eid || !db) { document.getElementById('lbData').innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Pilih event untuk melihat leaderboard</p>'; return; }
       const CRIT = ['interactivity', 'immersion', 'creativity', 'improvisation', 'costume'];
       const CLAB = ['Interac.', 'Immers.', 'Creat.', 'Improv.', 'Costume'];
-      db.ref(`scores/${eid}`).on('value', async snap => {
-        const scores = snap.val() || {}; const rs = await db.ref('registrations').once('value'); const regs = rs.val() || {};
-        const parts = {};
-        Object.entries(scores).forEach(([jid, jv]) => { Object.entries(jv).forEach(([pc, ps]) => { if (!parts[pc]) { parts[pc] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[pc].t[c] = (parts[pc].t[c] || 0) + (ps[c] || 0); }); parts[pc].jc++; }); });
-        const ranked = Object.entries(parts).map(([code, data]) => {
-          const avg = data.jc > 0 ? CRIT.reduce((s, c) => s + (data.t[c] / data.jc), 0) / CRIT.length : 0;
-          return { code, username: regs[code]?.username || code, avg, t: data.t, jc: data.jc };
-        }).sort((a, b) => b.avg - a.avg);
+      if (_lbScoresListener) {
+        try { db.ref(`scores/${_lbScoresListener}`).off('value'); } catch (e) { }
+        _lbScoresListener = null;
+      }
+      db.ref(`events/${eid}/published`).once('value').then(pubSnap => {
+        const published = !!pubSnap.val();
         const div = document.getElementById('lbData');
-        if (!ranked.length) { div.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Belum ada skor</p>'; return; }
-        const medals = ['🥇', '🥈', '🥉'];
-        div.innerHTML = ranked.map((p, i) => `
+        if (!published) {
+          div.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Leaderboard belum dipublikasikan. Silakan tunggu pengumuman resmi dari panitia.</p>';
+          return;
+        }
+        _lbScoresListener = eid;
+        db.ref(`scores/${eid}`).on('value', async snap => {
+          const scores = snap.val() || {}; const rs = await db.ref('registrations').once('value'); const regs = rs.val() || {};
+          const parts = {};
+          Object.entries(scores).forEach(([jid, jv]) => { Object.entries(jv).forEach(([pc, ps]) => { if (!parts[pc]) { parts[pc] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[pc].t[c] = (parts[pc].t[c] || 0) + (ps[c] || 0); }); parts[pc].jc++; }); });
+          const ranked = Object.entries(parts).map(([code, data]) => {
+            const avg = data.jc > 0 ? CRIT.reduce((s, c) => s + (data.t[c] / data.jc), 0) / CRIT.length : 0;
+            return { code, username: regs[code]?.username || code, avg, t: data.t, jc: data.jc };
+          }).sort((a, b) => b.avg - a.avg);
+          const div2 = document.getElementById('lbData');
+          if (!ranked.length) { div2.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Belum ada skor</p>'; return; }
+          const medals = ['🥇', '🥈', '🥉'];
+          div2.innerHTML = ranked.map((p, i) => `
     <div style="background:var(--card);border:1px solid ${i < 3 ? 'rgba(236,72,153,.3)' : 'var(--border)'};border-radius:16px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:16px">
       <div style="width:44px;height:44px;border-radius:12px;${i < 3 ? 'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff' : 'background:var(--bg2);color:var(--text2)'};display:flex;align-items:center;justify-content:center;font-size:${i < 3 ? '22px' : '16px'};font-weight:900;flex-shrink:0">${i < 3 ? medals[i] : i + 1}</div>
       <div style="flex:1;min-width:0">
@@ -990,6 +1004,9 @@
         <p style="font-size:11px;color:var(--text2)">${p.jc} juri</p>
       </div>
     </div>`).join('');
+        });
+      }).catch(() => {
+        document.getElementById('lbData').innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Tidak dapat memuat leaderboard.</p>';
       });
     }
     // Register langsung dari event card

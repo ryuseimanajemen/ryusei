@@ -335,6 +335,32 @@
     const CRIT = ['interactivity', 'immersion', 'creativity', 'improvisation', 'costume'];
     const CLAB = ['Interactivity', 'Immersion', 'Creativity', 'Improvisation', 'Costume'];
     let db = null, auth = null;
+    let isSuperAdmin = false;
+    let hasFirebaseConfig = false;
+    function sanitizeKey(key) { return key.replace(/[.#$\[\]]/g, '_'); }
+    function applyAdminRole() {
+      const restricted = !isSuperAdmin;
+      document.querySelectorAll('.sidebar-item[data-page="cms"], .sidebar-item[data-page="settings"]').forEach(el => el.style.display = restricted ? 'none' : 'flex');
+      if (restricted && (_currentPage === 'cms' || _currentPage === 'settings')) {
+        showPage('dashboard');
+      }
+    }
+    async function determineAdminRole(user) {
+      try {
+        const snap = await db.ref(`settings/adminUsers/${user.uid}`).once('value');
+        const data = snap.val();
+        if (data && (data.role === 'super' || data.role === 'it')) {
+          isSuperAdmin = true;
+        } else {
+          const allSnap = await db.ref('settings/adminUsers').once('value');
+          const all = allSnap.val() || {};
+          isSuperAdmin = Object.keys(all).length === 0;
+        }
+      } catch (e) {
+        isSuperAdmin = false;
+      }
+      applyAdminRole();
+    }
     // Theme
     const root = document.documentElement; const th = localStorage.getItem('ryusei_theme') || 'dark';
     if (th === 'dark') { root.classList.add('dark'); } else { document.getElementById('tBtn').textContent = '🌙'; }
@@ -344,10 +370,20 @@
     function initFB(cfg) {
       try {
         if (firebase.apps.length) { firebase.apps.forEach(a => a.delete()); }
-        if (!cfg) { console.warn('Firebase belum dikonfigurasi.'); return; } firebase.initializeApp(cfg); db = firebase.database(); auth = firebase.auth();
-        auth.onAuthStateChanged(u => {
-          if (u) { document.getElementById('loginScreen').style.display = 'none'; const a = document.getElementById('appShell'); a.style.display = 'flex'; document.getElementById('uEmail').textContent = u.email || 'Admin'; showPage('dashboard'); }
-          else { document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('appShell').style.display = 'none'; }
+        if (!cfg) { console.warn('Firebase belum dikonfigurasi.'); return; }
+        hasFirebaseConfig = true;
+        firebase.initializeApp(cfg); db = firebase.database(); auth = firebase.auth();
+        auth.onAuthStateChanged(async u => {
+          if (u) {
+            document.getElementById('loginScreen').style.display = 'none';
+            const a = document.getElementById('appShell'); a.style.display = 'flex';
+            document.getElementById('uEmail').textContent = u.email || 'Admin';
+            await determineAdminRole(u);
+            showPage('dashboard');
+          } else {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('appShell').style.display = 'none';
+          }
         });
         handleInviteUrl();
       } catch (e) { console.error(e); }
@@ -378,6 +414,10 @@
       if (_inviteListener) {
         try { db.ref('settings/adminInvites').off('value', _inviteListener); } catch (e) { };
         _inviteListener = null;
+      }
+      if (_publishListener) {
+        try { db.ref(`events/${_publishListener}/published`).off('value'); } catch (e) { };
+        _publishListener = null;
       }
     }
     function showPage(page) {
@@ -649,16 +689,26 @@
       await db.ref(`judges/${jid || db.ref('judges').push().key}`).set(data); closeM(); loadJL();
     }
     async function delJ(k) { if (!confirm('Hapus juri?')) return; await db.ref(`judges/${k}`).remove(); loadJL(); }
-    function cpJL(jid) { const url = `${location.origin}/judge/?id=${jid}`; navigator.clipboard.writeText(url).then(() => alert('Link disalin!\n' + url)); }
+    function cpJL(jid) { const base = location.pathname.replace(/\/admin(\/.*)?$/, '/'); const url = `${location.origin}${base}judge/?id=${jid}`; navigator.clipboard.writeText(url).then(() => alert('Link disalin!\n' + url)); }
     // ── SCORES ──
     function rScores() {
       const mc = document.getElementById('mainContent');
-      mc.innerHTML = `<div style="margin-bottom:16px"><select id="scE" class="form-input" onchange="loadSB(this.value)"><option value="">-- Pilih Event --</option></select></div><div id="sb" style="display:flex;flex-direction:column;gap:10px"></div>`;
+      mc.innerHTML = `<div style="margin-bottom:16px"><select id="scE" class="form-input" onchange="loadSB(this.value)"><option value="">-- Pilih Event --</option></select></div><div id="publishArea" style="margin-bottom:16px"></div><div id="sb" style="display:flex;flex-direction:column;gap:10px"></div>`;
       db.ref('events').once('value').then(s => { Object.entries(s.val() || {}).forEach(([k, v]) => { document.getElementById('scE').innerHTML += `<option value="${k}">${v.title}</option>`; }); });
     }
     function loadSB(eid) {
-      if (!eid) { document.getElementById('sb').innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px;font-size:13px">Pilih event</p>'; return; }
+      if (!eid) { document.getElementById('publishArea').innerHTML = ''; document.getElementById('sb').innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px;font-size:13px">Pilih event</p>'; return; }
       const medals = ['🥇', '🥈', '🥉'];
+      db.ref(`events/${eid}/published`).on('value', snap => {
+        const published = !!snap.val();
+        const pub = document.getElementById('publishArea');
+        if (pub) {
+          pub.innerHTML = `<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:${published ? 'rgba(34,197,94,.08)' : 'rgba(245,158,11,.08)'}">
+            <div><p style="font-size:13px;font-weight:700;">Status Publikasi Hasil</p><p style="font-size:12px;color:var(--text2)">${published ? 'Sudah dipublikasikan. Hasil terlihat di halaman publik leaderboard.' : 'Belum dipublikasikan. Klik tombol di samping untuk menampilkan hasil.'}</p></div>
+            <button onclick="toggleLeaderboardPublish('${eid}', ${published ? 'false' : 'true'})" style="padding:10px 14px;border:none;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-weight:700;cursor:pointer;font-size:13px">${published ? 'Tarik Publikasi' : 'Publikasikan Hasil'}</button>
+          </div>`;
+        }
+      });
       db.ref(`scores/${eid}`).on('value', async snap => {
         const sc = snap.val() || {}; const rSnap = await db.ref('registrations').once('value'); const regs = rSnap.val() || {}; // registrations: once is OK, score changes trigger refresh
         const parts = {};
@@ -832,7 +882,7 @@
       if (!name || !phone) { alert('Nama dan nomor WA/telepon wajib diisi'); return; }
       const token = `adm_${Math.random().toString(36).substr(2, 6)}_${Date.now()}`;
       const email = `admin+${token}@ryusei.local`;
-      const payload = { name, phone, email, createdAt: Date.now(), used: false };
+      const payload = { name, phone, email, createdAt: Date.now(), used: false, role: 'staff' };
       db.ref(`settings/adminInvites/${token}`).set(payload).then(() => {
         loadAdminInvites();
         alert('Link undangan admin dibuat. Copy link di daftar undangan.');
@@ -903,8 +953,11 @@
       if (!_inviteToken || !_inviteData) { errEl.textContent = 'Undangan tidak valid atau sudah digunakan'; errEl.style.display = 'block'; return; }
       const email = _inviteData.email || `admin+${_inviteToken}@ryusei.local`;
       try {
-        await auth.createUserWithEmailAndPassword(email, pass);
+        const credential = await auth.createUserWithEmailAndPassword(email, pass);
         await db.ref(`settings/adminInvites/${_inviteToken}`).update({ used: true, usedAt: Date.now(), usedBy: email });
+        if (credential.user && credential.user.uid) {
+          await db.ref(`settings/adminUsers/${credential.user.uid}`).set({ email, role: 'staff', createdAt: Date.now(), inviteToken: _inviteToken });
+        }
         const success = document.getElementById('inviteSuccess');
         if (success) { success.textContent = 'Akun admin berhasil dibuat. Silakan login dengan email dan password ini.'; success.style.display = 'block'; }
         const err = document.getElementById('inviteErr'); if (err) err.style.display = 'none';
@@ -915,6 +968,14 @@
         }, 1800);
       } catch (e) {
         errEl.textContent = e.message || 'Gagal membuat akun admin'; errEl.style.display = 'block';
+      }
+    }
+    async function toggleLeaderboardPublish(eid, publish) {
+      try {
+        await db.ref(`events/${eid}`).update({ published: publish });
+        alert(publish ? '✅ Hasil berhasil dipublikasikan.' : '✅ Publikasi hasil dibatalkan.');
+      } catch (e) {
+        alert('Gagal mengubah status publikasi: ' + e.message);
       }
     }
     // ── MODAL ──
@@ -931,6 +992,10 @@
       if (_iconClicks >= 5) { _iconClicks = 0; openSecretModal(); }
     }
     function openSecretModal() {
+      if (hasFirebaseConfig && !isSuperAdmin) {
+        alert('Akses terbatas. Hanya admin utama/IT yang dapat mengubah konfigurasi Firebase.');
+        return;
+      }
       _secretCfg = null;
       document.getElementById('secretModal').style.display = 'flex';
       document.getElementById('secretPreview').style.display = 'none';
