@@ -1,0 +1,38 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "events": {
+      ".read": true,
+      ".write": true
+    },
+    "registrations": {
+      ".read": true,
+      ".write": true
+    },
+    "judges": {
+      ".read": true,
+      ".write": true
+    },
+    "scores": {
+      ".read": true,
+      ".write": true
+    },
+    "cms": {
+      ".read": true,
+      ".write": true
+    },
+    "stats": {
+      ".read": true,
+      ".write": true
+    },
+    "settings": {
+      ".read": true,
+      ".write": true
+    },
+    "pw_resets": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

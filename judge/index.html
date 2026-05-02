@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/fav/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/fav/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/fav/favicon-16x16.png">
+<link rel="manifest" href="../assets/fav/site.webmanifest">
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Panel Juri — Ryusei Event</title>
+    
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../css/tailwind.min.css"/>
+<!-- Firebase CDN (compat version) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  :root{--bg:#fff;--bg2:#f9fafb;--text:#111827;--text2:#6b7280;--border:#e5e7eb;--card:#fff}
+  .dark{--bg:#030712;--bg2:#111827;--text:#f9fafb;--text2:#9ca3af;--border:#1f2937;--card:#111827}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;transition:background .3s}
+  .gradient-text{background:linear-gradient(135deg,#ec4899,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .btn{padding:12px 24px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;border:none;transition:all .2s}
+  .btn-primary{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
+  .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+  .form-input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-family:inherit}
+  .form-input:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.15)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+  .score-slider{width:100%;height:6px;-webkit-appearance:none;appearance:none;border-radius:99px;outline:none;cursor:pointer;background:linear-gradient(to right,#ec4899 0%,#ec4899 var(--val,50%),#e5e7eb var(--val,50%),#e5e7eb 100%)}
+  .score-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#ec4899;cursor:pointer;border:2px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,.4)}
+  .participant-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;transition:all .2s}
+  .participant-card.scored{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.04)}
+  .participant-card.active-score{border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.1)}
+  .criteria-row{padding:10px 0;border-bottom:1px solid var(--border)}
+  .criteria-row:last-child{border-bottom:none}
+  .tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text2);transition:all .2s}
+  .tab.active{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;color:#fff;font-weight:900">⚖️</div>
+      <h1 style="font-size:24px;font-weight:900">Panel Juri</h1>
+      <p style="color:var(--text2);font-size:14px;margin-top:6px">Masuk untuk mulai menilai</p>
+    </div>
+    <div class="card">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Judge ID</label>
+      <input type="text" id="jLoginId" placeholder="ID juri dari admin..." class="form-input"/></div>
+      <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Password</label>
+      <input type="password" id="jLoginPass" placeholder="••••••••" class="form-input"/></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="judgeLogin()">Masuk →</button>
+      <p id="jErr" style="color:#ef4444;font-size:12px;text-align:center;margin-top:10px;display:none"></p>
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:16px">ID dan password diberikan oleh administrator</p>
+  </div>
+</div>
+
+<!-- MAIN PANEL -->
+<div id="mainView" style="display:none;min-height:100vh">
+  <!-- Header -->
+  <div style="position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:12px">⚖️</div>
+      <div>
+        <p style="font-weight:800;font-size:14px" id="jNameDisplay">Juri</p>
+        <p style="font-size:11px;color:var(--text2)">Panel Penilaian</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="toggleJudgeTheme()" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:14px" id="jThemeBtn">🌙</button>
+      <button onclick="judgeLogout()" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2)">Keluar</button>
+    </div>
+  </div>
+
+  <div style="max-width:720px;margin:0 auto;padding:24px 16px">
+    <!-- Event Select -->
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Pilih Event yang Dinilai</label>
+      <select id="jEventSel" class="form-input" onchange="loadEventParticipants(this.value)"><option value="">-- Pilih Event --</option></select>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:20px;background:var(--bg2);padding:4px;border-radius:10px">
+      <button class="tab active" onclick="switchTab('scoring',this)" id="tabScoring">Scoring</button>
+      <button class="tab" onclick="switchTab('results',this)" id="tabResults">Hasil Saya</button>
+      <button class="tab" onclick="switchTab('leaderboard',this)" id="tabLB">Leaderboard</button>
+    </div>
+
+    <!-- Scoring Tab -->
+    <div id="tabContentScoring">
+      <div id="participantList"><p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Pilih event untuk mulai menilai</p></div>
+    </div>
+
+    <!-- Results Tab -->
+    <div id="tabContentResults" style="display:none">
+      <div id="myResults"><p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Pilih event terlebih dahulu</p></div>
+    </div>
+
+    <!-- Leaderboard Tab -->
+    <div id="tabContentLeaderboard" style="display:none">
+      <div id="lbContent"><p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Pilih event terlebih dahulu</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCORING MODAL -->
+<div id="scoreModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:50;padding:20px;overflow-y:auto;display:none;align-items:flex-start;justify-content:center">
+  <div style="background:var(--card);border-radius:20px;width:100%;max-width:480px;margin:auto" id="scoreModalInner">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)">
+      <h3 style="font-weight:800;font-size:15px" id="scoreModalTitle">Nilai Peserta</h3>
+      <button onclick="closeScoreModal()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:16px;color:var(--text2)">×</button>
+    </div>
+    <div style="padding:20px" id="scoreModalBody"></div>
+  </div>
+</div>
+
+<script>
+
+const CRIT=['interactivity','immersion','creativity','improvisation','costume'];
+const CLAB=['Interactivity','Immersion','Creativity','Improvisation','Costume'];
+const CDESC=['Kemampuan mengajak & melibatkan interaksi','Konsistensi & penghayatan karakter','Keunikan konsep & pengalaman','Respons cepat & adaptasi situasi','Kualitas visual & akurasi kostum'];
+let db=null,judgeId=null,judgeData=null,currentEventId=null;
+
+// Theme
+const root=document.documentElement;
+const t=localStorage.getItem('ryusei_theme')||'dark';
+if(t==='dark'){root.classList.add('dark');}
+// Update theme button after DOM loads
+window.addEventListener('DOMContentLoaded', function() {
+  const b=document.getElementById('jThemeBtn');
+  if(b && t==='dark') b.textContent='☀️';
+});
+
+function toggleJudgeTheme(){const d=root.classList.toggle('dark');localStorage.setItem('ryusei_theme',d?'dark':'light');document.getElementById('jThemeBtn').textContent=d?'☀️':'🌙';}
+// Init
+function init(){
+  try{
+    const saved=localStorage.getItem('ryusei_fb_config');
+    if(!saved){console.warn('Firebase belum dikonfigurasi.');return;}
+    const cfg=JSON.parse(saved);
+    if(!firebase.apps.length)firebase.initializeApp(cfg);
+    db=firebase.database();
+    // Check URL param
+    const urlId=new URLSearchParams(location.search).get('id');
+    if(urlId){document.getElementById('jLoginId').value=urlId;}
+  }catch(e){console.error(e);}
+}
+let _scoreRTListener=null;
+function attachScoreRealtime(eid){
+  if(_scoreRTListener){db.ref(`scores/${_scoreRTListener}`).off('value');_scoreRTListener=null;}
+  if(!eid||!judgeId)return;
+  _scoreRTListener=`${eid}/${judgeId}`;
+  db.ref(`scores/${eid}/${judgeId}`).on('value',()=>{
+    // Re-render participant cards when my scores change
+    if(currentEventId===eid)loadEventParticipants(eid);
+  });
+}
+async function judgeLogin(){
+  const id=document.getElementById('jLoginId').value.trim();
+  const pass=document.getElementById('jLoginPass').value;
+  const err=document.getElementById('jErr');err.style.display='none';
+  if(!id||!pass){err.textContent='ID dan password wajib diisi';err.style.display='block';return;}
+  try{
+    const snap=await db.ref(`judges/${id}`).once('value');
+    const j=snap.val();
+    if(!j){err.textContent='Judge ID tidak ditemukan';err.style.display='block';return;}
+    if(j.password!==pass){err.textContent='Password salah';err.style.display='block';return;}
+    judgeId=id;judgeData=j;
+    document.getElementById('loginView').style.display='none';
+    document.getElementById('mainView').style.display='block';
+    document.getElementById('jNameDisplay').textContent=j.name||'Juri';
+    loadJudgeEvents();
+  }catch(e){err.textContent=e.message;err.style.display='block';}
+}
+// Make judgeLogin globally accessible
+window.judgeLogin = judgeLogin;
+function judgeLogout(){
+  // Cleanup all listeners
+  if(_scoreRTListener){try{db.ref(`scores/${_scoreRTListener}`).off('value');}catch(e){}; _scoreRTListener=null;}
+  if(_myResultsListener){try{db.ref(`scores/${_myResultsListener}`).off('value');}catch(e){}; _myResultsListener=null;}
+  judgeId=null;judgeData=null;currentEventId=null;
+  document.getElementById('loginView').style.display='flex';
+  document.getElementById('mainView').style.display='none';
+}
+async function loadJudgeEvents(){
+  var evList=judgeData&&judgeData.events?judgeData.events:[];
+  if(!evList.length){
+    document.getElementById('participantList').innerHTML='<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Juri belum ditugaskan ke event manapun</p>';
+    return;
+  }
+  const evSnap=await db.ref('events').once('value');
+  const evs=evSnap.val()||{};
+  const sel=document.getElementById('jEventSel');
+  sel.innerHTML='<option value="">-- Pilih Event --</option>';
+  evList.forEach(function(eid){
+    if(evs[eid]) sel.innerHTML+='<option value="'+eid+'">'+evs[eid].title+'</option>';
+  });
+  // Auto-load event pertama yang tersedia
+  var firstEid=evList.find(function(eid){return evs[eid];});
+  if(firstEid){
+    sel.value=firstEid;
+    loadEventParticipants(firstEid);
+  }
+}
+var _partRegCallback=null; // simpan callback function untuk .off()
+async function loadEventParticipants(eid){
+  currentEventId=eid;
+  // Cleanup: detach listener lama dengan callback reference yang benar
+  if(_partRegCallback){
+    try{db.ref('registrations').off('value',_partRegCallback);}catch(e){}
+    _partRegCallback=null;
+  }
+  if(!eid){
+    document.getElementById('participantList').innerHTML='<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Pilih event untuk mulai menilai</p>';
+    return;
+  }
+  document.getElementById('participantList').innerHTML='<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Memuat peserta...</p>';
+  // Simpan eid lokal agar tidak berubah saat listener fire
+  var activeEid=eid;
+  // Callback function disimpan ke variabel agar bisa di-.off() nanti
+  _partRegCallback=function(regSnap){
+    var regs=regSnap.val()||{};
+    // Filter: peserta untuk event ini yang sudah approved
+    var approved=Object.keys(regs).filter(function(c){
+      return regs[c]&&regs[c].eventId===activeEid&&regs[c].status==='approved';
+    });
+    var div=document.getElementById('participantList');
+    if(!div)return;
+    // Ambil skor juri ini untuk event ini
+    db.ref('scores/'+activeEid+'/'+judgeId).once('value').then(function(scoreSnap){
+      var myScores=scoreSnap.val()||{};
+      if(!approved.length){
+        div.innerHTML='<div style="text-align:center;padding:48px 0"><div style="font-size:40px;margin-bottom:12px">👥</div><p style="color:var(--text2);font-size:14px">Belum ada peserta approved untuk event ini</p><p style="color:var(--text2);font-size:12px;margin-top:6px">Pastikan admin sudah approve peserta di halaman admin</p></div>';
+        return;
+      }
+      var scored=approved.filter(function(c){return myScores[c];});
+      // Render progress bar
+      var html='<div style="background:rgba(236,72,153,.08);border:1px solid rgba(236,72,153,.2);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">'
+        +'<span style="font-size:13px;font-weight:600">Progress Penilaian</span>'
+        +'<span style="font-size:13px;font-weight:700;color:#ec4899">'+scored.length+' / '+approved.length+' peserta</span>'
+        +'</div>';
+      // Render tiap kartu peserta
+      approved.forEach(function(code){
+        var r=regs[code];
+        var hasScore=!!myScores[code];
+        var avg=hasScore?CRIT.reduce(function(s,c){return s+(myScores[code][c]||0);},0)/CRIT.length:0;
+        var initials=(r.username||'?')[0].toUpperCase();
+        var scoreData=JSON.stringify(r).replace(/"/g,'&quot;');
+        html+='<div class="participant-card '+(hasScore?'scored':'')+'" id="pcard_'+code+'">'
+          +'<div style="display:flex;align-items:center;gap:12px">'
+          +'<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0">'+initials+'</div>'
+          +'<div style="flex:1;min-width:0">'
+          +'<p style="font-weight:700;font-size:15px">'+r.username+'</p>'
+          +'<p style="font-size:12px;color:var(--text2)">Perform: '+(r.performTime||'—')+' WIB · Kode: <span style="font-family:monospace;color:#ec4899">'+code+'</span></p>'
+          +'</div>'
+          +'<div style="text-align:right;flex-shrink:0">'
+          +(hasScore?'<p style="font-size:20px;font-weight:900;color:#ec4899">'+avg.toFixed(1)+'</p><p style="font-size:11px;color:var(--text2)">avg score</p>':'<span style="font-size:12px;color:var(--text2)">Belum dinilai</span>')
+          +'</div>'
+          +'</div>'
+          +'<button onclick="openScoreModal(\''+code+'\','+scoreData+')" style="width:100%;margin-top:12px;padding:9px;border-radius:10px;'+(hasScore?'background:rgba(34,197,94,.1);color:#16a34a;border:1px solid rgba(34,197,94,.3)':'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none')+';font-weight:700;cursor:pointer;font-size:13px">'
+          +(hasScore?'✓ Edit Nilai →':'Nilai Sekarang →')
+          +'</button>'
+          +'</div>';
+      });
+      div.innerHTML=html;
+    }); // end scores.once
+  }; // end _partRegCallback
+  // Attach listener dengan callback yang tersimpan
+  db.ref('registrations').on('value',_partRegCallback);
+}
+function openScoreModal(code,regData){
+  db.ref(`scores/${currentEventId}/${judgeId}/${code}`).once('value').then(snap=>{
+    const existing=snap.val()||{};
+    document.getElementById('scoreModalTitle').textContent=`Nilai: ${regData.username}`;
+    document.getElementById('scoreModalBody').innerHTML=`
+    <div style="margin-bottom:16px;padding:12px;background:var(--bg2);border-radius:10px">
+      <p style="font-size:12px;color:var(--text2)">Username: <strong>${regData.username}</strong> · Jam Perform: <strong>${regData.performTime||'—'} WIB</strong></p>
+      ${regData.link?`<p style="font-size:12px;margin-top:4px"><a href="${regData.link}" target="_blank" style="color:#ec4899">${regData.link}</a></p>`:''}
+    </div>
+    ${CRIT.map((c,i)=>`
+    <div class="criteria-row">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <p style="font-weight:700;font-size:14px">${CLAB[i]}</p>
+          <p style="font-size:11px;color:var(--text2)">${CDESC[i]}</p>
+        </div>
+        <div style="background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border-radius:8px;padding:4px 12px;font-weight:900;font-size:16px;min-width:42px;text-align:center" id="sv_${c}">${existing[c]||5}</div>
+      </div>
+      <input type="range" min="1" max="10" step="1" value="${existing[c]||5}" class="score-slider" id="s_${c}"
+        style="--val:${((existing[c]||5)-1)/9*100}%"
+        oninput="updateSlider('${c}',this.value)"/>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:10px;color:var(--text2)">1 — Sangat Buruk</span>
+        <span style="font-size:10px;color:var(--text2)">10 — Sempurna</span>
+      </div>
+    </div>`).join('')}
+    <div style="background:rgba(236,72,153,.08);border-radius:10px;padding:12px;margin:16px 0;text-align:center">
+      <p style="font-size:12px;color:var(--text2)">Rata-rata Skor</p>
+      <p style="font-size:28px;font-weight:900;color:#ec4899" id="avgDisplay">${(CRIT.reduce((s,c)=>s+(existing[c]||5),0)/CRIT.length).toFixed(2)}</p>
+    </div>
+    <button onclick="submitScore('${code}')" class="btn btn-primary" style="width:100%;padding:13px">Submit Penilaian →</button>`;
+    document.getElementById('scoreModal').style.display='flex';
+    document.body.style.overflow='hidden';
+  });
+}
+function updateSlider(crit,val){
+  document.getElementById(`sv_${crit}`).textContent=val;
+  document.getElementById(`s_${crit}`).style.setProperty('--val',((val-1)/9*100)+'%');
+  const avg=CRIT.reduce((s,c)=>{const el=document.getElementById(`s_${c}`);return s+(el?parseInt(el.value):5);},0)/CRIT.length;
+  document.getElementById('avgDisplay').textContent=avg.toFixed(2);
+}
+async function submitScore(code){
+  const scores={};
+  CRIT.forEach(c=>{const el=document.getElementById(`s_${c}`);scores[c]=el?parseInt(el.value):5;});
+  const btn=document.querySelector('#scoreModal .btn-primary');
+  if(btn){btn.textContent='Menyimpan...';btn.disabled=true;}
+  try{
+    await db.ref(`scores/${currentEventId}/${judgeId}/${code}`).set(scores);
+    closeScoreModal();
+    // Re-render participant list to reflect new score
+    loadEventParticipants(currentEventId);
+  }catch(e){
+    alert('Gagal simpan: '+e.message);
+    if(btn){btn.textContent='Submit Penilaian →';btn.disabled=false;}
+  }
+}
+function closeScoreModal(){document.getElementById('scoreModal').style.display='none';document.body.style.overflow='';}
+function switchTab(tab,btn){
+  ['scoring','results','leaderboard'].forEach(t=>{
+    document.getElementById(`tabContent${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display=t===tab?'block':'none';
+    document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active',t===tab);
+  });
+  if(tab==='results')loadMyResults();
+  if(tab==='leaderboard')loadJudgeLB();
+}
+// Make all onclick functions globally accessible
+window.judgeLogout = judgeLogout;
+window.toggleJudgeTheme = toggleJudgeTheme;
+window.loadEventParticipants = loadEventParticipants;
+window.openScoreModal = openScoreModal;
+window.updateSlider = updateSlider;
+window.submitScore = submitScore;
+window.closeScoreModal = closeScoreModal;
+window.switchTab = switchTab;
+let _myResultsListener=null;
+function loadMyResults(){
+  if(!currentEventId){document.getElementById('myResults').innerHTML='<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Pilih event terlebih dahulu</p>';return;}
+  if(_myResultsListener){db.ref(`scores/${_myResultsListener}`).off('value');_myResultsListener=null;}
+  _myResultsListener=`${currentEventId}/${judgeId}`;
+  db.ref(`scores/${currentEventId}/${judgeId}`).on('value',async sSnap=>{
+    const sc=sSnap.val()||{};
+    const rSnap=await db.ref('registrations').once('value');const regs=rSnap.val()||{};
+    const div=document.getElementById('myResults');if(!div)return;
+    if(!Object.keys(sc).length){div.innerHTML='<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Belum ada penilaian</p>';return;}
+    div.innerHTML=Object.entries(sc).map(([code,scores])=>{
+      const avg=CRIT.reduce((s,c)=>s+(scores[c]||0),0)/CRIT.length;
+      return`<div class="participant-card scored" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <p style="font-weight:700">${regs[code]?.username||code}</p>
+          <p style="font-size:20px;font-weight:900;color:#ec4899">${avg.toFixed(2)}</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+          ${CRIT.map((c,i)=>`<div style="background:var(--bg2);border-radius:8px;padding:8px;text-align:center">
+            <p style="font-size:10px;color:var(--text2);margin-bottom:2px">${CLAB[i].substring(0,4)}.</p>
+            <p style="font-weight:700;font-size:16px">${scores[c]||0}</p>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+async function loadJudgeLB(){
+  if(!currentEventId){document.getElementById('lbContent').innerHTML='<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Pilih event terlebih dahulu</p>';return;}
+  db.ref(`scores/${currentEventId}`).on('value',async snap=>{
+    const allScores=snap.val()||{};const rSnap=await db.ref('registrations').once('value');const regs=rSnap.val()||{};
+    const parts={};
+    Object.values(allScores).forEach(jScores=>{Object.entries(jScores).forEach(([code,sc])=>{if(!parts[code]){parts[code]={t:{},jc:0};}CRIT.forEach(c=>{parts[code].t[c]=(parts[code].t[c]||0)+(sc[c]||0);});parts[code].jc++;});});
+    const ranked=Object.entries(parts).map(([code,d])=>{const avg=d.jc>0?CRIT.reduce((s,c)=>s+(d.t[c]/d.jc),0)/CRIT.length:0;return{code,username:regs[code]?.username||code,avg,jc:d.jc};}).sort((a,b)=>b.avg-a.avg);
+    const medals=['🥇','🥈','🥉'];const div=document.getElementById('lbContent');
+    div.innerHTML=ranked.map((p,i)=>`<div style="background:var(--card);border:1px solid ${i<3?'rgba(236,72,153,.3)':'var(--border)'};border-radius:14px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:10px;${i<3?'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff':'background:var(--bg2);color:var(--text2)'};display:flex;align-items:center;justify-content:center;font-size:${i<3?'18px':'14px'};font-weight:900;flex-shrink:0">${i<3?medals[i]:i+1}</div>
+      <div style="flex:1"><p style="font-weight:700;font-size:14px">${p.username}</p><p style="font-size:11px;color:var(--text2)">${p.jc} juri telah menilai</p></div>
+      <p style="font-size:22px;font-weight:900;color:${i===0?'#eab308':i===1?'#9ca3af':i===2?'#d97706':'var(--text)'}">${p.avg.toFixed(2)}</p>
+    </div>`).join('');
+  });
+}
+init();
+</script>
+</body>
+</html>

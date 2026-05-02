@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+<meta charset="UTF-8"/>
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/fav/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/fav/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/fav/favicon-16x16.png">
+<link rel="manifest" href="../assets/fav/site.webmanifest">
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Ryusei CMS — Admin</title>
+    
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../css/tailwind.min.css"/>
+<!-- Firebase CDN (compat version) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<style>
+  .gradient-text{background:linear-gradient(135deg,#ec4899,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .sidebar-item{transition:all .2s;cursor:pointer}
+  .sidebar-item.active{background:linear-gradient(135deg,rgba(236,72,153,.15),rgba(168,85,247,.15));border-left:3px solid #ec4899}
+  .sidebar-item:not(.active):hover{background:rgba(236,72,153,.06)}
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#374151;border-radius:99px}
+  .modal-bg{background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+  :root{--bg:#fff;--bg2:#f9fafb;--text:#111;--text2:#6b7280;--border:#e5e7eb;--card:#fff}
+  html.dark{--bg:#030712;--bg2:#111827;--text:#f9fafb;--text2:#9ca3af;--border:#1f2937;--card:#111827}
+  body{background:var(--bg2);color:var(--text);font-family:system-ui,sans-serif;transition:background .3s,color .3s}
+  .form-input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-family:inherit;transition:all .2s}
+  .form-input:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.12)}
+  .btn-grad{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+  .btn-grad:hover{opacity:.9;transform:translateY(-1px)}
+  .card-admin{background:var(--card);border:1px solid var(--border);border-radius:16px}
+</style>
+</head>
+<body style="min-height:100vh">
+
+<!-- LOGIN -->
+<div id="loginScreen" style="position:fixed;inset:0;background:#030712;display:flex;align-items:center;justify-content:center;z-index:50;padding:20px">
+  <div style="width:100%;max-width:340px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#fff;font-weight:900;font-size:20px">R</div>
+      <h1 style="color:#fff;font-size:22px;font-weight:900">RYUSEI Admin</h1>
+      <p style="color:#6b7280;font-size:13px;margin-top:4px">Masuk ke dashboard</p>
+    </div>
+    <div style="background:#111827;border:1px solid #1f2937;border-radius:20px;padding:22px">
+      <div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@ryusei.com" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder:text-gray-600 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all" style="outline:none;font-family:inherit"/></div>
+      <div style="margin-bottom:18px"><label style="display:block;font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder:text-gray-600 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all" style="outline:none;font-family:inherit" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button onclick="doLogin()" style="width:100%;padding:12px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer">Masuk →</button>
+      <p id="loginErr" style="color:#f87171;font-size:12px;text-align:center;margin-top:10px;display:none"></p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appShell" style="display:none;height:100vh;flex-direction:row;overflow:hidden">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar" style="width:240px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:all .3s;overflow-y:auto">
+    <div style="padding:16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:13px">R</div>
+        <div><p style="font-weight:800;font-size:13px">RYUSEI</p><p style="font-size:11px;color:var(--text2)">Event Management</p></div>
+      </div>
+    </div>
+    <nav style="flex:1;padding:10px">
+      <p style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px">Menu Utama</p>
+      <button onclick="showPage('dashboard')" class="sidebar-item" data-page="dashboard" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>📊</span>Dashboard</button><button onclick="showPage('events')" class="sidebar-item" data-page="events" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>🎭</span>Event</button><button onclick="showPage('participants')" class="sidebar-item" data-page="participants" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>👥</span>Peserta</button><button onclick="showPage('judges')" class="sidebar-item" data-page="judges" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>⚖️</span>Juri</button><button onclick="showPage('scores')" class="sidebar-item" data-page="scores" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>🏆</span>Leaderboard</button>
+      <p style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px;margin-top:8px">Kustomisasi</p>
+      <button onclick="showPage('cms')" class="sidebar-item" data-page="cms" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>🖼️</span>Landing Page CMS</button><button onclick="showPage('settings')" class="sidebar-item" data-page="settings" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>⚙️</span>Settings</button>
+    </nav>
+    <div style="padding:10px;border-top:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">A</div>
+        <div style="flex:1;min-width:0"><p style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="uEmail">Admin</p><p style="font-size:11px;color:var(--text2)">Administrator</p></div>
+        <button onclick="doLogout()" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;color:var(--text2)" title="Logout">↩</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <header style="background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="toggleSidebar()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:14px">☰</button>
+        <h2 id="pageTitle" style="font-size:14px;font-weight:700">Dashboard</h2>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="tBtn" onclick="toggleAdminTheme()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:14px">☀️</button>
+        <a href="../" style="font-size:12px;color:var(--text2);text-decoration:none" onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">↗ Landing</a>
+      </div>
+    </header>
+    <main id="mainContent" style="flex:1;overflow-y:auto;padding:20px"></main>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:50;padding:20px;overflow-y:auto;align-items:flex-start;justify-content:center">
+  <div style="background:var(--card);border-radius:20px;width:100%;max-width:500px;margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
+      <h3 id="mTitle" style="font-weight:700;font-size:14px"></h3>
+      <button onclick="closeM()" style="width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:16px;color:var(--text2)">×</button>
+    </div>
+    <div id="mBody" style="padding:20px"></div>
+  </div>
+</div>
+
+<script>
+const CRIT=['interactivity','immersion','creativity','improvisation','costume'];
+const CLAB=['Interactivity','Immersion','Creativity','Improvisation','Costume'];
+let db=null,auth=null;
+// Theme
+const root=document.documentElement;const th=localStorage.getItem('ryusei_theme')||'dark';
+if(th==='dark'){root.classList.add('dark');}else{document.getElementById('tBtn').textContent='🌙';}
+function toggleAdminTheme(){const d=root.classList.toggle('dark');localStorage.setItem('ryusei_theme',d?'dark':'light');document.getElementById('tBtn').textContent=d?'☀️':'🌙';}
+function toggleSidebar(){const s=document.getElementById('sidebar');s.style.display=s.style.display==='none'?'flex':'none';}
+// Firebase
+function initFB(cfg){
+  try{if(firebase.apps.length){firebase.apps.forEach(a=>a.delete());}
+  if(!cfg){console.warn('Firebase belum dikonfigurasi.');return;}firebase.initializeApp(cfg);db=firebase.database();auth=firebase.auth();
+  auth.onAuthStateChanged(u=>{
+    if(u){document.getElementById('loginScreen').style.display='none';const a=document.getElementById('appShell');a.style.display='flex';document.getElementById('uEmail').textContent=u.email||'Admin';showPage('dashboard');}
+    else{document.getElementById('loginScreen').style.display='flex';document.getElementById('appShell').style.display='none';}
+  });}catch(e){console.error(e);}
+}
+async function doLogin(){
+  const em=document.getElementById('loginEmail').value.trim(),pw=document.getElementById('loginPass').value,err=document.getElementById('loginErr');
+  err.style.display='none';if(!em||!pw){err.textContent='Email & password wajib';err.style.display='block';return;}
+  try{await auth.signInWithEmailAndPassword(em,pw);}catch(e){err.textContent=e.message;err.style.display='block';}
+}
+function doLogout(){auth.signOut();}
+// Navigation
+const pageTitles={dashboard:'Dashboard',events:'Manajemen Event',participants:'Peserta',judges:'Juri',scores:'Leaderboard',cms:'Landing Page CMS',settings:'Settings'};
+let _currentPage=null;
+function cleanupListeners(){
+  // Detach all real-time listeners before switching page to avoid memory leaks
+  if(_evListener){try{db.ref('events').off('value',_evListener);}catch(e){}; _evListener=null;}
+  if(_partListener){try{db.ref('registrations').off('value',_partListener);}catch(e){}; _partListener=null;}
+  if(_judgeListener){try{db.ref('judges').off('value',_judgeListener);}catch(e){}; _judgeListener=null;}
+}
+function showPage(page){
+  if(_currentPage===page)return;
+  cleanupListeners();
+  _currentPage=page;
+  document.querySelectorAll('.sidebar-item').forEach(el=>{el.classList.toggle('active',el.dataset.page===page);});
+  document.getElementById('pageTitle').textContent=pageTitles[page]||page;
+  const mc=document.getElementById('mainContent');mc.innerHTML='<p style="text-align:center;padding:40px;color:var(--text2);font-size:13px">Memuat...</p>';
+  setTimeout(()=>{
+    if(page==='dashboard')rDash();
+    else if(page==='events')rEvents();
+    else if(page==='participants')rParts();
+    else if(page==='judges')rJudges();
+    else if(page==='scores')rScores();
+    else if(page==='cms')rCMS();
+    else if(page==='settings')rSettings();
+  },40);
+}
+// ── DASHBOARD ──
+function rDash(){
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+  ${[['Total Event','dE','🎭','from-pink-500'],['Peserta','dP','👥','from-purple-500'],['Juri','dJ','⚖️','from-teal-500'],['Pending','dPend','⏳','from-amber-500']].map(([l,id,ic,g])=>`
+  <div class="card-admin" style="padding:16px;transition:transform .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+    <div style="font-size:28px;margin-bottom:10px">${ic}</div>
+    <div style="font-size:24px;font-weight:900" id="${id}">—</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:4px">${l}</div>
+  </div>`).join('')}
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card-admin" style="overflow:hidden">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <h3 style="font-weight:700;font-size:13px">Pendaftaran Terbaru</h3>
+        <button onclick="showPage('participants')" style="font-size:12px;color:#ec4899;background:none;border:none;cursor:pointer">Lihat Semua →</button>
+      </div>
+      <div id="rRegs"></div>
+    </div>
+    <div class="card-admin" style="overflow:hidden">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <h3 style="font-weight:700;font-size:13px">Event Aktif</h3>
+        <button onclick="showPage('events')" style="font-size:12px;color:#ec4899;background:none;border:none;cursor:pointer">Kelola →</button>
+      </div>
+      <div id="rEvs"></div>
+    </div>
+  </div>`;
+  // FIX: Pasang semua listeners SETELAH innerHTML selesai (requestAnimationFrame)
+  // untuk memastikan element dE, dP, dPend, dJ, rEvs, rRegs sudah ada di DOM
+  requestAnimationFrame(function(){
+    db.ref('events').on('value',s=>{
+      const evData=s.val()||{};const c=Object.keys(evData).length;
+      const dE=document.getElementById('dE');if(dE)dE.textContent=c;
+      const div=document.getElementById('rEvs');if(!div)return;
+      const arr=Object.entries(evData);
+      if(!arr.length){div.innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Belum ada event</p>';return;}
+      // FIX: hitung peserta per event dari registrations bukan v.participants
+      db.ref('registrations').once('value').then(rs=>{
+        const allRegs=rs.val()||{};
+        div.innerHTML=arr.map(([k,v])=>{
+          const cnt=Object.values(allRegs).filter(r=>r&&r.eventId===k).length;
+          return`<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)"><span style="font-size:18px">🎭</span><div style="flex:1"><p style="font-size:13px;font-weight:600">${v.title}</p><p style="font-size:11px;color:var(--text2)">${v.date||'—'}</p></div><span style="font-size:11px;color:var(--text2)">${cnt} peserta</span></div>`;
+        }).join('');
+      });
+    });
+    // FIX: Stat Peserta real-time dari registrations langsung
+    db.ref('registrations').on('value',s=>{
+      const r=s.val()||{};const all=Object.values(r);
+      const dP=document.getElementById('dP');const dPend=document.getElementById('dPend');
+      if(dP)dP.textContent=all.length;
+      if(dPend)dPend.textContent=all.filter(x=>x.status==='pending').length;
+      const div=document.getElementById('rRegs');if(!div)return;
+      const sorted=Object.entries(r).sort((a,b)=>(b[1].registeredAt||0)-(a[1].registeredAt||0)).slice(0,5);
+      if(!sorted.length){div.innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Belum ada pendaftaran</p>';return;}
+      div.innerHTML=sorted.map(([code,reg])=>`<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">${(reg.username||'?')[0].toUpperCase()}</div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${reg.username}</p><p style="font-size:11px;color:var(--text2);font-family:monospace">${code}</p></div><span style="padding:3px 8px;border-radius:99px;font-size:11px;font-weight:700;background:${reg.status==='approved'?'rgba(34,197,94,.1)':reg.status==='rejected'?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};color:${reg.status==='approved'?'#16a34a':reg.status==='rejected'?'#dc2626':'#d97706'}">${reg.status==='approved'?'✓':reg.status==='rejected'?'✗':'⏳'}</span></div>`).join('');
+    });
+    db.ref('judges').on('value',s=>{const dJ=document.getElementById('dJ');if(dJ)dJ.textContent=Object.keys(s.val()||{}).length;});
+  });
+}
+// ── EVENTS ──
+function rEvents(){
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn-grad" onclick="oEM()">+ Tambah Event</button></div><div id="evL" class="space-y-3"></div>`;
+  loadEL();
+}
+let _evListener=null;
+function loadEL(){
+  if(_evListener){db.ref('events').off('value',_evListener);_evListener=null;}
+  _evListener=db.ref('events').on('value',s=>{
+    const evs=s.val()||{};const div=document.getElementById('evL');if(!div)return;
+    const arr=Object.entries(evs);
+    if(!arr.length){div.innerHTML='<div class="card-admin" style="padding:48px;text-align:center;color:var(--text2)"><div style="font-size:48px;margin-bottom:12px">🎭</div><p style="font-size:14px">Belum ada event. Tambah event baru!</p></div>';return;}
+    div.innerHTML=arr.map(([k,v])=>`
+    <div class="card-admin" style="padding:14px 16px;display:flex;align-items:center;gap:14px">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(168,85,247,.2));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎭</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+          <p style="font-weight:700;font-size:14px">${v.title}</p>
+          <span style="padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(34,197,94,.1);color:#16a34a">${v.status||'active'}</span>
+        </div>
+        <p style="font-size:12px;color:var(--text2)">${v.date||'Belum ada tanggal'} · ${Object.keys(v.participants||{}).length} peserta</p>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="oEM('${k}')" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);cursor:pointer;font-size:14px" title="Edit">✏️</button>
+        <button onclick="delEv('${k}')" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);cursor:pointer;font-size:14px" title="Hapus">🗑️</button>
+      </div>
+    </div>`).join('');
+  });
+}
+async function oEM(eid=''){
+  let ev={title:'',description:'',date:'',regDeadline:'',image:'',benefit:'',ketentuan:'',status:'active'};
+  if(eid){const s=await db.ref(`events/${eid}`).once('value');ev={...ev,...(s.val()||{})};}
+  openM(eid?'Edit Event':'Tambah Event Baru',`<div style="display:flex;flex-direction:column;gap:12px">
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">JUDUL EVENT *</label><input type="text" id="eT" value="${ev.title}" class="form-input" placeholder="Nama event..."/></div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">DESKRIPSI</label><textarea id="eD" rows="3" class="form-input" style="resize:none" placeholder="Deskripsi event...">${ev.description}</textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">TANGGAL EVENT</label><input type="date" id="eDt" value="${ev.date}" class="form-input"/></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">BATAS DAFTAR</label><input type="date" id="eDl" value="${ev.regDeadline}" class="form-input"/></div>
+    </div>
+    <div>
+      <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">GAMBAR EVENT</label>
+      ${ev.image?`<div style="margin-bottom:8px"><img src="${ev.image}" style="max-height:80px;border-radius:8px;object-fit:cover" onerror="this.style.display='none'"/></div>`:''}
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <label style="padding:8px 14px;background:rgba(236,72,153,.1);border:1px solid rgba(236,72,153,.3);color:#ec4899;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;text-align:center;display:block">
+          📁 Upload Gambar (max 2MB)
+          <input type="file" id="eImgFile" accept="image/*" style="display:none" onchange="previewEventImg(this)"/>
+        </label>
+        <input type="url" id="eI" value="${ev.image||''}" class="form-input" placeholder="Atau masukkan URL gambar https://..."/>
+        <input type="hidden" id="eImgData"/>
+      </div>
+      <div id="eImgPreview" style="${ev.image?'':'display:none'}"></div>
+    </div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">BENEFIT / HADIAH</label><textarea id="eB" rows="2" class="form-input" style="resize:none">${ev.benefit}</textarea></div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">KETENTUAN & ATURAN</label><textarea id="eK" rows="3" class="form-input" style="resize:none">${ev.ketentuan}</textarea></div>
+    <div style="display:flex;gap:10px;padding-top:6px">
+      <button onclick="saveEv('${eid}')" class="btn-grad" style="flex:1;justify-content:center">${eid?'Simpan Perubahan':'Buat Event'}</button>
+      <button onclick="closeM()" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:13px;color:var(--text2)">Batal</button>
+    </div>
+  </div>`);
+}
+async function saveEv(eid){
+  const imgData=document.getElementById('eImgData')?document.getElementById('eImgData').value:'';
+  const imgUrl=document.getElementById('eI')?document.getElementById('eI').value.trim():'';
+  const finalImg=imgData||imgUrl;
+  const data={title:document.getElementById('eT').value.trim(),description:document.getElementById('eD').value.trim(),date:document.getElementById('eDt').value,regDeadline:document.getElementById('eDl').value,image:finalImg,benefit:document.getElementById('eB').value.trim(),ketentuan:document.getElementById('eK').value.trim(),status:'active',criteria:CRIT};
+  if(!data.title){alert('Judul wajib!');return;}
+  await db.ref(`events/${eid||db.ref('events').push().key}`).set(data);closeM();loadEL();
+}
+function previewEventImg(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>2*1024*1024){alert('Gambar terlalu besar! Max 2MB. Gunakan URL external atau compress dahulu.');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const dataUrl=e.target.result;
+    const dataEl=document.getElementById('eImgData');if(dataEl)dataEl.value=dataUrl;
+    const urlEl=document.getElementById('eI');if(urlEl)urlEl.value='';
+    const prev=document.getElementById('eImgPreview');
+    if(prev){prev.style.display='block';prev.innerHTML=`<img src="${dataUrl}" style="max-height:80px;border-radius:8px;margin-top:6px;object-fit:cover"/>`;}
+  };
+  reader.readAsDataURL(file);
+}
+async function delEv(k){if(!confirm('Hapus event?'))return;await db.ref(`events/${k}`).remove();loadEL();}
+// ── PARTICIPANTS ──
+function rParts(){
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <select id="pfE" class="form-input" style="flex:1;min-width:150px"><option value="">Semua Event</option></select>
+    <select id="pfS" class="form-input" style="flex:1;min-width:120px"><option value="">Semua Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+  </div><div id="pL" style="display:flex;flex-direction:column;gap:8px"></div>`;
+  db.ref('events').once('value').then(s=>{Object.entries(s.val()||{}).forEach(([k,v])=>{document.getElementById('pfE').innerHTML+=`<option value="${k}">${v.title}</option>`;});});
+  document.getElementById('pfE').addEventListener('change',loadPL);document.getElementById('pfS').addEventListener('change',loadPL);loadPL();
+}
+let _partListener=null;
+function loadPL(){
+  const ef=document.getElementById('pfE')?.value||'',sf=document.getElementById('pfS')?.value||'';
+  if(_partListener){db.ref('registrations').off('value',_partListener);_partListener=null;}
+  _partListener=db.ref('registrations').on('value',s=>{
+    const regs=s.val()||{};let arr=Object.entries(regs);
+    if(ef)arr=arr.filter(([k,v])=>v.eventId===ef);if(sf)arr=arr.filter(([k,v])=>v.status===sf);
+    arr.sort((a,b)=>b[1].registeredAt-a[1].registeredAt);
+    const div=document.getElementById('pL');if(!div){if(_partListener){db.ref('registrations').off('value',_partListener);_partListener=null;}return;}
+    if(!arr.length){div.innerHTML='<div class="card-admin" style="padding:40px;text-align:center;color:var(--text2);font-size:13px">Tidak ada peserta</div>';return;}
+    div.innerHTML=arr.map(([code,r])=>`
+    <div class="card-admin" style="padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">${(r.username||'?')[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <p style="font-size:13px;font-weight:700">${r.username}</p>
+        <p style="font-size:11px;color:var(--text2)">Kode: <span style="font-family:monospace;color:#ec4899">${code}</span> · Perform: ${r.performTime||'—'} WIB</p>
+        ${r.link?`<a href="${r.link}" target="_blank" style="font-size:11px;color:#60a5fa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:200px">${r.link}</a>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
+        ${r.status!=='approved'?`<button onclick="upRS('${code}','approved')" style="padding:6px 12px;background:rgba(34,197,94,.1);color:#16a34a;border:1px solid rgba(34,197,94,.3);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">✓ Approve</button>`:''}
+        ${r.status!=='rejected'?`<button onclick="upRS('${code}','rejected')" style="padding:6px 12px;background:rgba(239,68,68,.1);color:#dc2626;border:1px solid rgba(239,68,68,.3);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">✗ Reject</button>`:''}
+        ${r.status==='approved'?`<span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(34,197,94,.1);color:#16a34a">✓ Approved</span>`:''}
+        <button onclick="delR('${code}','${r.eventId}')" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(239,68,68,.2);background:rgba(239,68,68,.05);cursor:pointer;font-size:12px" title="Hapus">🗑️</button>
+      </div>
+    </div>`).join('');
+  });
+}
+async function upRS(code,status){await db.ref(`registrations/${code}/status`).set(status);}
+async function delR(code,eid){if(!confirm('Hapus?'))return;await db.ref(`registrations/${code}`).remove();if(eid)await db.ref(`events/${eid}/participants/${code}`).remove();loadPL();}
+// ── JUDGES ──
+function rJudges(){
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn-grad" onclick="oJM()">+ Tambah Juri</button></div><div id="jL" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>`;
+  loadJL();
+}
+let _judgeListener=null;
+function loadJL(){
+  if(_judgeListener){db.ref('judges').off('value',_judgeListener);_judgeListener=null;}
+  _judgeListener=db.ref('judges').on('value',async snap=>{
+    const judges=snap.val()||{};const div=document.getElementById('jL');if(!div){if(_judgeListener){db.ref('judges').off('value',_judgeListener);_judgeListener=null;}return;}
+    const arr=Object.entries(judges);
+    if(!arr.length){div.innerHTML='<div style="grid-column:1/-1" class="card-admin"><p style="text-align:center;padding:40px;color:var(--text2);font-size:13px">Belum ada juri</p></div>';return;}
+    const evSnap=await db.ref('events').once('value');const evs=evSnap.val()||{};
+    div.innerHTML=arr.map(([k,j])=>`
+    <div class="card-admin" style="padding:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#14b8a6,#22c55e);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px">${(j.name||'J')[0].toUpperCase()}</div>
+        <div style="flex:1;min-width:0"><p style="font-weight:700;font-size:14px">${j.name}</p><p style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${j.email||'—'}</p></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <p style="font-size:11px;color:var(--text2);margin-bottom:6px">Event yang dinilai:</p>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${(j.events||[]).length?j.events.map(eid=>`<span style="padding:2px 8px;border-radius:99px;background:rgba(168,85,247,.1);color:#9333ea;font-size:11px;font-weight:600">${evs[eid]?.title||eid}</span>`).join(''):
+          '<span style="font-size:11px;color:var(--text2)">Belum ada event</span>'}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="oJM('${k}')" style="flex:1;padding:7px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);color:#60a5fa;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">Edit</button>
+        <button onclick="delJ('${k}')" style="flex:1;padding:7px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);color:#f87171;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">Hapus</button>
+        <button onclick="cpJL('${k}')" style="width:32px;height:32px;border:1px solid var(--border);background:transparent;border-radius:8px;cursor:pointer;font-size:14px" title="Copy link">🔗</button>
+      </div>
+    </div>`).join('');
+  });
+}
+async function oJM(jid=''){
+  let j={name:'',email:'',password:'',events:[]};
+  if(jid){const s=await db.ref(`judges/${jid}`).once('value');j={...j,...(s.val()||{})};}
+  const es=await db.ref('events').once('value');const evs=es.val()||{};
+  openM(jid?'Edit Juri':'Tambah Juri',`<div style="display:flex;flex-direction:column;gap:12px">
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">NAMA JURI *</label><input type="text" id="jN" value="${j.name}" class="form-input" placeholder="Nama lengkap..."/></div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">EMAIL</label><input type="email" id="jE" value="${j.email}" class="form-input" placeholder="juri@email.com"/></div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">PASSWORD PANEL</label><input type="text" id="jP" value="${j.password}" class="form-input" style="font-family:monospace" placeholder="password juri..."/></div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">ASSIGN KE EVENT</label>
+    <div style="border:1px solid var(--border);border-radius:10px;padding:8px;max-height:160px;overflow-y:auto" id="jEW">
+      ${Object.entries(evs).map(([k,v])=>`<label style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;transition:background .2s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
+        <input type="checkbox" value="${k}" ${(j.events||[]).includes(k)?'checked':''} style="accent-color:#ec4899"/>
+        <span style="font-size:13px">${v.title}</span></label>`).join('')||'<p style="font-size:12px;color:var(--text2);padding:8px">Belum ada event</p>'}
+    </div></div>
+    <div style="display:flex;gap:10px;padding-top:6px">
+      <button onclick="saveJ('${jid}')" class="btn-grad" style="flex:1;justify-content:center">${jid?'Simpan':'Tambah'}</button>
+      <button onclick="closeM()" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:13px;color:var(--text2)">Batal</button>
+    </div>
+  </div>`);
+}
+async function saveJ(jid){
+  const evs=Array.from(document.querySelectorAll('#jEW input:checked')).map(c=>c.value);
+  const data={name:document.getElementById('jN').value.trim(),email:document.getElementById('jE').value.trim(),password:document.getElementById('jP').value.trim(),events:evs,createdAt:Date.now()};
+  if(!data.name){alert('Nama wajib!');return;}
+  await db.ref(`judges/${jid||db.ref('judges').push().key}`).set(data);closeM();loadJL();
+}
+async function delJ(k){if(!confirm('Hapus juri?'))return;await db.ref(`judges/${k}`).remove();loadJL();}
+function cpJL(jid){const url=`${location.origin}/judge/?id=${jid}`;navigator.clipboard.writeText(url).then(()=>alert('Link disalin!\n'+url));}
+// ── SCORES ──
+function rScores(){
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`<div style="margin-bottom:16px"><select id="scE" class="form-input" onchange="loadSB(this.value)"><option value="">-- Pilih Event --</option></select></div><div id="sb" style="display:flex;flex-direction:column;gap:10px"></div>`;
+  db.ref('events').once('value').then(s=>{Object.entries(s.val()||{}).forEach(([k,v])=>{document.getElementById('scE').innerHTML+=`<option value="${k}">${v.title}</option>`;});});
+}
+function loadSB(eid){
+  if(!eid){document.getElementById('sb').innerHTML='<p style="text-align:center;color:var(--text2);padding:40px;font-size:13px">Pilih event</p>';return;}
+  const medals=['🥇','🥈','🥉'];
+  db.ref(`scores/${eid}`).on('value',async snap=>{
+    const sc=snap.val()||{};const rSnap=await db.ref('registrations').once('value');const regs=rSnap.val()||{}; // registrations: once is OK, score changes trigger refresh
+    const parts={};
+    Object.entries(sc).forEach(([jid,jv])=>{Object.entries(jv).forEach(([code,ps])=>{if(!parts[code]){parts[code]={t:{},jc:0};}CRIT.forEach(c=>{parts[code].t[c]=(parts[code].t[c]||0)+(ps[c]||0);});parts[code].jc++;});});
+    const ranked=Object.entries(parts).map(([code,d])=>{const avg=d.jc>0?CRIT.reduce((s,c)=>s+(d.t[c]/d.jc),0)/CRIT.length:0;return{code,username:regs[code]?.username||code,avg,t:d.t,jc:d.jc};}).sort((a,b)=>b.avg-a.avg);
+    const div=document.getElementById('sb');if(!div)return;
+    if(!ranked.length){div.innerHTML='<p style="text-align:center;color:var(--text2);padding:40px;font-size:13px">Belum ada skor</p>';return;}
+    div.innerHTML=ranked.map((p,i)=>`
+    <div class="card-admin" style="padding:14px 16px;display:flex;align-items:center;gap:14px">
+      <div style="width:42px;height:42px;border-radius:12px;${i<3?'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff':'background:var(--bg2);color:var(--text2)'};display:flex;align-items:center;justify-content:center;font-size:${i<3?'20px':'15px'};font-weight:900;flex-shrink:0">${i<3?medals[i]:i+1}</div>
+      <div style="flex:1;min-width:0">
+        <p style="font-weight:700;font-size:14px;margin-bottom:6px">${p.username}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${CRIT.map((c,ci)=>`<span style="padding:3px 8px;background:var(--bg2);border-radius:6px;font-size:11px"><span style="color:var(--text2)">${CLAB[ci].substring(0,3)}: </span><span style="font-weight:700">${p.jc>0?(p.t[c]/p.jc).toFixed(1):'—'}</span></span>`).join('')}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <p style="font-size:24px;font-weight:900;color:${i===0?'#eab308':i===1?'#9ca3af':i===2?'#d97706':'var(--text)'}">${p.avg.toFixed(2)}</p>
+        <p style="font-size:11px;color:var(--text2)">${p.jc} juri</p>
+      </div>
+    </div>`).join('');
+  });
+}
+// ── CMS ──
+function rCMS(){
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`<div class="card-admin" style="padding:24px;max-width:700px">
+    <h3 style="font-weight:700;font-size:14px;margin-bottom:18px">Hero Section</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">HERO TITLE</label><input type="text" id="cHT" class="form-input" placeholder="Judul utama..."/></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">HERO SUBTITLE</label><textarea id="cHS" rows="2" class="form-input" style="resize:none" placeholder="Teks subtitle..."></textarea></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">HERO IMAGE / ICON ANIMASI</label>
+      <div style="border:2px dashed var(--border);border-radius:12px;padding:16px;text-align:center" id="heroImgDrop">
+        <div id="heroImgPreview" style="margin-bottom:12px;display:none">
+          <img id="heroImgThumb" src="" alt="Preview" style="max-height:120px;border-radius:10px;object-fit:cover"/>
+        </div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Upload gambar untuk hero icon (akan mengganti animasi default)</p>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <label style="padding:8px 16px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700">
+            📁 Pilih Gambar
+            <input type="file" id="heroImgFile" accept="image/*" style="display:none" onchange="previewHeroImg(this)"/>
+          </label>
+          <button onclick="clearHeroImg()" style="padding:8px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:12px;color:var(--text2)">✕ Hapus Gambar</button>
+        </div>
+        <input type="hidden" id="cHeroImg"/>
+        <p style="font-size:11px;color:var(--text2);margin-top:8px">Atau masukkan URL gambar:</p>
+        <input type="url" id="cHeroImgUrl" class="form-input" style="margin-top:6px" placeholder="https://... (opsional)"/>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">HERO ICON TEXT (jika tidak ada gambar)</label>
+      <input type="text" id="cHeroIconTxt" class="form-input" placeholder="竜 (default karakter kanji)"/>
+    </div>
+    <h3 style="font-weight:700;font-size:14px;margin-bottom:14px;padding-top:16px;border-top:1px solid var(--border)">About Section</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">ABOUT TITLE</label><input type="text" id="cAT" class="form-input" placeholder="Judul about..."/></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">ABOUT DESCRIPTION</label><textarea id="cAD" rows="3" class="form-input" style="resize:none" placeholder="Deskripsi..."></textarea></div>
+    </div>
+    <h3 style="font-weight:700;font-size:14px;margin-bottom:14px;padding-top:16px;border-top:1px solid var(--border)">Contact Section</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">CONTACT TEXT</label><input type="text" id="cCD" class="form-input" placeholder="Teks kontak..."/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">WHATSAPP URL</label><input type="url" id="cWA" class="form-input" placeholder="https://wa.me/..."/></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">DISCORD URL</label><input type="url" id="cDC" class="form-input" placeholder="https://discord.gg/..."/></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">INSTAGRAM URL</label><input type="url" id="cIG" class="form-input" placeholder="https://instagram.com/..."/></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <button onclick="saveCMS()" class="btn-grad">💾 Simpan ke Firebase</button>
+      <button onclick="loadCF()" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:13px;color:var(--text2)">↺ Reset dari DB</button>
+    </div>
+  </div>`;
+  loadCF();
+}
+function loadCF(){
+  db.ref('cms/landing').once('value').then(s=>{
+    const d=s.val()||{};
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+    set('cHT',d.heroTitle);set('cHS',d.heroSubtitle);set('cAT',d.aboutTitle);set('cAD',d.aboutDesc);set('cCD',d.contactDesc);set('cWA',d.waUrl);set('cDC',d.dcUrl);set('cIG',d.igUrl);
+    set('cHeroImgUrl',d.heroImage||'');set('cHeroIconTxt',d.heroIconText||'竜');
+    if(d.heroImage){
+      const thumb=document.getElementById('heroImgThumb');const prev=document.getElementById('heroImgPreview');
+      if(thumb&&prev){thumb.src=d.heroImage;prev.style.display='block';}
+    }
+  });
+}
+function previewHeroImg(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>2*1024*1024){alert('Gambar terlalu besar! Max 2MB. Gunakan URL external atau compress dulu.');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const dataUrl=e.target.result;
+    document.getElementById('cHeroImg').value=dataUrl;
+    const thumb=document.getElementById('heroImgThumb');const prev=document.getElementById('heroImgPreview');
+    if(thumb&&prev){thumb.src=dataUrl;prev.style.display='block';}
+    // Clear URL field since file takes priority
+    const urlField=document.getElementById('cHeroImgUrl');if(urlField)urlField.value='';
+  };
+  reader.readAsDataURL(file);
+}
+function clearHeroImg(){
+  document.getElementById('cHeroImg').value='';
+  document.getElementById('cHeroImgUrl').value='';
+  const prev=document.getElementById('heroImgPreview');if(prev)prev.style.display='none';
+  const inp=document.getElementById('heroImgFile');if(inp)inp.value='';
+}
+async function saveCMS(){
+  const g=(id)=>{const el=document.getElementById(id);return el?el.value:'';};
+  const heroImg=g('cHeroImgUrl')||g('cHeroImg')||'';
+  await db.ref('cms/landing').set({heroTitle:g('cHT'),heroSubtitle:g('cHS'),heroImage:heroImg,heroIconText:g('cHeroIconTxt')||'竜',aboutTitle:g('cAT'),aboutDesc:g('cAD'),contactDesc:g('cCD'),waUrl:g('cWA'),dcUrl:g('cDC'),igUrl:g('cIG'),updatedAt:Date.now()});
+  alert('✅ Disimpan! Landing page akan terupdate otomatis.');
+}
+// ── SETTINGS ──
+function rSettings(){
+  const saved=localStorage.getItem('ryusei_fb_config');const cfg=saved?JSON.parse(saved):null;
+  const mc=document.getElementById('mainContent');
+  mc.innerHTML=`<div style="max-width:600px;display:flex;flex-direction:column;gap:16px">
+  <div class="card-admin" style="padding:22px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <div style="width:38px;height:38px;border-radius:10px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;font-size:18px">🔥</div>
+      <div><h3 style="font-weight:700;font-size:14px">Firebase RTDB Config</h3><p style="font-size:12px;color:var(--text2)">Disimpan di localStorage browser lokal Anda</p></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${[['apiKey','API Key'],['authDomain','Auth Domain'],['databaseURL','Database URL'],['projectId','Project ID'],['storageBucket','Storage Bucket'],['messagingSenderId','Messaging Sender ID'],['appId','App ID']].map(([k,l])=>`
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px">${l.toUpperCase()}</label>
+      <input type="text" id="cf_${k}" value="${cfg[k]||''}" class="form-input" style="font-family:monospace;font-size:12px"/></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="saveCfg()" class="btn-grad">💾 Simpan & Reconnect</button>
+      <button onclick="resetCfg()" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:13px;color:var(--text2)">↺ Reset Default</button>
+    </div>
+  </div>
+  <div class="card-admin" style="padding:20px">
+    <h3 style="font-weight:700;font-size:14px;margin-bottom:8px">Admin Account</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Tambah/ubah akun admin via Firebase Console → Authentication → Users</p>
+    <a href="https://console.firebase.google.com" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:1px solid var(--border);border-radius:10px;color:var(--text2);text-decoration:none;font-size:12px;font-weight:600" onmouseover="this.style.borderColor='#ec4899';this.style.color='#ec4899'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">↗ Buka Firebase Console</a>
+  </div></div>`;
+}
+function saveCfg(){
+  const keys=['apiKey','authDomain','databaseURL','projectId','storageBucket','messagingSenderId','appId'];
+  const cfg={};keys.forEach(k=>{cfg[k]=document.getElementById(`cf_${k}`).value.trim();});
+  localStorage.setItem('ryusei_fb_config',JSON.stringify(cfg));alert('Disimpan! Reload...');setTimeout(()=>location.reload(),600);
+}
+function resetCfg(){localStorage.removeItem('ryusei_fb_config');alert('Reset default! Reload...');setTimeout(()=>location.reload(),600);}
+// ── MODAL ──
+function openM(title,body){document.getElementById('mTitle').textContent=title;document.getElementById('mBody').innerHTML=body;document.getElementById('modal').style.display='flex';document.body.style.overflow='hidden';}
+function closeM(){document.getElementById('modal').style.display='none';document.body.style.overflow='';}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeM();});
+// ── INIT ──
+(()=>{const saved=localStorage.getItem('ryusei_fb_config');initFB(saved?JSON.parse(saved):null);})();
+</script>
+</body>
+</html>

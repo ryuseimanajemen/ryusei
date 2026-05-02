@@ -1,0 +1,13 @@
+/* Tailwind CSS v3 - Offline placeholder
+ * This file is used as a fallback when CDN is unavailable.
+ * For full offline support, download Tailwind CSS from:
+ * https://tailwindcss.com/docs/installation
+ * 
+ * Or use the Tailwind CLI to generate a custom CSS:
+ *   npx tailwindcss -i ./input.css -o ./css/tailwind.min.css --minify
+ *
+ * The HTML files in this project use cdn.tailwindcss.com by default.
+ * To switch to this file, replace the <script src="https://cdn.tailwindcss.com">
+ * tags with <link rel="stylesheet" href="/css/tailwind.min.css">
+ * in all HTML files.
+ */

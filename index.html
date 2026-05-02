@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+<meta charset="UTF-8"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/fav/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/fav/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/fav/favicon-16x16.png">
+<link rel="manifest" href="/assets/fav/site.webmanifest">
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Ryusei Event Management</title>
+    
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="css/tailwind.min.css"/>
+<!-- Firebase CDN (compat version) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  .gradient-text{background:linear-gradient(135deg,#ec4899,#a855f7,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .glass{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .hero-bg{background:radial-gradient(ellipse at 20% 50%,rgba(236,72,153,.15) 0,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(168,85,247,.15) 0,transparent 60%)}
+  .card-hover{transition:transform .3s ease}
+  .card-hover:hover{transform:translateY(-4px)}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes parallaxFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-18px) scale(1.03)}}
+  @keyframes glowPulse{0%,100%{box-shadow:0 20px 60px rgba(236,72,153,.45),0 0 0 0 rgba(168,85,247,.0)}50%{box-shadow:0 28px 80px rgba(168,85,247,.55),0 0 40px 8px rgba(236,72,153,.18)}}
+  @keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+  .mobile-cover-wrap{display:none}
+  @media(max-width:768px){
+    .mobile-cover-wrap{display:flex;justify-content:center;margin:32px 0 20px;pointer-events:none}
+    .mobile-cover-card{
+      position:relative;width:200px;height:200px;border-radius:28px;overflow:hidden;
+      animation:parallaxFloat 4s ease-in-out infinite, glowPulse 4s ease-in-out infinite;
+      will-change:transform;
+    }
+    .mobile-cover-card::before{
+      content:'';position:absolute;inset:0;z-index:1;
+      background:linear-gradient(135deg,rgba(236,72,153,.18) 0%,rgba(168,85,247,.12) 50%,rgba(236,72,153,.22) 100%);
+      border-radius:28px;
+    }
+    .mobile-cover-card::after{
+      content:'';position:absolute;inset:0;z-index:2;
+      background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.13) 50%,transparent 80%);
+      background-size:200% 100%;
+      animation:shimmer 3.5s linear infinite;
+      border-radius:28px;
+    }
+    .mobile-cover-bg{
+      position:absolute;inset:0;
+      background:linear-gradient(135deg,#ec4899 0%,#a855f7 60%,#ec4899 100%);
+      background-size:200% 200%;
+      animation:shimmer 5s ease-in-out infinite;
+    }
+    .mobile-cover-img{
+      position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:3;mix-blend-mode:normal;
+    }
+    .mobile-cover-ring{
+      position:absolute;inset:-6px;border-radius:34px;z-index:-1;
+      background:linear-gradient(135deg,#ec4899,#a855f7,#ec4899);
+      background-size:200% 200%;
+      animation:shimmer 4s linear infinite;
+      opacity:.6;
+      filter:blur(2px);
+    }
+  }
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .animate-float{animation:float 3s ease-in-out infinite}
+  .animate-fade{animation:fadeIn .6s ease}
+  .animate-up{animation:slideUp .5s ease}
+  :root{--bg:#fff;--bg2:#f9fafb;--text:#111827;--text2:#6b7280;--border:#e5e7eb;--card:#fff}
+  .dark{--bg:#030712;--bg2:#111827;--text:#f9fafb;--text2:#9ca3af;--border:#1f2937;--card:#111827}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;transition:background .3s,color .3s}
+  nav a,nav button{transition:color .2s}
+  input,select,textarea{font-family:inherit}
+  .nav-blur{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);background:rgba(255,255,255,.85)}
+  .dark .nav-blur{background:rgba(3,7,18,.85)}
+  section{padding:80px 0}
+  .container{max-width:1200px;margin:0 auto;padding:0 20px}
+  h1{font-size:clamp(3.5rem,7vw,5.5rem);font-weight:900;line-height:1.05;letter-spacing:-0.02em}
+  h2{font-size:clamp(2.2rem,4.5vw,3rem);font-weight:900;letter-spacing:-0.01em}
+  .btn-primary{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;padding:12px 24px;border-radius:14px;font-weight:700;cursor:pointer;font-size:14px;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary:hover{box-shadow:0 10px 30px rgba(236,72,153,.35);transform:translateY(-2px)}
+  .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text);padding:12px 24px;border-radius:14px;font-weight:700;cursor:pointer;font-size:14px;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center}
+  .btn-secondary:hover{border-color:#ec4899;color:#ec4899}
+  .feature-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;transition:transform .3s}
+  .feature-card:hover{transform:translateY(-4px)}
+  .form-input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;transition:all .2s;font-family:inherit}
+  .form-input:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.15)}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700}
+  .badge-open{background:rgba(34,197,94,.1);color:#16a34a}
+  .badge-closed{background:rgba(239,68,68,.1);color:#dc2626}
+  .nav-link{font-size:14px;font-weight:500;color:var(--text2);text-decoration:none}
+  .nav-link:hover{color:#ec4899}
+  @media(max-width:768px){.grid-3{grid-template-columns:1fr!important}.grid-2{grid-template-columns:1fr!important}.hide-mobile{display:none!important}}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="navbar" style="position:fixed;top:0;left:0;right:0;z-index:50;transition:all .3s">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:64px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px">R</div>
+      <span style="font-weight:800;font-size:16px">RYUSEI<span style="color:#ec4899">.</span></span>
+    </div>
+    <div class="hide-mobile" style="display:flex;align-items:center;gap:28px">
+      <a href="#home" class="nav-link">Home</a>
+      <a href="#about" class="nav-link">Tentang</a>
+      <a href="#events" class="nav-link">Event</a>
+      <a href="#register" class="nav-link">Daftar</a>
+      <a href="#leaderboard" class="nav-link">Leaderboard</a>
+      <a href="#contact" class="nav-link">Kontak</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="themeBtn" onclick="toggleTheme()" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px" title="Toggle theme">🌙</button>
+      <button id="hideNavBtn" onclick="toggleNav()" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px" title="Sembunyikan navbar">👁</button>
+      <a href="admin/" class="btn-primary hide-mobile" style="padding:8px 16px;font-size:13px">Admin →</a>
+      <button onclick="toggleMobile()" style="width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text2)" id="mobileBtn">☰</button>
+    </div>
+  </div>
+  <div id="mobilePanel" style="display:none;background:var(--card);border-top:1px solid var(--border);padding:16px 20px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <a href="#home" class="nav-link" onclick="toggleMobile()">Home</a>
+      <a href="#about" class="nav-link" onclick="toggleMobile()">Tentang</a>
+      <a href="#events" class="nav-link" onclick="toggleMobile()">Event</a>
+      <a href="#register" class="nav-link" onclick="toggleMobile()">Daftar</a>
+      <a href="#leaderboard" class="nav-link" onclick="toggleMobile()">Leaderboard</a>
+      <a href="admin/" class="btn-primary" style="text-align:center;justify-content:center;margin-top:4px">Admin Dashboard</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="home" class="hero-bg" style="min-height:100vh;display:flex;align-items:center;padding-top:80px">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center" class="grid-2">
+      <div class="animate-fade">
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:99px;border:1px solid rgba(236,72,153,.3);background:rgba(236,72,153,.08);margin-bottom:24px">
+          <span style="width:6px;height:6px;border-radius:50%;background:#ec4899;animation:float 1s ease-in-out infinite"></span>
+          <span style="font-size:11px;font-weight:700;color:#ec4899;text-transform:uppercase;letter-spacing:.1em">Platform Manajemen Event</span>
+        </div>
+        <!-- Parallax cover - mobile only -->
+        <div class="mobile-cover-wrap">
+          <div class="mobile-cover-card">
+            <div class="mobile-cover-ring"></div>
+            <div class="mobile-cover-bg"></div>
+            <img class="mobile-cover-img" src="/assets/fav/apple-touch-icon.png" alt="Ryusei"
+              onerror="this.style.display='none'"/>
+          </div>
+        </div>
+        <h1 id="heroTitle" style="margin-bottom:0">
+          <span class="gradient-text" style="font-size:1.15em;display:block;line-height:1">RYUSEI</span>
+          <span style="display:block;line-height:1.1">Event</span>
+          <span style="font-size:0.75em;font-weight:300;color:var(--text2);display:block;margin-top:4px;letter-spacing:0.05em">Management</span>
+        </h1>
+        <p id="heroSubtitle" style="font-size:18px;color:var(--text2);margin:28px 0 36px;line-height:1.75;max-width:500px">Platform terpadu untuk manajemen event virtual roleplay, pendaftaran peserta, dan sistem penilaian real-time.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          <a href="#events" class="btn-primary">Lihat Event →</a>
+          <a href="#register" class="btn-secondary">Daftar Sekarang</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:48px;padding-top:32px;border-top:1px solid var(--border)">
+          <div>
+            <div id="statEvents" style="font-size:2.8rem;font-weight:900;color:var(--text);line-height:1">0</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500">Total Event</div>
+          </div>
+          <div>
+            <div id="statParticipants" style="font-size:2.8rem;font-weight:900;color:var(--text);line-height:1">0</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500">Peserta</div>
+          </div>
+          <div>
+            <div id="statJudges" style="font-size:2.8rem;font-weight:900;color:var(--text);line-height:1">0</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:6px;font-weight:500">Juri</div>
+          </div>
+        </div>
+      </div>
+      <div class="hide-mobile animate-up" style="display:flex;justify-content:center">
+        <div style="position:relative;width:380px;height:380px">
+          <div style="position:absolute;inset:0;border-radius:24px;background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(168,85,247,.2))" class="animate-float"></div>
+          <div style="position:absolute;inset:24px;border-radius:18px;background:linear-gradient(135deg,rgba(236,72,153,.3),rgba(168,85,247,.3))" class="animate-float"></div>
+          <div id="heroIconWrap" style="position:absolute;inset:48px;border-radius:14px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;box-shadow:0 20px 60px rgba(236,72,153,.4);overflow:hidden" class="animate-float">
+            <img id="heroIconImg" src="/assets/fav/apple-touch-icon.png" alt="Ryusei" style="width:100%;height:100%;object-fit:cover;display:none" onerror="this.style.display=&apos;none&apos;;document.getElementById(&apos;heroIconFallback&apos;).style.display=&apos;flex&apos;"/>
+            <div id="heroIconFallback" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">
+              <span id="heroIconText" style="font-size:80px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))">竜</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" style="background:var(--bg2)">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:56px">
+      <h2 id="aboutTitle">Tentang <span class="gradient-text">Ryusei</span></h2>
+      <p id="aboutDesc" style="color:var(--text2);max-width:600px;margin:16px auto;font-size:17px;line-height:1.7">Platform profesional untuk mengelola event roleplay virtual dengan sistem scoring real-time dan manajemen peserta yang canggih.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" class="grid-3">
+      <div class="feature-card">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(236,72,153,.1);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px">⚡</div>
+        <h3 style="font-weight:700;font-size:16px;margin-bottom:8px">Real-time Scoring</h3>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6">Update skor langsung dari semua juri secara bersamaan via Firebase RTDB.</p>
+      </div>
+      <div class="feature-card">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(168,85,247,.1);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px">👨‍⚖️</div>
+        <h3 style="font-weight:700;font-size:16px;margin-bottom:8px">Multi-Judge System</h3>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6">Kelola banyak juri dengan akses panel terpisah dan sistem voting terstruktur.</p>
+      </div>
+      <div class="feature-card">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(59,130,246,.1);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px">🏆</div>
+        <h3 style="font-weight:700;font-size:16px;margin-bottom:8px">Auto Leaderboard</h3>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6">Ranking otomatis dengan medal untuk top 3 pemenang dan breakdown skor.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EVENTS -->
+<section id="events">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;flex-wrap:wrap;gap:16px">
+      <div>
+        <h2>Event <span class="gradient-text">Aktif</span></h2>
+        <p style="color:var(--text2);margin-top:8px">Event yang sedang berlangsung &amp; mendatang</p>
+      </div>
+    </div>
+    <div id="eventsGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" class="grid-3">
+      <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text2)">
+        <div style="font-size:48px;margin-bottom:12px">🎭</div>
+        <p style="font-size:14px">Memuat event...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background:var(--bg2)">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:48px">
+      <h2>Fitur <span class="gradient-text">Platform</span></h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px" class="grid-3">
+      <div class="feature-card"><span style="font-size:24px">🎭</span><h3 style="font-weight:700;margin:12px 0 6px;font-size:15px">5 Kriteria Penilaian</h3><p style="font-size:13px;color:var(--text2)">Interactivity, Immersion, Creativity, Improvisation, Costume</p></div>
+      <div class="feature-card"><span style="font-size:24px">⚡</span><h3 style="font-weight:700;margin:12px 0 6px;font-size:15px">Real-time Database</h3><p style="font-size:13px;color:var(--text2)">Firebase RTDB untuk update skor tanpa reload halaman</p></div>
+      <div class="feature-card"><span style="font-size:24px">🏆</span><h3 style="font-weight:700;margin:12px 0 6px;font-size:15px">Auto Leaderboard</h3><p style="font-size:13px;color:var(--text2)">Ranking otomatis dengan medal untuk top 3 pemenang</p></div>
+      <div class="feature-card"><span style="font-size:24px">🔑</span><h3 style="font-weight:700;margin:12px 0 6px;font-size:15px">Kode Unik Peserta</h3><p style="font-size:13px;color:var(--text2)">Cek status pendaftaran dengan kode unik tanpa login</p></div>
+      <div class="feature-card"><span style="font-size:24px">✅</span><h3 style="font-weight:700;margin:12px 0 6px;font-size:15px">Approval System</h3><p style="font-size:13px;color:var(--text2)">Admin approve/reject peserta sebelum event dimulai</p></div>
+      <div class="feature-card"><span style="font-size:24px">📱</span><h3 style="font-weight:700;margin:12px 0 6px;font-size:15px">Mobile Responsive</h3><p style="font-size:13px;color:var(--text2)">Desain optimal di semua ukuran layar</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTER -->
+<section id="register">
+  <div class="container" style="max-width:640px">
+    <div style="text-align:center;margin-bottom:40px">
+      <h2>Daftar <span class="gradient-text">Peserta</span></h2>
+      <p style="color:var(--text2);margin-top:12px">Isi form berikut untuk mendaftar sebagai peserta event</p>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:32px">
+      <div id="regFormWrap">
+        <div style="margin-bottom:18px"><label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Pilih Event *</label>
+        <select id="regEvent" class="form-input"><option value="">-- Pilih Event --</option></select></div>
+        <div style="margin-bottom:18px"><label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Username Aplikasi *</label>
+        <input type="text" id="regUsername" placeholder="@username_kamu" class="form-input"/></div>
+        <div style="margin-bottom:18px"><label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Link Profil / Aplikasi *</label>
+        <input type="url" id="regLink" placeholder="https://..." class="form-input"/></div>
+        <div style="margin-bottom:24px"><label style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Jam Perform (WIB) *</label>
+        <input type="time" id="regTime" class="form-input"/></div>
+        <button onclick="submitReg()" class="btn-primary" style="width:100%;justify-content:center;padding:14px">Daftar Sekarang 🚀</button>
+      </div>
+    </div>
+    <div style="margin-top:24px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px">
+      <h3 style="font-weight:700;text-align:center;margin-bottom:16px;font-size:15px">Cek Status Pendaftaran</h3>
+      <div style="display:flex;gap:10px">
+        <input type="text" id="checkCode" placeholder="Masukkan kode unik..." class="form-input" style="flex:1"/>
+        <button onclick="checkStatus()" class="btn-primary" style="padding:12px 20px;white-space:nowrap">Cek</button>
+      </div>
+      <div id="statusResult" style="display:none;margin-top:16px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- LEADERBOARD -->
+<section id="leaderboard" style="background:var(--bg2)">
+  <div class="container" style="max-width:800px">
+    <div style="text-align:center;margin-bottom:40px">
+      <h2>🏆 <span class="gradient-text">Leaderboard</span></h2>
+    </div>
+    <select id="lbSel" class="form-input" style="margin-bottom:20px" onchange="loadLB(this.value)"><option value="">-- Pilih Event --</option></select>
+    <div id="lbData"><p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Pilih event untuk melihat leaderboard</p></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container" style="text-align:center">
+    <h2>Hubungi <span class="gradient-text">Kami</span></h2>
+    <p id="contactDesc" style="color:var(--text2);margin:16px 0 32px;font-size:16px">Ada pertanyaan? Kami siap membantu Anda.</p>
+    <div id="contactLinks" style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px">
+      <a id="waLink" href="#" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#25d366;color:#fff;border-radius:12px;font-weight:700;font-size:13px;text-decoration:none">📱 WhatsApp</a>
+      <a id="dcLink" href="#" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#5865f2;color:#fff;border-radius:12px;font-weight:700;font-size:13px;text-decoration:none">💬 Discord</a>
+      <a id="igLink" href="#" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border-radius:12px;font-weight:700;font-size:13px;text-decoration:none">📸 Instagram</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="border-top:1px solid var(--border);padding:28px 0">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:11px">R</div>
+      <span style="font-weight:700;font-size:13px">RYUSEI Event Management</span>
+    </div>
+    <p style="font-size:12px;color:var(--text2)">© 2025 Ryusei Management. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+let db=null;
+// Theme
+const root=document.documentElement;
+const theme=localStorage.getItem('ryusei_theme')||'dark';
+if(theme==='dark'){root.classList.add('dark');document.getElementById('themeBtn').textContent='☀️';}
+function toggleTheme(){const d=root.classList.toggle('dark');localStorage.setItem('ryusei_theme',d?'dark':'light');document.getElementById('themeBtn').textContent=d?'☀️':'🌙';}
+// Nav
+let navHidden=false;
+function toggleNav(){navHidden=!navHidden;const n=document.getElementById('navbar');n.style.transform=navHidden?'translateY(-100%)':'translateY(0)';document.getElementById('hideNavBtn').textContent=navHidden?'👁‍🗨':'👁';}
+function toggleMobile(){const p=document.getElementById('mobilePanel');p.style.display=p.style.display==='none'?'block':'none';}
+window.addEventListener('scroll',()=>{const n=document.getElementById('navbar');if(window.scrollY>80){n.classList.add('nav-blur');}else{n.classList.remove('nav-blur');}
+  // Parallax mobile cover
+  const card=document.querySelector('.mobile-cover-card');
+  if(card&&window.innerWidth<=768){const y=window.scrollY;card.style.transform=`translateY(${y*0.22}px) scale(${1-y*0.0003})`;}
+});
+// Firebase
+function init(){
+  try{
+    const saved=localStorage.getItem('ryusei_fb_config');
+    if(!saved){console.warn('Firebase belum dikonfigurasi.');return;}
+    const cfg=JSON.parse(saved);
+    if(!firebase.apps.length)firebase.initializeApp(cfg);
+    db=firebase.database();
+    loadAll();
+  }catch(e){console.error(e);}
+}
+function loadAll(){
+  db.ref('cms/landing').on('value',s=>{
+    const d=s.val()||{};
+    if(d.heroTitle)document.getElementById('heroTitle').innerHTML=d.heroTitle;
+    if(d.heroSubtitle)document.getElementById('heroSubtitle').textContent=d.heroSubtitle;
+    if(d.aboutTitle)document.getElementById('aboutTitle').innerHTML=d.aboutTitle;
+    if(d.aboutDesc)document.getElementById('aboutDesc').textContent=d.aboutDesc;
+    if(d.contactDesc)document.getElementById('contactDesc').textContent=d.contactDesc;
+    if(d.waUrl)document.getElementById('waLink').href=d.waUrl;
+    if(d.dcUrl)document.getElementById('dcLink').href=d.dcUrl;
+    if(d.igUrl)document.getElementById('igLink').href=d.igUrl;
+    // Hero image / icon
+    const imgEl=document.getElementById('heroIconImg');
+    const fallback=document.getElementById('heroIconFallback');
+    const iconText=document.getElementById('heroIconText');
+    if(d.heroImage){
+      imgEl.src=d.heroImage;
+      imgEl.style.display='block';
+      if(fallback)fallback.style.display='none';
+    } else {
+      // Try favicon, fallback to text
+      imgEl.src='/assets/fav/apple-touch-icon.png';
+      imgEl.onload=function(){imgEl.style.display='block';if(fallback)fallback.style.display='none';};
+      imgEl.onerror=function(){imgEl.style.display='none';if(fallback)fallback.style.display='flex';};
+    }
+    if(d.heroIconText&&iconText&&!d.heroImage){iconText.textContent=d.heroIconText;}
+  });
+  // ── STATS & EVENT CARDS ──────────────────────────────────────
+  // Strategi: ambil registrations SEKALI (once) dulu agar cache siap,
+  // lalu render events. Setelah itu pasang realtime listener keduanya.
+  window._allRegs = {};
+
+  // Helper: hitung peserta suatu event dari cache _allRegs
+  function countEventParts(eid){
+    return Object.values(window._allRegs).filter(r=>r&&r.eventId===eid).length;
+  }
+
+  // Refresh angka peserta di kartu tanpa re-render seluruh grid
+  function refreshEventCards(){
+    if(!window._eventsData)return;
+    Object.keys(window._eventsData).forEach(eid=>{
+      const el=document.getElementById('partCount_'+eid);
+      if(el)el.textContent='\uD83D\uDC65 '+countEventParts(eid)+' peserta';
+    });
+  }
+
+  function renderEventsGrid(evs){
+    const g=document.getElementById('eventsGrid');
+    const rs=document.getElementById('regEvent');
+    const ls=document.getElementById('lbSel');
+    rs.innerHTML='<option value="">-- Pilih Event --</option>';
+    ls.innerHTML='<option value="">-- Pilih Event --</option>';
+    const arr=Object.entries(evs).filter(([k,v])=>v&&v.status!=='archived');
+    if(!arr.length){
+      g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text2)"><div style="font-size:48px;margin-bottom:12px">🎭</div><p style="font-size:14px">Belum ada event aktif</p></div>';
+      return;
+    }
+    window._eventsData=Object.fromEntries(arr);
+    g.innerHTML=arr.map(([k,v])=>{
+      const open=v.regDeadline?new Date(v.regDeadline)>new Date():true;
+      const cnt=countEventParts(k); // pakai cache yg sudah terisi
+      return`<div class="feature-card card-hover" style="cursor:pointer" onclick="openEventModal('${k}')">
+        ${v.image?`<div style="height:160px;border-radius:10px;overflow:hidden;margin-bottom:14px;position:relative"><img src="${v.image}" alt="${v.title}" style="width:100%;height:100%;object-fit:cover"/></div>`:`<div style="height:160px;border-radius:10px;background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(168,85,247,.2));display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:14px">🎭</div>`}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span class="badge ${open?'badge-open':'badge-closed'}">${open?'● Buka':'● Tutup'}</span>
+          <span style="font-size:12px;color:var(--text2)">${v.date||''}</span>
+        </div>
+        <h3 style="font-weight:700;font-size:16px;margin-bottom:6px">${v.title}</h3>
+        <p style="font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${v.description||'Klik untuk lihat detail event'}</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span id="partCount_${k}" style="font-size:12px;color:var(--text2)">👥 ${cnt} peserta</span>
+          <span style="font-size:12px;color:var(--text2)">${v.regDeadline?'Deadline: '+v.regDeadline:''}</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="event.stopPropagation();openEventModal('${k}')" style="flex:1;padding:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;font-weight:700;cursor:pointer;font-size:13px">Detail 📋</button>
+          ${open?`<button onclick="event.stopPropagation();registerEvent('${k}')" style="flex:1;padding:10px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px">Daftar →</button>`:`<button disabled style="flex:1;padding:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);border-radius:10px;font-weight:700;font-size:13px;opacity:.5;cursor:not-allowed">Tutup</button>`}
+        </div>
+      </div>`;
+    }).join('');
+    arr.forEach(([k,v])=>{
+      if(v.regDeadline?new Date(v.regDeadline)>new Date():true) rs.innerHTML+=`<option value="${k}">${v.title}</option>`;
+      ls.innerHTML+=`<option value="${k}">${v.title}</option>`;
+    });
+  }
+
+  // Muat registrations DULU (sekali/await), cache ke _allRegs, LALU render events
+  db.ref('registrations').once('value').then(initRegSnap=>{
+    window._allRegs=initRegSnap.val()||{};
+    const total=Object.keys(window._allRegs).length;
+    document.getElementById('statParticipants').textContent=total;
+
+    // Setelah cache siap, load events
+    db.ref('events').once('value').then(initEvSnap=>{
+      renderEventsGrid(initEvSnap.val()||{});
+    });
+
+    // Pasang realtime listener registrations — update cache + semua angka peserta
+    db.ref('registrations').on('value',regSnap=>{
+      window._allRegs=regSnap.val()||{};
+      document.getElementById('statParticipants').textContent=Object.keys(window._allRegs).length;
+      refreshEventCards();
+    });
+
+    // Pasang realtime listener events — re-render grid saat ada perubahan event
+    db.ref('events').on('value',evSnap=>{
+      renderEventsGrid(evSnap.val()||{});
+    });
+  });
+
+  // Stat events & judges terpisah (tidak bergantung registrations)
+  db.ref('events').on('value',evSnap=>{
+    const activeEvs=Object.values(evSnap.val()||{}).filter(v=>v&&v.status!=='archived');
+    document.getElementById('statEvents').textContent=activeEvs.length;
+  });
+  db.ref('judges').on('value',jSnap=>{
+    document.getElementById('statJudges').textContent=Object.keys(jSnap.val()||{}).length;
+  });
+}
+function genCode(){return Math.random().toString(36).substr(2,8).toUpperCase();}
+async function submitReg(){
+  if(!db){alert('Database belum terhubung');return;}
+  const eid=document.getElementById('regEvent').value,u=document.getElementById('regUsername').value.trim(),l=document.getElementById('regLink').value.trim(),t=document.getElementById('regTime').value;
+  if(!eid||!u||!l||!t){alert('Semua field wajib diisi!');return;}
+  const btn=document.querySelector('#regFormWrap button');
+  if(btn){btn.textContent='Mendaftarkan...';btn.disabled=true;}
+  try{
+    const code=genCode();
+    await db.ref(`registrations/${code}`).set({eventId:eid,username:u,link:l,performTime:t,code,status:'pending',registeredAt:Date.now()});
+    await db.ref(`events/${eid}/participants/${code}`).set(true);
+    showRegSuccessModal(code,u);
+  }catch(e){
+    alert('Gagal mendaftar: '+e.message);
+    if(btn){btn.textContent='Daftar Sekarang 🚀';btn.disabled=false;}
+  }
+}
+function showRegSuccessModal(code,username){
+  const existing=document.getElementById('regSuccessModal');
+  if(existing)existing.remove();
+  const modal=document.createElement('div');
+  modal.id='regSuccessModal';
+  modal.style.cssText='position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.8);backdrop-filter:blur(8px)';
+  modal.innerHTML=`
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:32px;max-width:440px;width:100%;text-align:center;animation:slideUp .4s ease">
+    <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.1));border:2px solid rgba(34,197,94,.4);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px">🎉</div>
+    <h2 style="font-size:22px;font-weight:900;margin-bottom:8px">Selamat, Pendaftaran Berhasil!</h2>
+    <p style="color:var(--text2);font-size:14px;margin-bottom:6px">Halo <strong>${username}</strong>, pendaftaranmu telah diterima!</p>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:24px;line-height:1.6">Menunggu persetujuan admin. Cek berkala status di bagian <strong>"Cek Status Pendaftaran"</strong> menggunakan kode unik berikut. Jangan lupa screenshot!</p>
+    <div style="background:linear-gradient(135deg,rgba(236,72,153,.08),rgba(168,85,247,.08));border:2px dashed rgba(236,72,153,.4);border-radius:16px;padding:20px;margin-bottom:16px">
+      <p style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">🔑 Kode Unik Pendaftaran Kamu</p>
+      <p id="regCodeDisplay" style="font-size:2.8rem;font-weight:900;color:#ec4899;letter-spacing:.25em;margin-bottom:14px;font-family:monospace">${code}</p>
+      <button onclick="copyRegCode('${code}')" id="copyCodeBtn" style="padding:9px 22px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px;transition:all .2s">📋 Salin Kode</button>
+    </div>
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:12px;margin-bottom:20px">
+      <p style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:3px">⏳ Status: Menunggu Persetujuan Admin</p>
+      <p style="font-size:11px;color:var(--text2)">Gunakan kode di atas pada bagian "Cek Status Pendaftaran" di bawah halaman ini untuk melihat perkembangan status pendaftaranmu.</p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeRegModal()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--text2);cursor:pointer;font-weight:700;font-size:13px">Tutup</button>
+      <button onclick="closeRegModalAndCheck('${code}')" style="flex:1;padding:12px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px">Cek Status →</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.body.style.overflow='hidden';
+}
+function copyRegCode(code){
+  navigator.clipboard.writeText(code).then(()=>{
+    const btn=document.getElementById('copyCodeBtn');
+    if(btn){btn.textContent='✅ Tersalin!';btn.style.background='linear-gradient(135deg,#16a34a,#15803d)';setTimeout(()=>{btn.textContent='📋 Salin Kode';btn.style.background='linear-gradient(135deg,#ec4899,#a855f7)';},2500);}
+  }).catch(()=>{
+    try{const el=document.createElement('textarea');el.value=code;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);}catch(e2){}
+    const btn=document.getElementById('copyCodeBtn');if(btn)btn.textContent='✅ Tersalin!';
+  });
+}
+function closeRegModal(){
+  const m=document.getElementById('regSuccessModal');if(m)m.remove();
+  document.body.style.overflow='';
+  location.reload();
+}
+function closeRegModalAndCheck(code){
+  const m=document.getElementById('regSuccessModal');if(m)m.remove();
+  document.body.style.overflow='';
+  const inp=document.getElementById('checkCode');if(inp)inp.value=code;
+  document.getElementById('register').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>checkStatus(),400);
+}
+async function checkStatus(){
+  if(!db)return;
+  const code=document.getElementById('checkCode').value.trim().toUpperCase();
+  const res=document.getElementById('statusResult');res.style.display='block';res.innerHTML='<p style="text-align:center;color:var(--text2);font-size:13px">Mencari...</p>';
+  try{
+    const snap=await db.ref(`registrations/${code}`).once('value');const d=snap.val();
+    if(!d){res.innerHTML='<p style="color:#ef4444;text-align:center;font-size:13px">Kode tidak ditemukan.</p>';return;}
+    const sc={pending:'rgba(245,158,11,.1)',approved:'rgba(34,197,94,.1)',rejected:'rgba(239,68,68,.1)'};
+    const tc={pending:'#f59e0b',approved:'#16a34a',rejected:'#dc2626'};
+    const tl={pending:'Menunggu Persetujuan',approved:'Disetujui ✓',rejected:'Ditolak ✗'};
+    res.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-weight:700;font-size:15px">${d.username}</span>
+        <span style="padding:4px 12px;border-radius:99px;background:${sc[d.status]||sc.pending};color:${tc[d.status]||tc.pending};font-size:12px;font-weight:700">${tl[d.status]||d.status}</span>
+      </div>
+      <p style="font-size:12px;color:var(--text2)">Jam Perform: ${d.performTime||'—'} WIB</p>
+    </div>`;
+  }catch(e){res.innerHTML=`<p style="color:#ef4444;font-size:13px">Error: ${e.message}</p>`;}
+}
+function loadLB(eid){
+  if(!eid||!db){document.getElementById('lbData').innerHTML='<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Pilih event untuk melihat leaderboard</p>';return;}
+  const CRIT=['interactivity','immersion','creativity','improvisation','costume'];
+  const CLAB=['Interac.','Immers.','Creat.','Improv.','Costume'];
+  db.ref(`scores/${eid}`).on('value',async snap=>{
+    const scores=snap.val()||{};const rs=await db.ref('registrations').once('value');const regs=rs.val()||{};
+    const parts={};
+    Object.entries(scores).forEach(([jid,jv])=>{Object.entries(jv).forEach(([pc,ps])=>{if(!parts[pc]){parts[pc]={t:{},jc:0};}CRIT.forEach(c=>{parts[pc].t[c]=(parts[pc].t[c]||0)+(ps[c]||0);});parts[pc].jc++;});});
+    const ranked=Object.entries(parts).map(([code,data])=>{
+      const avg=data.jc>0?CRIT.reduce((s,c)=>s+(data.t[c]/data.jc),0)/CRIT.length:0;
+      return{code,username:regs[code]?.username||code,avg,t:data.t,jc:data.jc};
+    }).sort((a,b)=>b.avg-a.avg);
+    const div=document.getElementById('lbData');
+    if(!ranked.length){div.innerHTML='<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Belum ada skor</p>';return;}
+    const medals=['🥇','🥈','🥉'];
+    div.innerHTML=ranked.map((p,i)=>`
+    <div style="background:var(--card);border:1px solid ${i<3?'rgba(236,72,153,.3)':'var(--border)'};border-radius:16px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:16px">
+      <div style="width:44px;height:44px;border-radius:12px;${i<3?'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff':'background:var(--bg2);color:var(--text2)'};display:flex;align-items:center;justify-content:center;font-size:${i<3?'22px':'16px'};font-weight:900;flex-shrink:0">${i<3?medals[i]:i+1}</div>
+      <div style="flex:1;min-width:0">
+        <p style="font-weight:700;font-size:15px;margin-bottom:4px">${p.username}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${CRIT.map((c,ci)=>`<span style="font-size:11px;color:var(--text2)">${CLAB[ci]}: ${p.jc>0?(p.t[c]/p.jc).toFixed(1):'—'}</span>`).join(' · ')}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <p style="font-size:24px;font-weight:900;color:${i===0?'#eab308':i===1?'#9ca3af':i===2?'#d97706':'var(--text)'}">${p.avg.toFixed(2)}</p>
+        <p style="font-size:11px;color:var(--text2)">${p.jc} juri</p>
+      </div>
+    </div>`).join('');
+  });
+}
+// Register langsung dari event card
+function registerEvent(eventId){
+  document.getElementById('regEvent').value=eventId;
+  document.getElementById('register').scrollIntoView({behavior:'smooth'});
+}
+// Buka modal detail event
+function openEventModal(eventId){
+  const v=window._eventsData&&window._eventsData[eventId];
+  if(!v)return;
+  const open=v.regDeadline?new Date(v.regDeadline)>new Date():true;
+  // FIX: hitung dari cache registrations (real-time), bukan v.participants
+  const partCount=countEventParts(eventId);
+  const modal=document.getElementById('eventModal');
+  const content=document.getElementById('eventModalContent');
+  content.innerHTML=`
+    <div style="position:relative">
+      ${v.image?`<div style="height:200px;border-radius:14px;overflow:hidden;margin-bottom:20px"><img src="${v.image}" alt="${v.title}" style="width:100%;height:100%;object-fit:cover"/></div>`:`<div style="height:180px;border-radius:14px;background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(168,85,247,.2));display:flex;align-items:center;justify-content:center;font-size:72px;margin-bottom:20px">🎭</div>`}
+      <button onclick="closeEventModal()" style="position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span class="badge ${open?'badge-open':'badge-closed'}" style="font-size:13px">${open?'● Pendaftaran Dibuka':'● Pendaftaran Ditutup'}</span>
+    </div>
+    <h2 style="font-size:1.5rem;font-weight:900;margin-bottom:10px">${v.title}</h2>
+    ${v.description?`<p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px">${v.description}</p>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:var(--bg2);border-radius:12px;padding:12px">
+        <p style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;margin-bottom:4px">📅 Tanggal Event</p>
+        <p style="font-size:14px;font-weight:700">${v.date||'TBA'}</p>
+      </div>
+      <div style="background:var(--bg2);border-radius:12px;padding:12px">
+        <p style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;margin-bottom:4px">⏰ Deadline Daftar</p>
+        <p style="font-size:14px;font-weight:700">${v.regDeadline||'TBA'}</p>
+      </div>
+      <div style="background:var(--bg2);border-radius:12px;padding:12px">
+        <p style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;margin-bottom:4px">👥 Total Peserta</p>
+        <p style="font-size:14px;font-weight:700">${partCount} orang</p>
+      </div>
+      <div style="background:var(--bg2);border-radius:12px;padding:12px">
+        <p style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;margin-bottom:4px">📌 Status</p>
+        <p style="font-size:14px;font-weight:700;color:${open?'#16a34a':'#dc2626'}">${open?'Buka':'Tutup'}</p>
+      </div>
+    </div>
+    ${v.benefit?`<div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:14px;margin-bottom:12px"><p style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:6px">🏆 BENEFIT & HADIAH</p><p style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-line">${v.benefit}</p></div>`:''}
+    ${v.ketentuan?`<div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:12px;padding:14px;margin-bottom:20px"><p style="font-size:12px;font-weight:700;color:#3b82f6;margin-bottom:6px">📋 KETENTUAN & ATURAN</p><p style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-line">${v.ketentuan}</p></div>`:''}
+    ${open?`<button onclick="closeEventModal();registerEvent('${eventId}')" style="width:100%;padding:14px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:15px">Daftar Event Ini →</button>`:`<div style="text-align:center;padding:12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:12px;color:#dc2626;font-weight:700;font-size:14px">Pendaftaran telah ditutup</div>`}
+  `;
+  modal.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeEventModal(){
+  document.getElementById('eventModal').style.display='none';
+  document.body.style.overflow='';
+}
+init();
+</script>
+
+<!-- EVENT DETAIL MODAL -->
+<div id="eventModal" style="display:none;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(6px)" onclick="if(event.target===this)closeEventModal()">
+  <div id="eventModalContent" style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;position:relative"></div>
+</div>
+</body>
+</html>
