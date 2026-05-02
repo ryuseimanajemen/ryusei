@@ -726,6 +726,18 @@
       const card = document.querySelector('.mobile-cover-card');
       if (card && window.innerWidth <= 768) { const y = window.scrollY; card.style.transform = `translateY(${y * 0.22}px) scale(${1 - y * 0.0003})`; }
     });
+    window._allRegs = {};
+    window._eventsData = {};
+    function countEventParts(eid) {
+      return Object.values(window._allRegs || {}).filter(r => r && r.eventId === eid).length;
+    }
+    function refreshEventCards() {
+      if (!window._eventsData) return;
+      Object.keys(window._eventsData).forEach(eid => {
+        const el = document.getElementById('partCount_' + eid);
+        if (el) el.textContent = '👥 ' + countEventParts(eid) + ' peserta';
+      });
+    }
     // Firebase
     async function init() {
       try {
@@ -790,20 +802,6 @@
       // Strategi: ambil registrations SEKALI (once) dulu agar cache siap,
       // lalu render events. Setelah itu pasang realtime listener keduanya.
       window._allRegs = {};
-
-      // Helper: hitung peserta suatu event dari cache _allRegs
-      function countEventParts(eid) {
-        return Object.values(window._allRegs).filter(r => r && r.eventId === eid).length;
-      }
-
-      // Refresh angka peserta di kartu tanpa re-render seluruh grid
-      function refreshEventCards() {
-        if (!window._eventsData) return;
-        Object.keys(window._eventsData).forEach(eid => {
-          const el = document.getElementById('partCount_' + eid);
-          if (el) el.textContent = '\uD83D\uDC65 ' + countEventParts(eid) + ' peserta';
-        });
-      }
 
       function renderEventsGrid(evs) {
         const g = document.getElementById('eventsGrid');

@@ -3,10 +3,10 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="apple-touch-icon" sizes="180x180" href="../ryusei/assets/fav/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="../ryusei/assets/fav/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="../ryusei/assets/fav/favicon-16x16.png">
-  <link rel="manifest" href="../ryusei/assets/fav/site.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="../assets/fav/fav/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/fav/fav/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/fav/fav/favicon-16x16.png">
+  <link rel="manifest" href="../assets/fav/fav/site.webmanifest">
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Ryusei CMS — Admin</title>
 
@@ -349,6 +349,7 @@
           if (u) { document.getElementById('loginScreen').style.display = 'none'; const a = document.getElementById('appShell'); a.style.display = 'flex'; document.getElementById('uEmail').textContent = u.email || 'Admin'; showPage('dashboard'); }
           else { document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('appShell').style.display = 'none'; }
         });
+        handleInviteUrl();
       } catch (e) { console.error(e); }
     }
     async function doLogin() {
@@ -1002,8 +1003,6 @@
 
     // ── INIT ──
     (async () => {
-      // Handle invite URL first
-      handleInviteUrl();
       // 1. Coba localStorage
       const saved = localStorage.getItem('ryusei_fb_config');
       if (saved) { try { initFB(JSON.parse(saved)); return; } catch (e) { } }
