@@ -142,7 +142,7 @@
           style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-weight:900;font-size:17px">
           🔥</div>
         <h2 style="color:#fff;font-size:17px;font-weight:900;margin-bottom:4px">Firebase Setup</h2>
-        <p style="color:#6b7280;font-size:12px">Upload JSON dari Firebase Console → Project Settings</p>
+        <p style="color:#6b7280;font-size:12px">Upload <code style="background:#1f2937;padding:1px 5px;border-radius:4px;color:#ec4899">ryusei-config.json</code> berisi Firebase config + Gemini key</p>
       </div>
       <div id="secretDropzone" onclick="document.getElementById('secretFileInput').click()"
         style="border:2px dashed #374151;border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px"
@@ -153,7 +153,7 @@
         ondrop="event.preventDefault();this.style.borderColor='#374151';this.style.background='transparent';handleSecretDrop(event)">
         <div style="font-size:28px;margin-bottom:8px">📄</div>
         <p style="color:#9ca3af;font-size:13px;font-weight:600">Klik atau drag & drop</p>
-        <p style="color:#6b7280;font-size:11px;margin-top:3px">firebase-config.json</p>
+        <p style="color:#6b7280;font-size:11px;margin-top:3px">ryusei-config.json</p>
       </div>
       <input type="file" id="secretFileInput" accept=".json" style="display:none"
         onchange="handleSecretFile(this.files[0])" />
@@ -546,7 +546,13 @@
       if (eid) { const s = await db.ref(`events/${eid}`).once('value'); ev = { ...ev, ...(s.val() || {}) }; }
       openM(eid ? 'Edit Event' : 'Tambah Event Baru', `<div style="display:flex;flex-direction:column;gap:12px">
     <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">JUDUL EVENT *</label><input type="text" id="eT" value="${ev.title}" class="form-input" placeholder="Nama event..."/></div>
-    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">DESKRIPSI</label><textarea id="eD" rows="3" class="form-input" style="resize:none" placeholder="Deskripsi event...">${ev.description}</textarea></div>
+    <div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--text2)">DESKRIPSI & KETENTUAN</label>
+    <button id="btnAutoGen" type="button" onclick="autoGenEvent()" style="padding:4px 10px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">✨ Auto-Generate</button>
+  </div>
+  <textarea id="eD" rows="3" class="form-input" style="resize:none" placeholder="Deskripsi event...">${ev.description}</textarea>
+</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">TANGGAL EVENT</label><input type="date" id="eDt" value="${ev.date}" class="form-input"/></div>
       <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">BATAS DAFTAR</label><input type="date" id="eDl" value="${ev.regDeadline}" class="form-input"/></div>
@@ -572,6 +578,78 @@
     </div>
   </div>`);
     }
+    // ── GEMINI AUTO-GENERATE ─────────────────────────────────────
+let _geminiKey = null;
+async function getGeminiKey() {
+  if (_geminiKey) return _geminiKey;
+  try {
+    const snap = await db.ref('settings/geminiKey').once('value');
+    _geminiKey = snap.val();
+  } catch (e) { _geminiKey = null; }
+  return _geminiKey;
+}
+
+async function autoGenEvent() {
+  const judul = document.getElementById('eT').value.trim();
+  if (!judul) { alert('Isi judul event dulu!'); return; }
+
+  const btn = document.getElementById('btnAutoGen');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+
+  const key = await getGeminiKey();
+  if (!key) {
+    alert('Gemini API Key belum diset.\nMasuk ke Firebase Console → settings/geminiKey');
+    btn.disabled = false; btn.textContent = '✨ Auto-Generate';
+    return;
+  }
+
+  try {
+    const prompt = `Kamu adalah copywriter event kompetisi profesional Indonesia.
+Buat konten untuk event bernama: "${judul}"
+
+Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
+{
+  "deskripsi": "2-3 kalimat deskripsi event yang menarik dan profesional dalam Bahasa Indonesia",
+  "ketentuan": "5 poin ketentuan & aturan peserta yang relevan, pisahkan dengan newline (\\n), format: 1. ... \\n2. ... dst"
+}`;
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
+        })
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    // Bersihkan markdown code block kalau ada
+    raw = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(raw);
+
+    if (parsed.deskripsi) document.getElementById('eD').value = parsed.deskripsi;
+    if (parsed.ketentuan) document.getElementById('eK').value = parsed.ketentuan;
+
+    btn.textContent = '✅ Done!';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '✨ Auto-Generate'; }, 2000);
+
+  } catch (e) {
+    console.error('Gemini error:', e);
+    alert('Gagal generate: ' + e.message);
+    btn.disabled = false; btn.textContent = '✨ Auto-Generate';
+  }
+}
+// ── END GEMINI ───────────────────────────────────────────────
     async function saveEv(eid) {
       const imgData = document.getElementById('eImgData') ? document.getElementById('eImgData').value : '';
       const imgUrl = document.getElementById('eI') ? document.getElementById('eI').value.trim() : '';
@@ -994,7 +1072,7 @@
     document.getElementById('modal').addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeM(); });
 
     // ── SECRET SETUP ──
-    let _iconClicks = 0, _iconTimer = null, _secretCfg = null;
+    let _iconClicks = 0, _iconTimer = null, _secretCfg = null, _secretGeminiKey = null;
     function handleIconClick() {
       _iconClicks++;
       clearTimeout(_iconTimer);
@@ -1007,6 +1085,7 @@
         return;
       }
       _secretCfg = null;
+_secretGeminiKey = null;
       document.getElementById('secretModal').style.display = 'flex';
       document.getElementById('secretPreview').style.display = 'none';
       document.getElementById('secretErr').style.display = 'none';
@@ -1018,27 +1097,45 @@
     function closeSecretModal() { document.getElementById('secretModal').style.display = 'none'; }
     function handleSecretDrop(e) { const f = e.dataTransfer.files[0]; if (f) handleSecretFile(f); }
     function handleSecretFile(f) {
-      if (!f || !f.name.endsWith('.json')) { showSecretErr('File harus .json'); return; }
-      const r = new FileReader();
-      r.onload = ev => {
-        try {
-          let cfg = JSON.parse(ev.target.result);
-          if (cfg.firebaseConfig) cfg = cfg.firebaseConfig;
-          const req = ['apiKey', 'authDomain', 'databaseURL', 'projectId'];
-          const miss = req.filter(k => !cfg[k]);
-          if (miss.length) { showSecretErr('Field tidak lengkap: ' + miss.join(', ')); return; }
-          _secretCfg = cfg;
-          document.getElementById('secretPreview').style.display = 'block';
-          document.getElementById('secretPreview').textContent = JSON.stringify(cfg, null, 2);
-          document.getElementById('secretErr').style.display = 'none';
-          document.getElementById('secretStatus').style.display = 'none';
-          const btn = document.getElementById('secretBtn');
-          btn.disabled = false; btn.style.background = 'linear-gradient(135deg,#ec4899,#a855f7)';
-          btn.style.color = '#fff'; btn.style.cursor = 'pointer';
-        } catch (e) { showSecretErr('JSON tidak valid: ' + e.message); }
-      };
-      r.readAsText(f);
-    }
+  if (!f || !f.name.endsWith('.json')) { showSecretErr('File harus .json'); return; }
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+
+      // Support format lama (hanya fbConfig) dan format baru (fbConfig + geminiKey)
+      let cfg = parsed.firebaseConfig || parsed;
+      let geminiKey = parsed.geminiKey || null;
+
+      const req = ['apiKey', 'authDomain', 'databaseURL', 'projectId'];
+      const miss = req.filter(k => !cfg[k]);
+      if (miss.length) { showSecretErr('Firebase config tidak lengkap: ' + miss.join(', ')); return; }
+
+      _secretCfg = cfg;
+      _secretGeminiKey = geminiKey;
+
+      // Tampilkan preview
+      const previewObj = { firebaseConfig: cfg };
+      if (geminiKey) previewObj.geminiKey = geminiKey.substring(0, 8) + '••••••••••••••••••••••••••••';
+      document.getElementById('secretPreview').style.display = 'block';
+      document.getElementById('secretPreview').textContent = JSON.stringify(previewObj, null, 2);
+      document.getElementById('secretErr').style.display = 'none';
+      document.getElementById('secretStatus').style.display = 'none';
+
+      // Info kalau geminiKey ada atau tidak
+      if (geminiKey) {
+        showSecretStatus('✅ Firebase config + Gemini key terdeteksi', true);
+      } else {
+        showSecretStatus('⚠️ Hanya Firebase config (tanpa Gemini key)', false);
+      }
+
+      const btn = document.getElementById('secretBtn');
+      btn.disabled = false; btn.style.background = 'linear-gradient(135deg,#ec4899,#a855f7)';
+      btn.style.color = '#fff'; btn.style.cursor = 'pointer';
+    } catch (e) { showSecretErr('JSON tidak valid: ' + e.message); }
+  };
+  r.readAsText(f);
+}
     function showSecretErr(msg) { const e = document.getElementById('secretErr'); e.textContent = msg; e.style.display = 'block'; }
     function showSecretStatus(msg, ok) {
       const s = document.getElementById('secretStatus');
@@ -1058,6 +1155,10 @@
         const tempDb = firebase.database();
         // Push config ke Firebase database settings/fbConfig
         await tempDb.ref('settings/fbConfig').set(_secretCfg);
+// Simpan geminiKey ke DB kalau ada
+if (_secretGeminiKey) {
+  await tempDb.ref('settings/geminiKey').set(_secretGeminiKey);
+}
         // Simpan juga ke localStorage
         localStorage.setItem('ryusei_fb_config', JSON.stringify(_secretCfg));
         showSecretStatus('✅ Config berhasil disimpan ke Firebase!', true);

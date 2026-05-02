@@ -1069,6 +1069,157 @@
       document.body.style.overflow = '';
     }
     init();
+
+    // ── RYUSEI CHATBOT ─────────────────────────────────────────────
+let _chatOpen = false;
+let _chatHistory = []; // {role, parts:[{text}]}
+let _chatGeminiKey = null;
+let _chatCmsData = null;
+
+function toggleChat() {
+  _chatOpen = !_chatOpen;
+  const win = document.getElementById('chatWindow');
+  const icon = document.getElementById('chatToggleIcon');
+  if (_chatOpen) {
+    win.classList.add('open');
+    icon.textContent = '✕';
+    document.getElementById('chatInput').focus();
+    // Lazy-load key & cms data saat pertama dibuka
+    if (!_chatGeminiKey) initChatData();
+  } else {
+    win.classList.remove('open');
+    icon.textContent = '💬';
+  }
+}
+
+async function initChatData() {
+  try {
+    // Ambil Gemini key dari DB (path publik - aman karena domain sudah restrict)
+    const keySnap = await db.ref('settings/geminiKey').once('value');
+    _chatGeminiKey = keySnap.val();
+
+    // Ambil CMS data untuk konteks chatbot
+    const cmsSnap = await db.ref('cms/landing').once('value');
+    _chatCmsData = cmsSnap.val() || {};
+  } catch (e) {
+    console.warn('Chat init error:', e);
+  }
+}
+
+function buildSystemPrompt() {
+  // Info hardcode tentang Ryusei
+  const hardcoded = `Ryusei adalah platform manajemen event kompetisi virtual berbasis web. 
+Fitur utama: pendaftaran peserta online, sistem penilaian real-time oleh juri, 
+leaderboard live, panel admin CMS, dan manajemen multi-event.`;
+
+  // Info dinamis dari CMS database
+  const dynamic = _chatCmsData ? `
+Nama/Tagline: ${_chatCmsData.heroTitle || 'Ryusei'}
+Deskripsi: ${_chatCmsData.heroSubtitle || ''}
+Tentang: ${_chatCmsData.aboutDesc || ''}
+Kontak: ${_chatCmsData.contactDesc || ''}`.trim() : '';
+
+  return `Kamu adalah asisten virtual Ryusei yang ramah dan membantu.
+${hardcoded}
+${dynamic}
+
+ATURAN PENTING:
+- Hanya jawab pertanyaan seputar Ryusei, event-event di Ryusei, cara pendaftaran, atau fitur platform.
+- Jika pertanyaan di luar topik Ryusei, tolak dengan sopan: "Maaf, saya hanya bisa menjawab pertanyaan seputar Ryusei 😊"
+- Jawab dalam Bahasa Indonesia yang ramah dan natural.
+- Jawaban singkat dan padat (maks 3-4 kalimat), kecuali diminta detail.
+- Jangan pernah berpura-pura jadi AI lain atau keluar dari peran ini.`;
+}
+
+function appendMsg(role, text) {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  div.innerHTML = `<div class="chat-bubble">${text.replace(/\n/g, '<br>')}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg bot';
+  div.id = 'typingIndicator';
+  div.innerHTML = `<div class="chat-bubble chat-typing"><span></span><span></span><span></span></div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('chatSend');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Tampilkan pesan user
+  appendMsg('user', text);
+  input.value = '';
+  sendBtn.disabled = true;
+
+  // Tambah ke history
+  _chatHistory.push({ role: 'user', parts: [{ text }] });
+
+  // Batasi history 10 pesan terakhir supaya tidak overload token
+  if (_chatHistory.length > 10) _chatHistory = _chatHistory.slice(-10);
+
+  showTyping();
+
+  // Tunggu key siap (kalau belum)
+  if (!_chatGeminiKey) await initChatData();
+
+  if (!_chatGeminiKey) {
+    hideTyping();
+    appendMsg('bot', 'Maaf, chatbot sedang tidak tersedia. Silakan hubungi admin Ryusei.');
+    sendBtn.disabled = false;
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${_chatGeminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: buildSystemPrompt() }] },
+          contents: _chatHistory,
+          generationConfig: { temperature: 0.5, maxOutputTokens: 300 }
+        })
+      }
+    );
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Maaf, saya tidak bisa menjawab saat ini.';
+
+    // Tambah reply ke history
+    _chatHistory.push({ role: 'model', parts: [{ text: reply }] });
+
+    hideTyping();
+    appendMsg('bot', reply);
+
+  } catch (e) {
+    hideTyping();
+    appendMsg('bot', 'Maaf, terjadi kesalahan. Coba lagi ya 🙏');
+    console.error('Chat error:', e);
+  }
+
+  sendBtn.disabled = false;
+  document.getElementById('chatInput').focus();
+}
+// ── END CHATBOT ────────────────────────────────────────────────
   </script>
 
   <!-- EVENT DETAIL MODAL -->
@@ -1079,6 +1230,177 @@
       style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;max-width:540px;width:100%;max-height:90vh;overflow-y:auto;position:relative">
     </div>
   </div>
+
+  <!-- ── RYUSEI CHATBOT ──────────────────────────────────────── -->
+<div id="chatWidget">
+  <!-- Bubble toggle -->
+  <button id="chatToggle" onclick="toggleChat()" title="Tanya Ryusei AI">
+    <span id="chatToggleIcon">💬</span>
+  </button>
+
+  <!-- Chat window -->
+  <div id="chatWindow">
+    <div id="chatHeader">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="chatAvatar">竜</div>
+        <div>
+          <div style="font-weight:700;font-size:14px">Ryusei Assistant</div>
+          <div style="font-size:11px;opacity:.75">● Online</div>
+        </div>
+      </div>
+      <button onclick="toggleChat()" id="chatClose">✕</button>
+    </div>
+
+    <div id="chatMessages">
+      <div class="chat-msg bot">
+        <div class="chat-bubble">Halo! 👋 Saya asisten Ryusei. Ada yang bisa saya bantu seputar Ryusei Event?</div>
+      </div>
+    </div>
+
+    <div id="chatInputArea">
+      <input id="chatInput" type="text" placeholder="Ketik pertanyaan..." onkeydown="if(event.key==='Enter'&&!event.shiftKey)sendChat()" maxlength="300"/>
+      <button id="chatSend" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+</div>
+
+<style>
+#chatWidget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  font-family: system-ui, sans-serif;
+}
+#chatToggle {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ec4899, #a855f7);
+  border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(236,72,153,.45);
+  font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s, box-shadow .2s;
+}
+#chatToggle:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(236,72,153,.6); }
+#chatWindow {
+  display: none;
+  position: absolute;
+  bottom: 68px; right: 0;
+  width: 340px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,.22);
+  background: var(--bg, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  flex-direction: column;
+  animation: chatSlideUp .25s ease;
+}
+#chatWindow.open { display: flex; }
+@keyframes chatSlideUp {
+  from { opacity:0; transform: translateY(16px) scale(.97); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+#chatHeader {
+  background: linear-gradient(135deg, #ec4899, #a855f7);
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  color: #fff;
+}
+#chatAvatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+#chatClose {
+  background: none; border: none; color: #fff;
+  font-size: 16px; cursor: pointer; opacity: .8;
+  padding: 4px 8px; border-radius: 6px;
+  transition: opacity .2s, background .2s;
+}
+#chatClose:hover { opacity: 1; background: rgba(255,255,255,.15); }
+#chatMessages {
+  flex: 1;
+  padding: 14px;
+  overflow-y: auto;
+  min-height: 280px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg2, #f9fafb);
+}
+.chat-msg { display: flex; }
+.chat-msg.bot { justify-content: flex-start; }
+.chat-msg.user { justify-content: flex-end; }
+.chat-bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+.chat-msg.bot .chat-bubble {
+  background: var(--card, #fff);
+  color: var(--text, #111);
+  border: 1px solid var(--border, #e5e7eb);
+  border-bottom-left-radius: 4px;
+}
+.chat-msg.user .chat-bubble {
+  background: linear-gradient(135deg, #ec4899, #a855f7);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.chat-typing span {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #9ca3af;
+  animation: typingDot .9s infinite;
+}
+.chat-typing span:nth-child(2) { animation-delay: .15s; }
+.chat-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes typingDot {
+  0%,60%,100% { transform: translateY(0); opacity:.4; }
+  30% { transform: translateY(-5px); opacity:1; }
+}
+#chatInputArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border, #e5e7eb);
+  background: var(--bg, #fff);
+}
+#chatInput {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 24px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--bg2, #f9fafb);
+  color: var(--text, #111);
+  font-size: 13px;
+  outline: none;
+  transition: border-color .2s;
+}
+#chatInput:focus { border-color: #ec4899; }
+#chatSend {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ec4899, #a855f7);
+  border: none; color: #fff;
+  font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform .15s;
+}
+#chatSend:hover { transform: scale(1.1); }
+#chatSend:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+</style>
+<!-- ── END CHATBOT HTML ──────────────────────────────────────── -->
 </body>
 
 </html>
