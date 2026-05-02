@@ -221,4 +221,4 @@ Untuk pertanyaan atau bug report, buat issue di repository GitHub atau hubungi t
 
 ---
 
-**Ryusei Event Management System** © 2025. Built with ❤️ for seamless event management.
+**Ryusei Event Management System** © 2026. Built with ❤️ for seamless event management.
