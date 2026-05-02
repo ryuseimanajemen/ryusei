@@ -137,14 +137,25 @@ window.addEventListener('DOMContentLoaded', function() {
 
 function toggleJudgeTheme(){const d=root.classList.toggle('dark');localStorage.setItem('ryusei_theme',d?'dark':'light');document.getElementById('jThemeBtn').textContent=d?'☀️':'🌙';}
 // Init
-function init(){
+async function init(){
   try{
+    let cfg=null;
     const saved=localStorage.getItem('ryusei_fb_config');
-    if(!saved){console.warn('Firebase belum dikonfigurasi.');return;}
-    const cfg=JSON.parse(saved);
+    if(saved){cfg=JSON.parse(saved);}
+    if(!cfg){
+      try{
+        const res=await fetch('../firebase-config.json',{cache:'no-store'});
+        if(res.ok){const j=await res.json();if(j&&j.apiKey)cfg=j;}
+      }catch(e){}
+    }
+    if(!cfg){console.warn('Firebase belum dikonfigurasi.');return;}
     if(!firebase.apps.length)firebase.initializeApp(cfg);
     db=firebase.database();
-    // Check URL param
+    try{
+      const snap=await db.ref('settings/fbConfig').once('value');
+      const dbCfg=snap.val();
+      if(dbCfg&&dbCfg.apiKey){localStorage.setItem('ryusei_fb_config',JSON.stringify(dbCfg));}
+    }catch(e){}
     const urlId=new URLSearchParams(location.search).get('id');
     if(urlId){document.getElementById('jLoginId').value=urlId;}
   }catch(e){console.error(e);}

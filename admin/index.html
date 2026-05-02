@@ -35,10 +35,41 @@
 <body style="min-height:100vh">
 
 <!-- LOGIN -->
+<!-- SECRET SETUP MODAL -->
+<div id="secretModal" style="position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;backdrop-filter:blur(6px)">
+  <div style="width:100%;max-width:400px;background:#111827;border:1px solid #1f2937;border-radius:24px;padding:28px;position:relative">
+    <button onclick="closeSecretModal()" style="position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:8px;border:1px solid #374151;background:transparent;color:#6b7280;cursor:pointer;font-size:14px">✕</button>
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-weight:900;font-size:17px">🔥</div>
+      <h2 style="color:#fff;font-size:17px;font-weight:900;margin-bottom:4px">Firebase Setup</h2>
+      <p style="color:#6b7280;font-size:12px">Upload JSON dari Firebase Console → Project Settings</p>
+    </div>
+    <div id="secretDropzone" onclick="document.getElementById('secretFileInput').click()"
+      style="border:2px dashed #374151;border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px"
+      onmouseover="this.style.borderColor='#ec4899';this.style.background='rgba(236,72,153,.06)'"
+      onmouseout="this.style.borderColor='#374151';this.style.background='transparent'"
+      ondragover="event.preventDefault();this.style.borderColor='#ec4899';this.style.background='rgba(236,72,153,.06)'"
+      ondragleave="this.style.borderColor='#374151';this.style.background='transparent'"
+      ondrop="event.preventDefault();this.style.borderColor='#374151';this.style.background='transparent';handleSecretDrop(event)">
+      <div style="font-size:28px;margin-bottom:8px">📄</div>
+      <p style="color:#9ca3af;font-size:13px;font-weight:600">Klik atau drag & drop</p>
+      <p style="color:#6b7280;font-size:11px;margin-top:3px">firebase-config.json</p>
+    </div>
+    <input type="file" id="secretFileInput" accept=".json" style="display:none" onchange="handleSecretFile(this.files[0])"/>
+    <div id="secretPreview" style="display:none;background:#0d1117;border:1px solid #1f2937;border-radius:10px;padding:10px;margin-bottom:12px;font-size:11px;font-family:monospace;color:#6ee7b7;max-height:100px;overflow:auto;line-height:1.5"></div>
+    <p id="secretErr" style="color:#f87171;font-size:12px;text-align:center;margin-bottom:10px;display:none"></p>
+    <div id="secretStatus" style="display:none;text-align:center;padding:10px;margin-bottom:10px;border-radius:10px;font-size:12px;font-weight:600"></div>
+    <button id="secretBtn" onclick="applySecretCfg()" disabled
+      style="width:100%;padding:12px;background:#1f2937;color:#4b5563;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:not-allowed;transition:all .3s">
+      Simpan ke Firebase & Aktifkan →
+    </button>
+  </div>
+</div>
+
 <div id="loginScreen" style="position:fixed;inset:0;background:#030712;display:flex;align-items:center;justify-content:center;z-index:50;padding:20px">
   <div style="width:100%;max-width:340px">
     <div style="text-align:center;margin-bottom:28px">
-      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#fff;font-weight:900;font-size:20px">R</div>
+      <div id="iconR" onclick="handleIconClick()" style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#fff;font-weight:900;font-size:20px;cursor:pointer;user-select:none;transition:transform .1s" onmousedown="this.style.transform='scale(.92)'" onmouseup="this.style.transform='scale(1)'">R</div>
       <h1 style="color:#fff;font-size:22px;font-weight:900">RYUSEI Admin</h1>
       <p style="color:#6b7280;font-size:13px;margin-top:4px">Masuk ke dashboard</p>
     </div>
@@ -559,8 +590,119 @@ function resetCfg(){localStorage.removeItem('ryusei_fb_config');alert('Reset def
 function openM(title,body){document.getElementById('mTitle').textContent=title;document.getElementById('mBody').innerHTML=body;document.getElementById('modal').style.display='flex';document.body.style.overflow='hidden';}
 function closeM(){document.getElementById('modal').style.display='none';document.body.style.overflow='';}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeM();});
+
+// ── SECRET SETUP ──
+let _iconClicks=0,_iconTimer=null,_secretCfg=null;
+function handleIconClick(){
+  _iconClicks++;
+  clearTimeout(_iconTimer);
+  _iconTimer=setTimeout(()=>{_iconClicks=0;},1500);
+  if(_iconClicks>=5){_iconClicks=0;openSecretModal();}
+}
+function openSecretModal(){
+  _secretCfg=null;
+  document.getElementById('secretModal').style.display='flex';
+  document.getElementById('secretPreview').style.display='none';
+  document.getElementById('secretErr').style.display='none';
+  document.getElementById('secretStatus').style.display='none';
+  document.getElementById('secretFileInput').value='';
+  const btn=document.getElementById('secretBtn');
+  btn.disabled=true;btn.style.background='#1f2937';btn.style.color='#4b5563';btn.style.cursor='not-allowed';
+}
+function closeSecretModal(){document.getElementById('secretModal').style.display='none';}
+function handleSecretDrop(e){const f=e.dataTransfer.files[0];if(f)handleSecretFile(f);}
+function handleSecretFile(f){
+  if(!f||!f.name.endsWith('.json')){showSecretErr('File harus .json');return;}
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      let cfg=JSON.parse(ev.target.result);
+      if(cfg.firebaseConfig)cfg=cfg.firebaseConfig;
+      const req=['apiKey','authDomain','databaseURL','projectId'];
+      const miss=req.filter(k=>!cfg[k]);
+      if(miss.length){showSecretErr('Field tidak lengkap: '+miss.join(', '));return;}
+      _secretCfg=cfg;
+      document.getElementById('secretPreview').style.display='block';
+      document.getElementById('secretPreview').textContent=JSON.stringify(cfg,null,2);
+      document.getElementById('secretErr').style.display='none';
+      document.getElementById('secretStatus').style.display='none';
+      const btn=document.getElementById('secretBtn');
+      btn.disabled=false;btn.style.background='linear-gradient(135deg,#ec4899,#a855f7)';
+      btn.style.color='#fff';btn.style.cursor='pointer';
+    }catch(e){showSecretErr('JSON tidak valid: '+e.message);}
+  };
+  r.readAsText(f);
+}
+function showSecretErr(msg){const e=document.getElementById('secretErr');e.textContent=msg;e.style.display='block';}
+function showSecretStatus(msg,ok){
+  const s=document.getElementById('secretStatus');
+  s.textContent=msg;s.style.display='block';
+  s.style.background=ok?'rgba(52,211,153,.1)':'rgba(248,113,113,.1)';
+  s.style.color=ok?'#34d399':'#f87171';
+  s.style.border='1px solid '+(ok?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)');
+}
+async function applySecretCfg(){
+  if(!_secretCfg)return;
+  const btn=document.getElementById('secretBtn');
+  btn.textContent='Menyimpan...';btn.disabled=true;btn.style.cursor='not-allowed';
+  try{
+    // Init firebase sementara dengan config baru
+    if(firebase.apps.length)await Promise.all(firebase.apps.map(a=>a.delete()));
+    firebase.initializeApp(_secretCfg);
+    const tempDb=firebase.database();
+    // Push config ke Firebase database settings/fbConfig
+    await tempDb.ref('settings/fbConfig').set(_secretCfg);
+    // Simpan juga ke localStorage
+    localStorage.setItem('ryusei_fb_config',JSON.stringify(_secretCfg));
+    showSecretStatus('✅ Config berhasil disimpan ke Firebase!',true);
+    btn.textContent='Berhasil! Menutup...';
+    setTimeout(()=>{
+      closeSecretModal();
+      db=tempDb;auth=firebase.auth();
+      auth.onAuthStateChanged(u=>{
+        if(u){document.getElementById('loginScreen').style.display='none';const a=document.getElementById('appShell');a.style.display='flex';document.getElementById('uEmail').textContent=u.email||'Admin';showPage('dashboard');}
+        else{document.getElementById('loginScreen').style.display='flex';document.getElementById('appShell').style.display='none';}
+      });
+    },1200);
+  }catch(e){
+    showSecretStatus('❌ Gagal: '+e.message,false);
+    btn.textContent='Simpan ke Firebase & Aktifkan →';btn.disabled=false;btn.style.cursor='pointer';
+  }
+}
+
 // ── INIT ──
-(()=>{const saved=localStorage.getItem('ryusei_fb_config');initFB(saved?JSON.parse(saved):null);})();
+(async()=>{
+  // 1. Coba localStorage
+  const saved=localStorage.getItem('ryusei_fb_config');
+  if(saved){try{initFB(JSON.parse(saved));return;}catch(e){}}
+  // 2. Fetch dari Firebase settings/fbConfig — butuh bootstrap config dulu
+  // Coba fetch firebase-config.json (boleh kosong, hanya untuk bootstrap awal)
+  try{
+    const res=await fetch('../firebase-config.json',{cache:'no-store'});
+    if(res.ok){
+      const j=await res.json();
+      if(j&&j.apiKey){
+        // Ada bootstrap config, fetch settings/fbConfig dari DB
+        if(firebase.apps.length)await Promise.all(firebase.apps.map(a=>a.delete()));
+        firebase.initializeApp(j);
+        const tempDb=firebase.database();
+        const snap=await tempDb.ref('settings/fbConfig').once('value');
+        const dbCfg=snap.val();
+        if(dbCfg&&dbCfg.apiKey){
+          localStorage.setItem('ryusei_fb_config',JSON.stringify(dbCfg));
+          initFB(dbCfg);return;
+        }
+        // Tidak ada di DB, pakai bootstrap langsung
+        localStorage.setItem('ryusei_fb_config',JSON.stringify(j));
+        initFB(j);return;
+      }
+    }
+  }catch(e){}
+  // 3. Tidak ada config sama sekali — user harus klik icon R 5x
+  // Login screen tetap tampil, tapi firebase tidak aktif
+  document.getElementById('loginErr').textContent='⚙️ Firebase belum dikonfigurasi. Klik icon R sebanyak 5x untuk setup.';
+  document.getElementById('loginErr').style.display='block';
+})();
 </script>
 </body>
 </html>

@@ -336,13 +336,35 @@ window.addEventListener('scroll',()=>{const n=document.getElementById('navbar');
   if(card&&window.innerWidth<=768){const y=window.scrollY;card.style.transform=`translateY(${y*0.22}px) scale(${1-y*0.0003})`;}
 });
 // Firebase
-function init(){
+async function init(){
   try{
+    let cfg=null;
+    // 1. localStorage
     const saved=localStorage.getItem('ryusei_fb_config');
-    if(!saved){console.warn('Firebase belum dikonfigurasi.');return;}
-    const cfg=JSON.parse(saved);
+    if(saved)cfg=JSON.parse(saved);
+    // 2. Fetch dari firebase-config.json (bootstrap) → ambil settings/fbConfig dari DB
+    if(!cfg){
+      try{
+        const res=await fetch('firebase-config.json',{cache:'no-store'});
+        if(res.ok){const j=await res.json();if(j&&j.apiKey)cfg=j;}
+      }catch(e){}
+    }
+    if(!cfg){console.warn('Firebase belum dikonfigurasi.');return;}
     if(!firebase.apps.length)firebase.initializeApp(cfg);
     db=firebase.database();
+    // Coba ambil config final dari DB (kalau ada)
+    try{
+      const snap=await db.ref('settings/fbConfig').once('value');
+      const dbCfg=snap.val();
+      if(dbCfg&&dbCfg.apiKey&&dbCfg.apiKey!==cfg.apiKey){
+        localStorage.setItem('ryusei_fb_config',JSON.stringify(dbCfg));
+        await Promise.all(firebase.apps.map(a=>a.delete()));
+        firebase.initializeApp(dbCfg);
+        db=firebase.database();
+      } else if(dbCfg&&dbCfg.apiKey){
+        localStorage.setItem('ryusei_fb_config',JSON.stringify(dbCfg));
+      }
+    }catch(e){}
     loadAll();
   }catch(e){console.error(e);}
 }
