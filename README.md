@@ -1,6 +1,6 @@
 # Ryusei Event Management System
 
-Sistem manajemen event lengkap untuk Ryusei dengan fitur admin, juri, dan publik. Dibangun menggunakan HTML/CSS/JavaScript dengan Firebase Realtime Database.
+Sistem manajemen event lengkap untuk Ryusei dengan fitur publik, admin, juri, dan dokumentasi fitur. Dibangun menggunakan HTML/CSS/JavaScript dengan Firebase Realtime Database.
 
 ## 🚀 Fitur Utama
 
@@ -10,6 +10,7 @@ Sistem manajemen event lengkap untuk Ryusei dengan fitur admin, juri, dan publik
 - **Pendaftaran Peserta**: Form pendaftaran dengan validasi real-time
 - **Cek Status**: Verifikasi status pendaftaran dengan kode unik
 - **Leaderboard**: Tampilan hasil kompetisi (hanya jika dipublikasikan admin)
+- **Terms & Fitur**: Halaman informasi `tos.html` dan `fitur.html` untuk dokumentasi publik
 - **Tema Dark/Light**: Toggle tema dengan penyimpanan lokal
 - **Responsive Design**: Optimal di desktop dan mobile
 
@@ -41,9 +42,9 @@ Sistem manajemen event lengkap untuk Ryusei dengan fitur admin, juri, dan publik
 - Pesan "Leaderboard belum dipublikasikan" jika belum diaktifkan
 
 ### Role-Based Security
-- Super admin emails: `admin@ryusei.com`, `it@ryusei.com`
-- Staff admin hanya dapat diundang oleh super admin
-- Akses Firebase config dan CMS terbatas untuk super admin
+- Peran super admin dan staff dikelola melalui Firebase settings
+- Staff admin dapat dibuat melalui undangan token dari admin utama
+- Akses Firebase config dan CMS dibatasi hanya untuk super admin
 
 ### Real-time Updates
 - Semua data update otomatis tanpa reload halaman
@@ -82,6 +83,8 @@ ryusei/
 │       └── site.webmanifest
 ├── firebase-config.json    # Template config Firebase
 ├── firebase.rules.json     # Firebase security rules
+├── fitur.html              # Halaman fitur publik
+├── tos.html                # Halaman terms of service
 └── README.md               # Dokumentasi ini
 ```
 
@@ -188,6 +191,7 @@ Paste ke Firebase Console → Realtime Database → Rules:
 - ✅ Enhanced Firebase config security
 - ✅ Real-time publication status
 - ✅ Improved admin user management
+- ✅ Public documentation pages: `fitur.html` dan `tos.html`
 
 ### v3.0 - Real-time Dashboard & Judge Permissions
 - ✅ Real-time admin dashboard counters
