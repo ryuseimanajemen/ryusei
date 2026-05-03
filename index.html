@@ -1213,21 +1213,42 @@ async function checkRegistration(kode) {
   return div;
 }
 
-function formatChatText(text) {
-  // 1. Escape HTML dulu supaya aman dari XSS
-  const escaped = text
+ function formatChatText(text) {
+  // 1. Escape HTML
+  let out = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // 2. Deteksi URL → jadikan link
-  const linked = escaped.replace(
+  // 2. URL → link
+  out = out.replace(
     /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g,
     '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:#ec4899;text-decoration:underline;word-break:break-all">$1</a>'
   );
 
-  // 3. Newline → <br>
-  return linked.replace(/\n/g, '<br>');
+  // 3. Bold **teks**
+  out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // 4. List bernomor (1. 2. 3.) → <ol>
+  out = out.replace(/((?:^\d+\..+$\n?)+)/gm, match => {
+    const items = match.trim().split('\n')
+      .map(l => `<li style="margin-bottom:4px">${l.replace(/^\d+\.\s*/, '')}</li>`)
+      .join('');
+    return `<ol style="margin:6px 0 6px 18px;padding:0">${items}</ol>`;
+  });
+
+  // 5. List bullet (- atau •) → <ul>
+  out = out.replace(/((?:^[-•]\s.+$\n?)+)/gm, match => {
+    const items = match.trim().split('\n')
+      .map(l => `<li style="margin-bottom:4px">${l.replace(/^[-•]\s*/, '')}</li>`)
+      .join('');
+    return `<ul style="margin:6px 0 6px 18px;padding:0;list-style:disc">${items}</ul>`;
+  });
+
+  // 6. Sisa newline → <br>
+  out = out.replace(/\n/g, '<br>');
+
+  return out;
 }
 
 function showTyping() {
