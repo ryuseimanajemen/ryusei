@@ -440,9 +440,9 @@
     function toggleAdminTheme() { const d = root.classList.toggle('dark'); localStorage.setItem('ryusei_theme', d ? 'dark' : 'light'); document.getElementById('tBtn').textContent = d ? '☀️' : '🌙'; }
     function toggleSidebar() { const s = document.getElementById('sidebar'); s.style.display = s.style.display === 'none' ? 'flex' : 'none'; }
     // Firebase
-    function initFB(cfg) {
+    async function initFB(cfg) {
       try {
-        if (firebase.apps.length) { firebase.apps.forEach(a => a.delete()); }
+        if (firebase.apps.length) { await Promise.all(firebase.apps.map(a => a.delete())); }
         if (!cfg) { console.warn('Firebase belum dikonfigurasi.'); return; }
         hasFirebaseConfig = true;
         firebase.initializeApp(cfg); db = firebase.database(); auth = firebase.auth();
@@ -458,10 +458,11 @@
           } else {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('appShell').style.display = 'none';
+            // Cek invite URL setelah auth siap & Firebase konek
+            handleInviteUrl();
             hideLoader();
           }
         });
-        handleInviteUrl();
       } catch (e) { console.error(e); }
     }
     function setLoaderMsg(msg) {
@@ -1450,7 +1451,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
       setTimeout(hideLoader, 12000);
       // 1. Coba localStorage
       const saved = localStorage.getItem('ryusei_fb_config');
-      if (saved) { try { setLoaderMsg('Menyambungkan database…'); initFB(JSON.parse(saved)); return; } catch (e) { } }
+      if (saved) { try { setLoaderMsg('Menyambungkan database…'); await initFB(JSON.parse(saved)); return; } catch (e) { } }
       // 2. Fetch dari Firebase settings/fbConfig — butuh bootstrap config dulu
       setLoaderMsg('Mengambil konfigurasi Firebase…');
       try {
@@ -1459,18 +1460,18 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
           const j = await res.json();
           if (j && j.apiKey) {
             // Ada bootstrap config, fetch settings/fbConfig dari DB
-            if (firebase.apps.length) await Promise.all(firebase.apps.map(a => a.delete()));
-            firebase.initializeApp(j);
+            // Inisialisasi sementara untuk ambil config final dari DB
+            if (!firebase.apps.length) firebase.initializeApp(j);
             const tempDb = firebase.database();
             const snap = await tempDb.ref('settings/fbConfig').once('value');
             const dbCfg = snap.val();
             if (dbCfg && dbCfg.apiKey) {
               localStorage.setItem('ryusei_fb_config', JSON.stringify(dbCfg));
-              initFB(dbCfg); return;
+              await initFB(dbCfg); return;
             }
             // Tidak ada di DB, pakai bootstrap langsung
             localStorage.setItem('ryusei_fb_config', JSON.stringify(j));
-            initFB(j); return;
+            await initFB(j); return;
           }
         }
       } catch (e) { }
