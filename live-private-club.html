@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Private Club — Panduan Lengkap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== ROOT & RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --bg2:       #111118;
+      --bg3:       #16161f;
+      --border:    rgba(255,255,255,0.08);
+      --border2:   rgba(255,255,255,0.14);
+      --accent:    #c8a96e;
+      --accent2:   #e2c98a;
+      --red:       #e05c5c;
+      --green:     #5ce08a;
+      --text:      #e8e8f0;
+      --muted:     #8888a8;
+      --tag-bg:    rgba(200,169,110,0.12);
+      --radius:    10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== NOISE OVERLAY ===== */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; opacity: .5;
+    }
+
+    /* ===== NAV ===== */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 clamp(1rem,4vw,3rem);
+      display: flex; align-items: center; justify-content: space-between;
+      height: 58px;
+    }
+
+    .nav-logo {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--accent2); letter-spacing: .05em;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-logo img { width: 28px; height: 28px; border-radius: 6px; }
+
+    .nav-links {
+      display: flex; gap: 1.6rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--muted); font-size: .82rem;
+      text-decoration: none; letter-spacing: .04em;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ===== HERO ===== */
+    .hero {
+      position: relative; z-index: 1;
+      padding: clamp(3rem,10vw,7rem) clamp(1rem,6vw,4rem) clamp(2rem,6vw,4rem);
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: .72rem; letter-spacing: .2em;
+      color: var(--accent);
+      border: 1px solid rgba(200,169,110,.3);
+      padding: .3em 1em; border-radius: 999px;
+      margin-bottom: 1.4rem;
+      background: var(--tag-bg);
+    }
+
+    .hero-jp {
+      font-family: 'Noto Serif JP', serif;
+      font-size: clamp(3rem, 12vw, 7rem);
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      letter-spacing: -.02em;
+      opacity: .15;
+      position: absolute;
+      top: 1.2rem; left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .hero h1 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .hero h1 strong { color: var(--accent2); }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 2rem;
+      font-size: .95rem;
+      position: relative;
+    }
+
+    .badges {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem;
+      position: relative;
+    }
+
+    .badge {
+      background: var(--tag-bg);
+      border: 1px solid rgba(200,169,110,.25);
+      color: var(--accent2);
+      padding: .35em 1em; border-radius: 999px;
+      font-size: .78rem; font-family: 'Space Mono', monospace;
+      letter-spacing: .05em;
+    }
+
+    /* ===== TOC ===== */
+    .toc-bar {
+      position: relative; z-index: 1;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: .9rem clamp(1rem,4vw,3rem);
+      display: flex; flex-wrap: wrap; gap: .5rem 1.2rem;
+      align-items: center;
+    }
+    .toc-bar span { color: var(--muted); font-size: .75rem; font-family: 'Space Mono', monospace; }
+    .toc-bar a {
+      color: var(--muted); font-size: .78rem; text-decoration: none;
+      transition: color .2s;
+    }
+    .toc-bar a:hover { color: var(--accent2); }
+
+    /* ===== MAIN LAYOUT ===== */
+    main {
+      position: relative; z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 clamp(1rem,4vw,3rem) 6rem;
+    }
+
+    /* ===== SECTION ===== */
+    section { padding: clamp(2.5rem,6vw,4rem) 0; border-bottom: 1px solid var(--border); }
+    section:last-child { border-bottom: none; }
+
+    .section-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: .72rem; letter-spacing: .18em;
+      color: var(--muted);
+      margin-bottom: .6rem;
+      display: block;
+    }
+
+    .section-title {
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: .5rem;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: .9rem;
+      margin-bottom: 2.2rem;
+      max-width: 620px;
+    }
+
+    /* ===== GRID CARDS ===== */
+    .grid { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .grid-2 { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+    .card {
+      background: var(--bg2);
+      padding: 1.5rem 1.6rem;
+      transition: background .2s;
+    }
+    .card:hover { background: var(--bg3); }
+
+    .card-icon {
+      font-size: 1.5rem; margin-bottom: .8rem; display: block;
+    }
+    .card-num {
+      font-family: 'Space Mono', monospace;
+      font-size: .68rem; color: var(--accent);
+      letter-spacing: .15em;
+      display: block; margin-bottom: .4rem;
+    }
+    .card h3 {
+      font-size: .95rem; font-weight: 600;
+      margin-bottom: .5rem; line-height: 1.3;
+    }
+    .card p { color: var(--muted); font-size: .85rem; line-height: 1.65; }
+
+    /* ===== STEP LIST (Alur) ===== */
+    .step-list { display: flex; flex-direction: column; gap: 0; }
+
+    .step-item {
+      display: grid;
+      grid-template-columns: 50px 1fr;
+      gap: 1.2rem;
+      padding: 1.3rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+    .step-item:last-child { border-bottom: none; }
+
+    .step-num {
+      width: 38px; height: 38px;
+      background: var(--tag-bg);
+      border: 1px solid rgba(200,169,110,.3);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: .8rem; color: var(--accent); font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .step-content h4 { font-size: .92rem; font-weight: 600; margin-bottom: .25rem; }
+    .step-content p  { color: var(--muted); font-size: .84rem; }
+
+    /* ===== POLICY TABLE ===== */
+    .policy-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .policy-row {
+      display: grid;
+      grid-template-columns: 2.2rem 1fr;
+      gap: 1rem;
+      padding: 1rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      transition: background .2s;
+    }
+    .policy-row:last-child { border-bottom: none; }
+    .policy-row:hover { background: var(--bg3); }
+
+    .policy-dot {
+      width: 28px; height: 28px;
+      background: var(--tag-bg);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: .68rem; color: var(--accent); font-weight: 700;
+    }
+
+    .policy-row p { font-size: .88rem; color: var(--text); line-height: 1.5; }
+
+    /* ===== BONUS TABLE ===== */
+    .bonus-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .bonus-card {
+      background: var(--bg2);
+      padding: 1.6rem 1.4rem;
+      text-align: center;
+      transition: background .2s;
+    }
+    .bonus-card:hover { background: var(--bg3); }
+
+    .bonus-tier {
+      font-family: 'Space Mono', monospace;
+      font-size: .68rem; letter-spacing: .15em;
+      color: var(--muted); margin-bottom: .5rem;
+    }
+    .bonus-beans {
+      font-size: 1.4rem; font-weight: 700;
+      color: var(--accent2); margin-bottom: .3rem;
+      line-height: 1;
+    }
+    .bonus-label { font-size: .8rem; color: var(--muted); margin-bottom: .8rem; }
+    .bonus-reward {
+      background: rgba(92,224,138,.1);
+      border: 1px solid rgba(92,224,138,.25);
+      color: var(--green);
+      border-radius: 999px; padding: .3em .9em;
+      font-size: .82rem; font-family: 'Space Mono', monospace;
+      display: inline-block;
+    }
+
+    /* ===== BANNED LIST ===== */
+    .banned-list { display: flex; flex-direction: column; gap: 0; }
+
+    .banned-item {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      background: var(--bg2);
+      transition: background .2s;
+    }
+    .banned-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .banned-item:last-child  { border-radius: 0 0 var(--radius) var(--radius); border-bottom: none; }
+    .banned-item:hover { background: rgba(224,92,92,.07); }
+
+    .banned-icon {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      background: rgba(224,92,92,.12);
+      border: 1px solid rgba(224,92,92,.25);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem;
+    }
+
+    .banned-item p { font-size: .88rem; line-height: 1.55; }
+    .banned-item p strong { color: var(--red); }
+
+    /* ===== ALERT BOX ===== */
+    .alert {
+      border-radius: var(--radius);
+      padding: 1.2rem 1.4rem;
+      font-size: .88rem;
+      margin-bottom: 1.5rem;
+      display: flex; align-items: flex-start; gap: .8rem;
+      line-height: 1.6;
+    }
+    .alert-warn {
+      background: rgba(224,92,92,.1);
+      border: 1px solid rgba(224,92,92,.3);
+      color: #f4a9a9;
+    }
+    .alert-info {
+      background: rgba(200,169,110,.1);
+      border: 1px solid rgba(200,169,110,.3);
+      color: var(--accent2);
+    }
+    .alert-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+
+    /* ===== TIMELINE ===== */
+    .timeline { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 2.2rem; }
+    .timeline::before {
+      content: '';
+      position: absolute; left: 10px; top: 0; bottom: 0; width: 1px;
+      background: var(--border2);
+    }
+
+    .tl-item {
+      position: relative; padding: 0 0 1.8rem 1.2rem;
+    }
+    .tl-item:last-child { padding-bottom: 0; }
+
+    .tl-dot {
+      position: absolute; left: -1.75rem; top: .3rem;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 3px rgba(200,169,110,.2);
+    }
+
+    .tl-date {
+      font-family: 'Space Mono', monospace;
+      font-size: .72rem; color: var(--accent);
+      letter-spacing: .1em; margin-bottom: .3rem;
+      display: block;
+    }
+    .tl-item h4 { font-size: .9rem; font-weight: 600; margin-bottom: .2rem; }
+    .tl-item p  { font-size: .83rem; color: var(--muted); }
+
+    /* ===== FOOTER ===== */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      background: var(--bg2);
+      padding: 2rem clamp(1rem,4vw,3rem);
+      text-align: center;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .bonus-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero h1, .hero p, .hero .badges, .hero-eyebrow {
+      animation: fadeUp .6s both;
+    }
+    .hero-eyebrow { animation-delay: .05s; }
+    .hero h1      { animation-delay: .15s; }
+    .hero p       { animation-delay: .25s; }
+    .hero .badges { animation-delay: .35s; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <img src="https://ryuseimanajemen.github.io/ryusei/assets/fav/apple-touch-icon.png" alt="Logo" />
+    RYUSEI
+  </a>
+  <ul class="nav-links">
+    <li><a href="#kriteria">Kriteria</a></li>
+    <li><a href="#alur">Alur Daftar</a></li>
+    <li><a href="#policy">Policy</a></li>
+    <li><a href="#bonus">Bonus</a></li>
+    <li><a href="#peraturan">Peraturan</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-jp">尺YU</div>
+  <div class="hero-eyebrow">PROGRAM EKSKLUSIF</div>
+  <h1>Live <strong>Private Club</strong><br/>Panduan Lengkap</h1>
+  <p>Syarat, alur pendaftaran, kebijakan host, skema bonus, dan peraturan resmi program Live Private Club.</p>
+  <div class="badges">
+    <span class="badge">Berlaku 1 April 2026</span>
+    <span class="badge">Evaluasi Berkala</span>
+    <span class="badge">Bonus Mingguan</span>
+    <span class="badge">HeeSay Walla</span>
+  </div>
+</header>
+
+<!-- TOC -->
+<div class="toc-bar">
+  <span>Daftar Isi ·</span>
+  <a href="#kriteria">📋 Kriteria Peserta</a>
+  <a href="#alur">🔄 Alur Pendaftaran</a>
+  <a href="#policy">📌 Policy Host</a>
+  <a href="#bonus">🏆 Skema Bonus</a>
+  <a href="#peraturan">⚠️ Peraturan</a>
+</div>
+
+<main>
+
+  <!-- SECTION 01 — KRITERIA -->
+  <section id="kriteria">
+    <span class="section-tag">// 01 — Kriteria Peserta</span>
+    <h2 class="section-title">Siapa yang Bisa Mendaftar?</h2>
+    <p class="section-sub">Semua peserta wajib memenuhi kriteria berikut sebelum pengajuan pendaftaran diproses oleh Admin Ketua Agency.</p>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="card-icon">📡</span>
+        <span class="card-num">KRITERIA 01</span>
+        <h3>Aktif & Rutin Live Streaming</h3>
+        <p>Rajin, rutin, dan sering aktif live streaming dengan durasi live yang panjang setiap hari.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">👥</span>
+        <span class="card-num">KRITERIA 02</span>
+        <h3>Banyak Penonton / Followers</h3>
+        <p>Memiliki basis penonton dan followers yang besar dan aktif mengikuti live.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🎓</span>
+        <span class="card-num">KRITERIA 03</span>
+        <h3>Mahir Live & Fitur Live</h3>
+        <p>Sudah pintar mengoperasikan live streaming dan memahami seluruh fitur live yang tersedia.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">⚔️</span>
+        <span class="card-num">KRITERIA 04</span>
+        <h3>Rutin PK Battle & Beans</h3>
+        <p>Aktif rutin mengikuti PK Battle, mengumpulkan beans coin, dan meningkatkan popularity.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">📷</span>
+        <span class="card-num">KRITERIA 05</span>
+        <h3>Kamera & Internet Berkualitas</h3>
+        <p>Kamera live bagus, jernih, dan jelas. Koneksi internet live aman dan lancar tanpa gangguan.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">✨</span>
+        <span class="card-num">KRITERIA 06</span>
+        <h3>Real Good Looking & Good Body</h3>
+        <p>Foto asli, penampilan menarik, dan postur tubuh yang baik sesuai standar program.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🎤</span>
+        <span class="card-num">KRITERIA 07</span>
+        <h3>Percaya Diri & Public Speaking</h3>
+        <p>Tidak insecure di depan kamera, aktif, dan lancar dalam public speaking selama live berlangsung.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">📜</span>
+        <span class="card-num">KRITERIA 08 & 09</span>
+        <h3>Taat Peraturan HeeSay Walla</h3>
+        <p>Paham dan tidak melanggar semua peraturan HeeSay. Tidak sering terkena banned.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🎯</span>
+        <span class="card-num">KRITERIA 10</span>
+        <h3>Siap Kejar Target Bulanan</h3>
+        <p>Bersedia dan serius mengejar target poin bulanan serta aktif mencari pendapatan coin beans.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 02 — ALUR -->
+  <section id="alur">
+    <span class="section-tag">// 02 — Alur Pendaftaran</span>
+    <h2 class="section-title">Bagaimana Proses Pendaftaran?</h2>
+    <p class="section-sub">Pendaftaran dilakukan setiap awal bulan. Ikuti alur berikut dengan seksama agar proses berjalan lancar.</p>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">ℹ️</span>
+      <span>Syarat wajib: Member <strong>harus sudah join agency</strong> terlebih dahulu. Member yang belum join agency tidak bisa mendaftar Live Private.</span>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-date">LANGKAH 1</span>
+        <h4>Pengajuan Pendaftaran</h4>
+        <p>Dilakukan oleh <strong>Admin Ketua Agency</strong> atas nama member yang memenuhi kriteria.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-date">LANGKAH 2</span>
+        <h4>Verifikasi Syarat</h4>
+        <p>Member wajib sudah join agency. Member tidak sesuai kriteria atau belum join agency otomatis tidak lolos.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-date">LANGKAH 3 · Tanggal 3–4</span>
+        <h4>Pengajuan Pendaftaran Resmi</h4>
+        <p>Pengajuan pendaftaran dilakukan setiap tanggal <strong>3–4</strong> di awal bulan (1 bulan 1x).</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-date">LANGKAH 4 · Tanggal 5–6</span>
+        <h4>Seleksi oleh Admin Aplikasi</h4>
+        <p>Penentuan lolos atau tidak lolos peserta seleksi dilakukan oleh <strong>Admin Aplikasi</strong> pada tanggal 5–6.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <span class="tl-date">LANGKAH 5 · Tanggal 7–8</span>
+        <h4>Pengumuman Hasil Seleksi</h4>
+        <p>Pengumuman hasil seleksi disampaikan pada tanggal <strong>7–8</strong> melalui <strong>Group Pendaftaran</strong>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 03 — POLICY -->
+  <section id="policy">
+    <span class="section-tag">// 03 — Policy Khusus Host Private Club</span>
+    <h2 class="section-title">Ketentuan Resmi Host</h2>
+    <p class="section-sub">Kebijakan ini berlaku mulai <strong>1 April 2026</strong>. Seluruh host wajib membaca dan mematuhi setiap poin berikut.</p>
+
+    <div class="policy-block" style="margin-bottom: 1.5rem;">
+      <div class="policy-row">
+        <div class="policy-dot">1</div>
+        <p>Policy ini berlaku mulai sejak <strong>1 April 2026</strong>.</p>
+      </div>
+      <div class="policy-row">
+        <div class="policy-dot">2</div>
+        <p>Host <strong>wajib mendaftarkan diri</strong> ke admin.</p>
+      </div>
+      <div class="policy-row">
+        <div class="policy-dot">3</div>
+        <p>Host akan <strong>dievaluasi secara berkala</strong> oleh admin.</p>
+      </div>
+      <div class="policy-row">
+        <div class="policy-dot">4</div>
+        <p>Host <strong>wajib mengikuti setiap aturan dan instruksi</strong> dari admin.</p>
+      </div>
+      <div class="policy-row">
+        <div class="policy-dot">6</div>
+        <p>Hanya pendapatan dari <strong>mode Private Club</strong> yang dihitung untuk pencapaian target (tiket dan gift selama sesi Private Club).</p>
+      </div>
+      <div class="policy-row">
+        <div class="policy-dot">7</div>
+        <p>Pendapatan target <strong>hanya dihitung dari mode Private Club</strong>. Pendapatan di luar mode ini tidak dihitung.</p>
+      </div>
+      <div class="policy-row">
+        <div class="policy-dot">8</div>
+        <p>Perhitungan target bonus secara <strong>MINGGUAN</strong> mulai setiap hari <strong>Senin hingga Minggu</strong>.</p>
+      </div>
+      <div class="policy-row">
+        <div class="policy-dot">9</div>
+        <p>Penghasilan Beans dianggap <strong>SAH</strong> ketika host berhasil live lebih dari <strong>10 menit</strong> sejak tiket dibeli oleh viewers.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-warn">
+      <span class="alert-icon">🚫</span>
+      <span><strong>DILARANG MELAKUKAN KECURANGAN.</strong> Jika terdapat kecurangan, semua bonus dibatalkan dan host akan <strong>diblacklist</strong> dari program. Fungsi Private Club juga akan <strong>diblokir</strong>.</span>
+    </div>
+  </section>
+
+  <!-- SECTION 04 — BONUS -->
+  <section id="bonus">
+    <span class="section-tag">// 04 — Skema Bonus Mingguan</span>
+    <h2 class="section-title">Target & Reward Mingguan</h2>
+    <p class="section-sub">Capai target beans mingguan untuk mendapatkan bonus koin. Perhitungan dilakukan setiap Senin–Minggu.</p>
+
+    <div class="bonus-grid">
+      <div class="bonus-card">
+        <div class="bonus-tier">TIER A</div>
+        <div class="bonus-beans">150.000</div>
+        <div class="bonus-label">Beans / Minggu</div>
+        <span class="bonus-reward">+1.500 Koin</span>
+      </div>
+      <div class="bonus-card">
+        <div class="bonus-tier">TIER B</div>
+        <div class="bonus-beans">250.000</div>
+        <div class="bonus-label">Beans / Minggu</div>
+        <span class="bonus-reward">+3.000 Koin</span>
+      </div>
+      <div class="bonus-card">
+        <div class="bonus-tier">TIER C</div>
+        <div class="bonus-beans">400.000</div>
+        <div class="bonus-label">Beans / Minggu</div>
+        <span class="bonus-reward">+6.000 Koin</span>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">📅</span>
+      <span>Perhitungan target bonus berjalan <strong>setiap Senin hingga Minggu</strong>. Hanya beans dari mode Private Club (tiket + gift saat sesi aktif) yang dihitung. Live harus berlangsung lebih dari <strong>10 menit</strong> sejak tiket dibeli agar beans dianggap sah.</span>
+    </div>
+  </section>
+
+  <!-- SECTION 05 — PERATURAN -->
+  <section id="peraturan">
+    <span class="section-tag">// 05 — Peraturan Private Club</span>
+    <h2 class="section-title">Hal-Hal yang Dilarang</h2>
+    <p class="section-sub">Pelanggaran terhadap peraturan berikut akan berakibat sanksi tegas. Admin Official berhak atas semua keputusan dan interpretasi akhir.</p>
+
+    <div class="banned-list">
+      <div class="banned-item">
+        <div class="banned-icon">🚫</div>
+        <p><strong>DILARANG</strong> melakukan live hubungan intim 2 orang atau lebih.</p>
+      </div>
+      <div class="banned-item">
+        <div class="banned-icon">🚫</div>
+        <p><strong>DILARANG</strong> melakukan live tidak jelas atau tanpa konten.</p>
+      </div>
+      <div class="banned-item">
+        <div class="banned-icon">🚫</div>
+        <p><strong>DILARANG</strong> melakukan konten di luar ruangan / outdoor / di dalam mobil / ekstrem / berbahaya.</p>
+      </div>
+      <div class="banned-item">
+        <div class="banned-icon">🚫</div>
+        <p><strong>DILARANG</strong> menampilkan pemutaran film.</p>
+      </div>
+      <div class="banned-item">
+        <div class="banned-icon">🚫</div>
+        <p><strong>DILARANG</strong> melakukan live tidur, layer gelap, ataupun konten dengan situasi yang sangat gelap.</p>
+      </div>
+      <div class="banned-item">
+        <div class="banned-icon">🚫</div>
+        <p><strong>DILARANG</strong> melakukan live hal-hal yang membahayakan termasuk senjata.</p>
+      </div>
+      <div class="banned-item">
+        <div class="banned-icon">🚫</div>
+        <p><strong>DILARANG</strong> melakukan live mengkonsumsi zat dan obat terlarang.</p>
+      </div>
+      <div class="banned-item">
+        <div class="banned-icon">🚫</div>
+        <p>Host <strong>DILARANG</strong> telanjang tanpa pakaian atau melakukan hal vulgar pada tahap live PreHeat / Pemanasan.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-warn" style="margin-top: 1.5rem;">
+      <span class="alert-icon">⚖️</span>
+      <span><strong>Admin Official berhak atas semua keputusan dan interpretasi akhir</strong> terkait seluruh peraturan yang berlaku dalam program Live Private Club.</span>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>Panduan Live Private Club — <a href="https://ryuseimanajemen.github.io/ryusei/">RYUSEI Event & Agency Management</a></p>
+  <p style="margin-top:.4rem;">© 2026 Ryusei Event & Agency Management. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

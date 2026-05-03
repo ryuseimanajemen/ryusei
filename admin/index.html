@@ -1345,7 +1345,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
         if (mistralEndInput && _cbMistralEndpoint) mistralEndInput.value = _cbMistralEndpoint;
 
         // Update status indicator
-        cbSetStatus(_cbGeminiKey ? true : false);
+        cbSetStatus(!!(_cbGeminiKey || _cbMistralKey));
       } catch (e) {
         cbSetStatus(false, 'Gagal memuat config: ' + e.message);
       }
@@ -1356,10 +1356,27 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       const txt = document.getElementById('cbStatusText');
       if (!dot || !txt) return;
       dot.style.background = ok ? '#22c55e' : '#ef4444';
-      txt.textContent = ok
-        ? '✅ Gemini API Key terdeteksi — Chatbot aktif'
-        : (msg || '❌ Gemini API Key belum dikonfigurasi');
+      if (msg) {
+        txt.textContent = msg;
+        txt.style.color = ok ? '#22c55e' : '#ef4444';
+        return;
+      }
+
+      if (_cbGeminiKey && _cbMistralKey) {
+        txt.textContent = '✅ Gemini aktif — Mistral terpasang sebagai fallback';
+      } else if (_cbGeminiKey) {
+        txt.textContent = '✅ Gemini aktif — Mistral belum dikonfigurasi';
+      } else if (_cbMistralKey) {
+        txt.textContent = '⚠️ Gemini tidak dikonfigurasi. Mistral aktif sebagai provider utama';
+      } else {
+        txt.textContent = '❌ Belum ada API key Gemini atau Mistral. Silakan konfigurasi di kiri.';
+      }
       txt.style.color = ok ? '#22c55e' : '#ef4444';
+    }
+
+    function cbIsLimitError(error) {
+      const msg = String(error?.message || '').toLowerCase();
+      return msg.includes('quota exceeded') || msg.includes('rate limit') || msg.includes('429') || msg.includes('403');
     }
 
     async function cbRefreshConfig() {
@@ -1514,18 +1531,20 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       cbShowTestTyping();
 
       // Reload key kalau belum ada
-      if (!_cbGeminiKey) await cbLoadConfig();
+      if (!_cbGeminiKey && !_cbMistralKey) await cbLoadConfig();
 
-      if (!_cbGeminiKey) {
+      if (!_cbGeminiKey && !_cbMistralKey) {
         cbHideTestTyping();
-        cbAppendTestMsg('bot', '❌ Gemini API Key belum dikonfigurasi. Simpan API Key di kolom kiri terlebih dahulu.');
+        cbAppendTestMsg('bot', '❌ Belum ada API Key Gemini atau Mistral. Simpan API Key di kolom kiri terlebih dahulu.');
         _cbSending = false;
         if (sendBtn) sendBtn.disabled = false;
         return;
       }
 
+      let providerUsed = null;
+      let response = null;
+      let lastError = null;
       try {
-        // Build system prompt — gunakan prompt yang sama dengan chatbot.js
         const promptSnap = await db.ref('settings/chatbotSystemPrompt').once('value');
         const cmsSnap = await db.ref('cms/landing').once('value');
         const evSnap = await db.ref('events').once('value');
@@ -1543,7 +1562,6 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
 
         let systemPrompt = customPrompt;
         if (!systemPrompt || systemPrompt.trim().length < 50) {
-          // Default prompt (ringkas untuk admin test)
           systemPrompt = `Kamu adalah asisten virtual Ryusei yang ramah, helpful, dan profesional.
 Platform: Ryusei Event Management — kompetisi virtual live streaming Walla/Heesay Indonesia.
 CMS: ${cmsData.heroTitle || 'Ryusei'} — ${cmsData.heroSubtitle || ''}
@@ -1551,37 +1569,83 @@ Event aktif:\n${evList || 'Belum ada event aktif'}
 Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan data sensitif (password, API key, config).`;
         }
 
-        let endpoint = _cbEndpoint || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
-        if (modelOverride && modelOverride.trim()) {
-          endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelOverride.trim()}:generateContent`;
-        }
-
-        const res = await fetch(`${endpoint}?key=${_cbGeminiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents: _cbTestHistory,
-            generationConfig: { temperature: 0.45, maxOutputTokens: 400 },
-          }),
+        const requestBody = JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: _cbTestHistory,
+          generationConfig: { temperature: 0.45, maxOutputTokens: 400 },
         });
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err?.error?.message || `HTTP ${res.status}`);
+        if (_cbGeminiKey) {
+          providerUsed = 'gemini';
+          try {
+            const endpoint = _cbEndpoint || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+            const res = await fetch(`${endpoint}?key=${_cbGeminiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: requestBody,
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err?.error?.message || `HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            response = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          } catch (e) {
+            lastError = e;
+            if (_cbMistralKey && cbIsLimitError(e)) {
+              providerUsed = 'mistral';
+            } else {
+              throw e;
+            }
+          }
         }
 
-        const data = await res.json();
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Maaf, tidak ada respons.';
+        if (providerUsed === 'mistral' || (!_cbGeminiKey && _cbMistralKey)) {
+          providerUsed = 'mistral';
+          const mistralEndpoint = _cbMistralEndpoint || 'https://api.mistral.ai/v1/chat/completions';
+          const mistralBody = JSON.stringify({
+            model: modelOverride || 'mistral-tiny',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              ..._cbTestHistory.map(h => ({ role: h.role === 'model' ? 'assistant' : h.role, content: h.parts[0].text }))
+            ],
+            max_tokens: 400,
+            temperature: 0.45,
+          });
+          const res = await fetch(mistralEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_cbMistralKey}` },
+            body: mistralBody,
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error?.message || `HTTP ${res.status}`);
+          }
+          const data = await res.json();
+          response = data?.choices?.[0]?.message?.content || '';
+        }
 
-        _cbTestHistory.push({ role: 'model', parts: [{ text: reply }] });
+        if (!response) {
+          throw lastError || new Error('Maaf, tidak ada respons dari provider.');
+        }
+
+        _cbTestHistory.push({ role: 'model', parts: [{ text: response }] });
         cbHideTestTyping();
-        cbAppendTestMsg('bot', reply);
+        if (providerUsed === 'mistral') {
+          cbAppendTestMsg('bot', `🌀 [Fallback ke Mistral]\n${response}`);
+          cbSetStatus(true, '✅ Mistral digunakan untuk test karena Gemini tidak tersedia atau limit.');
+        } else {
+          cbAppendTestMsg('bot', response);
+          cbSetStatus(true, '✅ Gemini digunakan untuk test.');
+        }
 
       } catch (e) {
         cbHideTestTyping();
         if (errEl) { errEl.textContent = '❌ Error: ' + e.message; errEl.style.display = 'block'; }
         console.error('[Admin Chatbot Test]', e);
+        if (providerUsed === 'gemini' && _cbMistralKey) {
+          cbSetStatus(true, '⚠️ Gemini error, Mistral tersedia sebagai fallback.');
+        }
       }
 
       _cbSending = false;
