@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>尺YUSEI – Tutorial Lengkap Fitur Fungsional</title>
+    <link rel="icon" href="https://ryuseimanajemen.github.io/ryusei/assets/fav/apple-touch-icon.png" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Orbitron:wght@400;700;900&family=Space+Mono&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg: #06060f;
+            --surface: #0d0d1f;
+            --surface2: #111128;
+            --border: #1e1e3a;
+            --primary: #7c3aed;
+            --primary-g: #a855f7;
+            --accent: #f59e0b;
+            --neon: #e879f9;
+            --cyan: #22d3ee;
+            --green: #34d399;
+            --red: #f87171;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --glow: rgba(124, 58, 237, .4);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Background ── */
+        .bg-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 70% 50% at 10% 20%, rgba(124, 58, 237, .12) 0%, transparent 65%),
+                radial-gradient(ellipse 60% 60% at 90% 80%, rgba(232, 121, 249, .08) 0%, transparent 65%);
+        }
+
+        .grid-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(124, 58, 237, .04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124, 58, 237, .04) 1px, transparent 1px);
+            background-size: 48px 48px;
+            animation: gridDrift 25s linear infinite;
+        }
+
+        @keyframes gridDrift {
+            to {
+                background-position: 48px 48px;
+            }
+        }
+
+        .kanji-bg {
+            position: fixed;
+            font-family: 'Noto Serif JP', serif;
+            color: rgba(124, 58, 237, .05);
+            user-select: none;
+            pointer-events: none;
+            animation: floatKanji 20s ease-in-out infinite;
+        }
+
+        .kanji-bg.k1 {
+            font-size: 30vw;
+            top: -5%;
+            right: -5%;
+            animation-delay: 0s;
+        }
+
+        .kanji-bg.k2 {
+            font-size: 18vw;
+            bottom: 5%;
+            left: -3%;
+            animation-delay: -10s;
+        }
+
+        @keyframes floatKanji {
+
+            0%,
+            100% {
+                transform: rotate(-4deg);
+            }
+
+            50% {
+                transform: rotate(4deg) translateY(20px);
+            }
+        }
+
+        /* ── Layout ── */
+        .wrapper {
+            position: relative;
+            z-index: 10;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        /* ── Top Nav ── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(6, 6, 15, .85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+        }
+
+        .nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: .9rem;
+            background: linear-gradient(135deg, #fff 0%, var(--primary-g) 60%, var(--neon) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-brand img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            font-size: .78rem;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all .2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+            background: rgba(124, 58, 237, .15);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            text-align: center;
+            padding: 80px 0 60px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(124, 58, 237, .15);
+            border: 1px solid rgba(124, 58, 237, .3);
+            border-radius: 99px;
+            padding: 6px 18px;
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--primary-g);
+            margin-bottom: 28px;
+        }
+
+        .hero-badge span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary-g);
+            animation: blink 1.4s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .2;
+            }
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            font-weight: 900;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, var(--primary-g) 50%, var(--neon) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% auto;
+            animation: shimmer 5s linear infinite;
+        }
+
+        @keyframes shimmer {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .hero-sub {
+            font-size: 1.05rem;
+            color: var(--muted);
+            max-width: 580px;
+            margin: 0 auto 40px;
+            line-height: 1.75;
+        }
+
+        .hero-sub strong {
+            color: var(--text);
+        }
+
+        /* ── Section titles ── */
+        .section {
+            margin-top: 72px;
+        }
+
+        .section-header {
+            margin-bottom: 32px;
+        }
+
+        .section-label {
+            font-family: 'Space Mono', monospace;
+            font-size: .68rem;
+            letter-spacing: .25em;
+            text-transform: uppercase;
+            color: var(--primary-g);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.3rem, 3vw, 1.9rem);
+            font-weight: 900;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .section-desc {
+            color: var(--muted);
+            font-size: .9rem;
+            max-width: 560px;
+            line-height: 1.7;
+        }
+
+        .divider-line {
+            height: 2px;
+            width: 56px;
+            margin-top: 14px;
+            background: linear-gradient(90deg, var(--primary), var(--neon));
+            border-radius: 2px;
+            box-shadow: 0 0 10px var(--primary-g);
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: linear-gradient(135deg, var(--surface) 0%, rgba(17, 17, 40, .95) 100%);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            transition: all .3s ease;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, .06) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(124, 58, 237, .35);
+            box-shadow: 0 0 40px rgba(124, 58, 237, .2), 0 20px 40px rgba(0, 0, 0, .4);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-desc {
+            color: var(--muted);
+            font-size: .84rem;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Lists ── */
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all .2s;
+        }
+
+        .step-list li:hover {
+            border-color: rgba(124, 58, 237, .4);
+            background: rgba(124, 58, 237, .05);
+        }
+
+        .step-num {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-g));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: .75rem;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(124, 58, 237, .4);
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content strong {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--muted);
+            font-size: .8rem;
+        }
+
+        footer a {
+            color: var(--primary-g);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 60px 0 40px;
+            }
+
+            .section {
+                margin-top: 48px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-layer"></div>
+    <div class="grid-layer"></div>
+    <div class="kanji-bg k1">尺</div>
+    <div class="kanji-bg k2">尺yu</div>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-inner">
+            <a href="index.html" class="nav-brand">
+                <img src="https://ryuseimanajemen.github.io/ryusei/assets/fav/apple-touch-icon.png" alt="Ryusei" />
+                RYUSEI
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Beranda</a>
+                <a href="fitur.html">Fitur</a>
+                <a href="tos.html">ToS</a>
+                <a href="admin/index.html">Admin</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <!-- HERO -->
+        <div class="hero">
+            <div class="hero-badge">
+                <span></span>
+                TUTORIAL LENGKAP
+            </div>
+            <h1>Tutorial Lengkap Fitur Fungsional Ryusei Event Management System</h1>
+            <p class="hero-sub">
+                Panduan langkah demi langkah semua fitur mulai dari login hingga logout. Aplikasi terdiri dari halaman
+                publik, admin, juri, dan halaman statis.
+            </p>
+        </div>
+
+        <!-- SECTIONS -->
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">01</span>
+                <h2 class="section-title">Login Admin</h2>
+                <p class="section-desc">Langkah awal untuk mengakses dashboard admin.</p>
+                <div class="divider-line"></div>
+            </div>
+            <div class="card">
+                <ul class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Buka admin/index.html di browser.</strong>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Masukkan email dan password admin</strong> (contoh: admin@ryusei.com).
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Klik "Masuk →".</strong>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <strong>Jika lupa password, klik "Lupa Password?"</strong> dan ikuti instruksi email.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">5</div>
+                        <div class="step-content">
+                            <strong>Setelah login, dashboard muncul.</strong>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">02</span>
+                <h2 class="section-title">Dashboard</h2>
+                <p class="section-desc">Ringkasan utama sistem Ryusei.</p>
+                <div class="divider-line"></div>
+            </div>
+            <div class="card">
+                <ul class="step-list">
+                    <li>
+                        <div class="step-num">•</div>
+                        <div class="step-content">
+                            <strong>Counter Statistik:</strong> Lihat total event aktif, peserta, juri, dan pending
+                            approval.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">•</div>
+                        <div class="step-content">
+                            <strong>Recent Events:</strong> Daftar event terbaru dengan status aktif/nonaktif.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">•</div>
+                        <div class="step-content">
+                            <strong>Recent Registrations:</strong> Daftar pendaftaran terbaru dengan status
+                            pending/approved/rejected.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">•</div>
+                        <div class="step-content">
+                            <strong>Klik ikon di sidebar untuk navigasi.</strong>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">03</span>
+                <h2 class="section-title">Manajemen Event</h2>
+                <p class="section-desc">Kelola event kompetisi dari awal hingga akhir.</p>
+                <div class="divider-line"></div>
+            </div>
+            <div class="card">
+                <ul class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Klik "🎭 Event" di sidebar.</strong>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Filter & Sort:</strong> Gunakan dropdown untuk filter status (aktif/nonaktif) dan
+                            sort (aktif, nonaktif, nama, dll.).
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Tambah Event Baru:</strong> Klik "➕ Tambah Event", isi form (judul, deskripsi,
+                            tanggal, deadline, gambar, benefit, ketentuan, status), simpan.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <strong>Edit Event:</strong> Klik ikon edit pada event, ubah data, simpan.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">5</div>
+                        <div class="step-content">
+                            <strong>Toggle Status:</strong> Klik tombol ⏸/▶️ untuk aktifkan/nonaktifkan event.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">6</div>
+                        <div class="step-content">
+                            <strong>Hapus Event:</strong> Klik ikon hapus, konfirmasi.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">04</span>
+                <h2 class="section-title">Manajemen Peserta</h2>
+                <p class="section-desc">Kelola pendaftaran dan approval peserta.</p>
+                <div class="divider-line"></div>
+            </div>
+            <div class="card">
+                <ul class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Klik "👥 Peserta" di sidebar.</strong>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Filter:</strong> Pilih event dan status (pending/approved/rejected).
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Approve/Reject:</strong> Klik "✓ Approve" atau "✗ Reject" pada pendaftaran.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <strong>Lihat Detail:</strong> Klik nama peserta untuk lihat username, link, perform time,
+                            dll.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">5</div>
+                        <div class="step-content">
+                            <strong>Statistik:</strong> Lihat jumlah peserta per event.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">05</span>
+                <h2 class="section-title">Manajemen Juri</h2>
+                <p class="section-desc">Kelola juri untuk penilaian event.</p>
+                <div class="divider-line"></div>
+            </div>
+            <div class="card">
+                <ul class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Klik "⚖️ Juri" di sidebar.</strong>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Tambah Juri:</strong> Klik "➕ Tambah Juri", isi nama, email, password, kirim
+                            undangan. <em>Catatan: Demi menjaga privasi, field password akan dimasking (*********),
+                                harap buat password di menu juri.</em>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Lihat Daftar:</strong> Tabel juri dengan status aktif/tidak.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <strong>Copy Link Undangan:</strong> Klik ikon copy untuk bagikan link aktivasi juri.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">06</span>
+                <h2 class="section-title">Leaderboard Admin</h2>
+                <p class="section-desc">Pantau dan publikasikan hasil penilaian.</p>
+                <div class="divider-line"></div>
+            </div>
+            <div class="card">
+                <ul class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Klik "🏆 Leaderboard" di sidebar.</strong>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Pilih Event:</strong> Dropdown untuk pilih event.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Lihat Skor:</strong> Tabel skor real-time dari juri.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <strong>Publikasikan:</strong> Klik "Publikasikan Hasil" untuk tampilkan di publik, atau
+                            "Tarik Publikasi" untuk sembunyikan.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">5</div>
+                        <div class="step-content">
+                            <strong>Filter:</strong> Berdasarkan event.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">07</span>
+                <h2 class="section-title">Logout</h2>
+                <p class="section-desc">Keluar dari sistem admin.</p>
+                <div class="divider-line"></div>
+            </div>
+            <div class="card">
+                <ul class="step-list">
+                    <li>
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <strong>Klik ikon profil di bawah sidebar.</strong>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <strong>Klik "Logout".</strong>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <strong>Kembali ke halaman login.</strong>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <span class="section-label">EXTRA</span>
+                <h2 class="section-title">Fitur Tambahan</h2>
+                <p class="section-desc">Komponen lain dari sistem Ryusei.</p>
+                <div class="divider-line"></div>
+            </div>
+            <div class="card">
+                <ul class="step-list">
+                    <li>
+                        <div class="step-num">•</div>
+                        <div class="step-content">
+                            <strong>Halaman Publik (index.html):</strong> Lihat event, daftar, cek status, leaderboard.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="step-num">•</div>
+                        <div class="step-content">
+                            <strong>Panel Juri (judge/index.html):</strong> Login juri, pilih event, beri skor 5
+                            kriteria, lihat leaderboard hasil penilaian sementara menunggu rekapitulasi penilaian juri yang lain.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Ryusei Agency & Event Manajemen. <a href="tos.html">Terms of Service</a> | <a
+                href="fitur.html">Fitur</a></p>
+    </footer>
+
+</body>
+
+</html>
