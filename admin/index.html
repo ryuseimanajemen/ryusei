@@ -348,7 +348,8 @@
           Kustomisasi</p>
         <button onclick="showPage('cms')" class="sidebar-item" data-page="cms"
           style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>🖼️</span>Landing
-          Page CMS</button><button onclick="showPage('settings')" class="sidebar-item" data-page="settings"
+          Page CMS</button><button onclick="showPage('chatbot')" class="sidebar-item" data-page="chatbot"
+          style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>🤖</span>AI Chatbot</button><button onclick="showPage('settings')" class="sidebar-item" data-page="settings"
           style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>⚙️</span>Settings</button>
       </nav>
       <div style="padding:10px;border-top:1px solid var(--border)">
@@ -413,8 +414,8 @@
     function sanitizeKey(key) { return key.replace(/[.#$\[\]]/g, '_'); }
     function applyAdminRole() {
       const restricted = !isSuperAdmin;
-      document.querySelectorAll('.sidebar-item[data-page="cms"], .sidebar-item[data-page="settings"]').forEach(el => el.style.display = restricted ? 'none' : 'flex');
-      if (restricted && (_currentPage === 'cms' || _currentPage === 'settings')) {
+      document.querySelectorAll('.sidebar-item[data-page="cms"], .sidebar-item[data-page="settings"], .sidebar-item[data-page="chatbot"]').forEach(el => el.style.display = restricted ? 'none' : 'flex');
+      if (restricted && (_currentPage === 'cms' || _currentPage === 'settings' || _currentPage === 'chatbot')) {
         showPage('dashboard');
       }
     }
@@ -480,7 +481,7 @@
     }
     function doLogout() { auth.signOut(); }
     // Navigation
-    const pageTitles = { dashboard: 'Dashboard', events: 'Manajemen Event', participants: 'Peserta', judges: 'Juri', scores: 'Leaderboard', cms: 'Landing Page CMS', settings: 'Settings', profile: 'Profil Admin' };
+    const pageTitles = { dashboard: 'Dashboard', events: 'Manajemen Event', participants: 'Peserta', judges: 'Juri', scores: 'Leaderboard', cms: 'Landing Page CMS', chatbot: '🤖 AI Chatbot', settings: 'Settings', profile: 'Profil Admin' };
     let _currentPage = null;
     function cleanupListeners() {
       // Detach all real-time listeners before switching page to avoid memory leaks
@@ -523,6 +524,7 @@
         else if (page === 'judges') rJudges();
         else if (page === 'scores') rScores();
         else if (page === 'cms') rCMS();
+        else if (page === 'chatbot') rChatbot();
         else if (page === 'settings') rSettings();
         else if (page === 'profile') rProfile();
       }, 40);
@@ -679,7 +681,7 @@
     <label style="display:block;font-size:11px;font-weight:700;color:var(--text2)">DESKRIPSI & KETENTUAN</label>
     <button id="btnAutoGen" type="button" onclick="autoGenEvent()" style="padding:4px 10px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap">✨ Auto-Generate</button>
   </div>
-  <textarea id="eD" rows="3" class="form-input" style="resize:none" placeholder="Deskripsi event...">${ev.description}</textarea>
+  <textarea id="eD" rows="4" class="form-input" style="resize:vertical;min-height:100px;max-height:300px" placeholder="Deskripsi event...">${ev.description}</textarea>
 </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">TANGGAL EVENT</label><input type="date" id="eDt" value="${ev.date}" class="form-input"/></div>
@@ -699,103 +701,130 @@
       <div id="eImgPreview" style="${ev.image ? '' : 'display:none'}"></div>
     </div>
     <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">BENEFIT / HADIAH</label><textarea id="eB" rows="2" class="form-input" style="resize:none">${ev.benefit}</textarea></div>
-    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">KETENTUAN & ATURAN</label><textarea id="eK" rows="3" class="form-input" style="resize:none">${ev.ketentuan}</textarea></div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">KETENTUAN & ATURAN</label><textarea id="eK" rows="5" class="form-input" style="resize:vertical;min-height:120px;max-height:400px">${ev.ketentuan}</textarea></div>
     <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">STATUS EVENT</label>
       <select id="eStatus" class="form-input">
-        <option value="active" \${ev.status !== 'inactive' ? 'selected' : ''}>🟢 Aktif — terbuka untuk pendaftaran</option>
-        <option value="inactive" \${ev.status === 'inactive' ? 'selected' : ''}>🔴 Nonaktif — tersembunyi dari publik</option>
+        <option value="active" ${ev.status !== 'inactive' ? 'selected' : ''}>🟢 Aktif — terbuka untuk pendaftaran</option>
+        <option value="inactive" ${ev.status === 'inactive' ? 'selected' : ''}>🔴 Nonaktif — tersembunyi dari publik</option>
       </select>
     </div>
     <div style="display:flex;gap:10px;padding-top:6px">
-      <button onclick="saveEv('\${eid}')" class="btn-grad" style="flex:1;justify-content:center">\${eid ? 'Simpan Perubahan' : 'Buat Event'}</button>
+      <button onclick="saveEv('${eid}')" class="btn-grad" style="flex:1;justify-content:center">${eid ? 'Simpan Perubahan' : 'Buat Event'}</button>
       <button onclick="closeM()" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:13px;color:var(--text2)">Batal</button>
     </div>
   </div>`);
     }
     // ── GEMINI AUTO-GENERATE ─────────────────────────────────────
-    let _geminiKey = null;
-    let _geminiEndpoint = null;
+    // State di-share: gunakan _cbGeminiKey & _cbEndpoint dari AI Chatbot Manager
+    // agar tidak dobel fetch Firebase saat keduanya dipakai.
     async function getGeminiKey() {
-      if (_geminiKey && _geminiEndpoint) return _geminiKey;
+      // Gunakan cache dari chatbot manager kalau sudah ada
+      if (_cbGeminiKey) return _cbGeminiKey;
       try {
-        const [keySnap, endpointSnap] = await Promise.all([
+        const [keySnap, endpointSnap, modelSnap] = await Promise.all([
           db.ref('settings/geminiKey').once('value'),
-          db.ref('settings/geminiEndpoint').once('value')
+          db.ref('settings/geminiEndpoint').once('value'),
+          db.ref('settings/chatbotModel').once('value'),
         ]);
-        _geminiKey = keySnap.val();
-        _geminiEndpoint = endpointSnap.val();
-      } catch (e) { _geminiKey = null; _geminiEndpoint = null; }
-      return _geminiKey;
+        _cbGeminiKey = keySnap.val() || null;
+        _cbEndpoint = endpointSnap.val() || null;
+        // simpan model override di variabel chatbot manager juga
+        if (!_cbModelOverride) _cbModelOverride = modelSnap.val() || null;
+      } catch (e) { _cbGeminiKey = null; _cbEndpoint = null; }
+      return _cbGeminiKey;
     }
 
     async function autoGenEvent() {
-      const judul = document.getElementById('eT').value.trim();
+      const judulEl = document.getElementById('eT');
+      const judul = judulEl ? judulEl.value.trim() : '';
       if (!judul) { alert('Isi judul event dulu!'); return; }
 
       const btn = document.getElementById('btnAutoGen');
-      btn.disabled = true;
-      btn.textContent = '⏳ Generating...';
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating...'; }
 
       const key = await getGeminiKey();
       if (!key) {
-        alert('Gemini API Key belum diset.\nMasuk ke Firebase Console → settings/geminiKey');
-        btn.disabled = false; btn.textContent = '✨ Auto-Generate';
+        alert('Gemini API Key belum diset.\nBuka menu 🤖 AI Chatbot → simpan API Key terlebih dahulu.');
+        if (btn) { btn.disabled = false; btn.textContent = '✨ Auto-Generate'; }
         return;
       }
 
       try {
-        const prompt = `Kamu adalah copywriter platform Ryusei — platform manajemen event kompetisi virtual live streaming applikasi walla/heesay Indonesia.
+        const prompt = `Kamu adalah copywriter platform Ryusei — platform manajemen event kompetisi virtual live streaming aplikasi Walla/Heesay Indonesia.
 
 Buat konten untuk event bernama: "${judul}"
 
 Konteks platform:
-- Event berlangsung secara virtual/online via live streaming aplikasi walla/heesay
-- Peserta tampil sebagai karakter (roleplay/cosplay) live streaming walla/heesay
+- Event berlangsung secara virtual/online via live streaming aplikasi Walla/Heesay
+- Peserta tampil sebagai karakter (roleplay/cosplay) di live streaming Walla/Heesay
 - Dinilai oleh juri berdasarkan 5 kriteria: Interaksi, Penghayatan, Kreativitas, Improvisasi, Penampilan
-- Audience menyaksikan live dan bisa berinteraksi dengan chat dan memberikan gift (virtual item)
-- Konten harus informatif, kreatif, dan menghibur (entertaining)
+- Audience menyaksikan live dan bisa berinteraksi melalui chat dan gift (virtual item)
+- Konten harus informatif, kreatif, dan mengundang antusias peserta
 
-Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
+Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan:
 {
-  "deskripsi": "2-3 kalimat deskripsi event yang hype, kreatif, dan mengundang antusias peserta — cocok untuk event live streaming walla/heesay",
+  "deskripsi": "2-3 kalimat deskripsi event yang hype, kreatif, dan mengundang antusias peserta — cocok untuk event live streaming Walla/Heesay",
   "ketentuan": "7 poin ketentuan spesifik untuk event live streaming ini, pisahkan dengan newline (\\n), format: 1. ... \\n2. ... dst. Wajib mencakup: etika live streaming, aturan karakter, konten yang dilarang (SARA/dewasa/kekerasan), teknis stream, dan sportivitas"
 }`;
 
-        
-      const endpoint = _geminiEndpoint || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
-        const res = await fetch(
-          `${endpoint}?key=${key}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
-            })
-          }
-        );
+        // Ikuti model override dari chatbot manager jika ada
+        let endpoint = _cbEndpoint || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+        if (_cbModelOverride && _cbModelOverride.trim()) {
+          endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${_cbModelOverride.trim()}:generateContent`;
+        }
+
+        const res = await fetch(`${endpoint}?key=${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+          })
+        });
 
         if (!res.ok) {
-          const err = await res.json();
+          // .catch() agar tidak crash jika response bukan JSON
+          const err = await res.json().catch(() => ({}));
           throw new Error(err?.error?.message || `HTTP ${res.status}`);
         }
 
         const data = await res.json();
         let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        // Bersihkan markdown code block kalau ada
+
+        // Bersihkan markdown code block jika ada
         raw = raw.replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(raw);
 
-        if (parsed.deskripsi) document.getElementById('eD').value = parsed.deskripsi;
-        if (parsed.ketentuan) document.getElementById('eK').value = parsed.ketentuan;
+        let parsed;
+        try {
+          parsed = JSON.parse(raw);
+        } catch (parseErr) {
+          throw new Error('Respons AI bukan JSON valid. Coba generate ulang.');
+        }
 
-        btn.textContent = '✅ Done!';
-        setTimeout(() => { btn.disabled = false; btn.textContent = '✨ Auto-Generate'; }, 2000);
+        if (parsed.deskripsi) {
+          const edEl = document.getElementById('eD');
+          if (edEl) {
+            edEl.value = parsed.deskripsi;
+            edEl.style.height = 'auto';
+            edEl.style.height = Math.min(edEl.scrollHeight, 300) + 'px';
+          }
+        }
+        if (parsed.ketentuan) {
+          const ekEl = document.getElementById('eK');
+          if (ekEl) {
+            ekEl.value = parsed.ketentuan;
+            ekEl.style.height = 'auto';
+            ekEl.style.height = Math.min(ekEl.scrollHeight, 400) + 'px';
+          }
+        }
+
+        if (btn) { btn.textContent = '✅ Done!'; }
+        setTimeout(() => { if (btn) { btn.disabled = false; btn.textContent = '✨ Auto-Generate'; } }, 2000);
 
       } catch (e) {
-        console.error('Gemini error:', e);
+        console.error('[AutoGen Event] Gemini error:', e);
         alert('Gagal generate: ' + e.message);
-        btn.disabled = false; btn.textContent = '✨ Auto-Generate';
+        if (btn) { btn.disabled = false; btn.textContent = '✨ Auto-Generate'; }
       }
     }
     // ── END GEMINI ───────────────────────────────────────────────
@@ -1077,6 +1106,355 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
       alert('✅ Disimpan! Landing page akan terupdate otomatis.');
     }
     // ── SETTINGS ──
+    // ── AI CHATBOT MANAGER ───────────────────────────────────────
+    let _cbTestHistory = [];
+    let _cbGeminiKey = null;
+    let _cbEndpoint = null;
+    let _cbModelOverride = null;
+    let _cbSending = false;
+
+    async function rChatbot() {
+      const mc = document.getElementById('mainContent');
+      mc.innerHTML = `<div style="max-width:860px;display:flex;flex-direction:column;gap:16px">
+
+  <!-- STATUS BAR -->
+  <div class="card-admin" style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="cbStatusDot" style="width:10px;height:10px;border-radius:50%;background:#6b7280;flex-shrink:0"></div>
+      <span id="cbStatusText" style="font-size:13px;color:var(--text2)">Memeriksa konfigurasi...</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="cbRefreshConfig()" style="padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;font-size:12px;color:var(--text2);font-weight:600">🔄 Refresh</button>
+      <a href="../" target="_blank" style="padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;font-size:12px;color:var(--text2);font-weight:600;text-decoration:none">↗ Lihat Landing</a>
+    </div>
+  </div>
+
+  <!-- GRID: Config + Test -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+    <!-- KOLOM KIRI: Konfigurasi -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- Gemini Key -->
+      <div class="card-admin" style="padding:18px">
+        <h3 style="font-weight:700;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:6px">✨ Konfigurasi Gemini API</h3>
+        <div style="margin-bottom:10px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">GEMINI API KEY</label>
+          <div style="position:relative">
+            <input type="password" id="cbKeyInput" class="form-input" placeholder="AIza..." style="padding-right:80px"/>
+            <button onclick="cbToggleKeyVis()" id="cbKeyVis" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;color:var(--text2);font-weight:600;padding:4px 6px">Lihat</button>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">MODEL (kosongkan = default)</label>
+          <input type="text" id="cbModelInput" class="form-input" placeholder="gemini-2.5-flash-lite (default)"/>
+          <p style="font-size:10px;color:var(--text2);margin-top:4px">Contoh: gemini-2.0-flash, gemini-1.5-pro</p>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">CUSTOM ENDPOINT (opsional)</label>
+          <input type="text" id="cbEndpointInput" class="form-input" placeholder="https://generativelanguage.googleapis.com/..."/>
+        </div>
+        <button onclick="cbSaveConfig()" style="width:100%;padding:10px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">💾 Simpan ke Firebase</button>
+        <p id="cbSaveMsg" style="font-size:12px;text-align:center;margin-top:8px;display:none"></p>
+      </div>
+
+      <!-- System Prompt Override -->
+      <div class="card-admin" style="padding:18px">
+        <h3 style="font-weight:700;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:6px">📝 System Prompt Override</h3>
+        <p style="font-size:11px;color:var(--text2);margin-bottom:10px">Kosongkan = gunakan prompt default dari chatbot.js. Isi = override penuh.</p>
+        <textarea id="cbPromptInput" class="form-input" rows="8" style="resize:vertical;min-height:140px;max-height:400px;font-size:12px;line-height:1.5;font-family:monospace" placeholder="(Kosongkan untuk menggunakan prompt default yang sudah dikonfigurasi di chatbot.js)"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="cbSavePrompt()" style="flex:1;padding:9px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer">💾 Simpan Prompt</button>
+          <button onclick="cbResetPrompt()" style="padding:9px 14px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:12px;color:var(--text2)">Reset</button>
+        </div>
+        <p id="cbPromptMsg" style="font-size:12px;text-align:center;margin-top:8px;display:none"></p>
+      </div>
+
+    </div>
+
+    <!-- KOLOM KANAN: Test Chatbot -->
+    <div class="card-admin" style="padding:18px;display:flex;flex-direction:column;min-height:500px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h3 style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px">🧪 Test Chatbot (Preview)</h3>
+        <button onclick="cbClearTest()" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;font-size:11px;color:var(--text2)">Clear</button>
+      </div>
+      <div id="cbTestMessages" style="flex:1;overflow-y:auto;min-height:300px;max-height:380px;display:flex;flex-direction:column;gap:8px;padding:4px;margin-bottom:10px;background:var(--bg2);border-radius:12px;padding:10px">
+        <div style="display:flex"><div style="max-width:85%;padding:10px 13px;border-radius:14px;font-size:12px;line-height:1.55;border:1px solid var(--border);background:var(--card);color:var(--text);border-bottom-left-radius:4px">Halo! Ini mode preview admin. Tanya apapun untuk menguji respons chatbot. 🤖</div></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <textarea id="cbTestInput" class="form-input" rows="1" placeholder="Ketik pertanyaan uji..." maxlength="500" style="flex:1;resize:none;min-height:36px;max-height:100px;font-size:13px;line-height:1.4;overflow-y:hidden" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();cbSendTest()}"></textarea>
+        <button id="cbTestSend" onclick="cbSendTest()" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">➤</button>
+      </div>
+      <p id="cbTestErr" style="font-size:11px;color:#f87171;margin-top:6px;display:none"></p>
+    </div>
+
+  </div>
+
+  <!-- INFO: Cara kerja -->
+  <div class="card-admin" style="padding:18px">
+    <h3 style="font-weight:700;font-size:13px;margin-bottom:10px">ℹ️ Cara Kerja Chatbot Ryusei</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      ${[
+        ['📄 chatbot.js', 'File logika chatbot yang terpisah dari index.html. Berisi system prompt, deteksi kode registrasi, format pesan, dan semua logika AI.'],
+        ['🔥 Firebase RTDB', 'Gemini Key, endpoint, dan system prompt override disimpan di Firebase settings/. Chatbot load config ini saat pertama dibuka.'],
+        ['🧠 Context Cerdas', 'Chatbot otomatis inject daftar event aktif, data CMS landing page, dan data registrasi (jika user kirim kode) ke dalam prompt.'],
+      ].map(([t, d]) => `<div style="background:var(--bg2);border-radius:12px;padding:12px"><p style="font-weight:700;font-size:12px;margin-bottom:4px">${t}</p><p style="font-size:11px;color:var(--text2);line-height:1.6">${d}</p></div>`).join('')}
+    </div>
+  </div>
+
+</div>`;
+
+      // Auto-resize test input
+      const ti = document.getElementById('cbTestInput');
+      if (ti) {
+        ti.addEventListener('input', function () {
+          this.style.height = 'auto';
+          this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+      }
+
+      // Load config
+      await cbLoadConfig();
+    }
+
+    async function cbLoadConfig() {
+      try {
+        const [keySnap, endSnap, promptSnap, modelSnap] = await Promise.all([
+          db.ref('settings/geminiKey').once('value'),
+          db.ref('settings/geminiEndpoint').once('value'),
+          db.ref('settings/chatbotSystemPrompt').once('value'),
+          db.ref('settings/chatbotModel').once('value'),
+        ]);
+        _cbGeminiKey = keySnap.val() || null;
+        _cbEndpoint = endSnap.val() || null;
+        _cbModelOverride = modelSnap.val() || null;
+
+        const keyInput = document.getElementById('cbKeyInput');
+        const endInput = document.getElementById('cbEndpointInput');
+        const promptInput = document.getElementById('cbPromptInput');
+        const modelInput = document.getElementById('cbModelInput');
+
+        if (keyInput && _cbGeminiKey) keyInput.value = _cbGeminiKey;
+        if (endInput && _cbEndpoint) endInput.value = _cbEndpoint;
+        if (promptInput) promptInput.value = promptSnap.val() || '';
+        if (modelInput) modelInput.value = modelSnap.val() || '';
+
+        // Update status indicator
+        cbSetStatus(_cbGeminiKey ? true : false);
+      } catch (e) {
+        cbSetStatus(false, 'Gagal memuat config: ' + e.message);
+      }
+    }
+
+    function cbSetStatus(ok, msg) {
+      const dot = document.getElementById('cbStatusDot');
+      const txt = document.getElementById('cbStatusText');
+      if (!dot || !txt) return;
+      dot.style.background = ok ? '#22c55e' : '#ef4444';
+      txt.textContent = ok
+        ? '✅ Gemini API Key terdeteksi — Chatbot aktif'
+        : (msg || '❌ Gemini API Key belum dikonfigurasi');
+      txt.style.color = ok ? '#22c55e' : '#ef4444';
+    }
+
+    async function cbRefreshConfig() {
+      const txt = document.getElementById('cbStatusText');
+      if (txt) { txt.textContent = 'Memuat ulang config...'; txt.style.color = 'var(--text2)'; }
+      await cbLoadConfig();
+    }
+
+    function cbToggleKeyVis() {
+      const input = document.getElementById('cbKeyInput');
+      const btn = document.getElementById('cbKeyVis');
+      if (!input || !btn) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.textContent = input.type === 'password' ? 'Lihat' : 'Sembunyikan';
+    }
+
+    async function cbSaveConfig() {
+      const key = document.getElementById('cbKeyInput')?.value.trim();
+      const end = document.getElementById('cbEndpointInput')?.value.trim();
+      const model = document.getElementById('cbModelInput')?.value.trim();
+      const msg = document.getElementById('cbSaveMsg');
+
+      if (!key) {
+        if (msg) { msg.textContent = '❌ API Key tidak boleh kosong'; msg.style.color = '#f87171'; msg.style.display = 'block'; }
+        return;
+      }
+      try {
+        const updates = { 'settings/geminiKey': key };
+        if (end) updates['settings/geminiEndpoint'] = end;
+        else updates['settings/geminiEndpoint'] = null;
+        if (model) updates['settings/chatbotModel'] = model;
+        else updates['settings/chatbotModel'] = null;
+
+        await db.ref().update(updates);
+        _cbGeminiKey = key;
+        _cbEndpoint = end || null;
+        _cbModelOverride = model || null;
+        if (msg) { msg.textContent = '✅ Config berhasil disimpan ke Firebase!'; msg.style.color = '#34d399'; msg.style.display = 'block'; }
+        cbSetStatus(true);
+        setTimeout(() => { if (msg) msg.style.display = 'none'; }, 3000);
+      } catch (e) {
+        if (msg) { msg.textContent = '❌ Gagal: ' + e.message; msg.style.color = '#f87171'; msg.style.display = 'block'; }
+      }
+    }
+
+    async function cbSavePrompt() {
+      const val = document.getElementById('cbPromptInput')?.value.trim() || '';
+      const msg = document.getElementById('cbPromptMsg');
+      try {
+        await db.ref('settings/chatbotSystemPrompt').set(val || null);
+        if (msg) { msg.textContent = val ? '✅ System prompt override disimpan!' : '✅ System prompt direset ke default'; msg.style.color = '#34d399'; msg.style.display = 'block'; }
+        setTimeout(() => { if (msg) msg.style.display = 'none'; }, 3000);
+      } catch (e) {
+        if (msg) { msg.textContent = '❌ Gagal: ' + e.message; msg.style.color = '#f87171'; msg.style.display = 'block'; }
+      }
+    }
+
+    async function cbResetPrompt() {
+      const input = document.getElementById('cbPromptInput');
+      if (input) input.value = '';
+      await cbSavePrompt();
+    }
+
+    function cbClearTest() {
+      _cbTestHistory = [];
+      const box = document.getElementById('cbTestMessages');
+      if (box) box.innerHTML = `<div style="display:flex"><div style="max-width:85%;padding:10px 13px;border-radius:14px;font-size:12px;line-height:1.55;border:1px solid var(--border);background:var(--card);color:var(--text);border-bottom-left-radius:4px">Halo! Ini mode preview admin. Tanya apapun untuk menguji respons chatbot. 🤖</div></div>`;
+    }
+
+    function cbAppendTestMsg(role, text) {
+      const box = document.getElementById('cbTestMessages');
+      if (!box) return;
+      const isBot = role === 'bot';
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;' + (isBot ? '' : 'justify-content:flex-end');
+      const bubble = document.createElement('div');
+      bubble.style.cssText = `max-width:85%;padding:10px 13px;border-radius:14px;font-size:12px;line-height:1.55;word-break:break-word;border-bottom-${isBot ? 'left' : 'right'}-radius:4px;` + (isBot ? 'border:1px solid var(--border);background:var(--card);color:var(--text)' : 'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff');
+      bubble.innerHTML = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<>"]+)/g,'<a href="$1" target="_blank" style="color:#ec4899;text-decoration:underline">$1</a>');
+      div.appendChild(bubble);
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function cbShowTestTyping() {
+      const box = document.getElementById('cbTestMessages');
+      if (!box || document.getElementById('cbTyping')) return;
+      const div = document.createElement('div');
+      div.id = 'cbTyping';
+      div.style.cssText = 'display:flex';
+      div.innerHTML = `<div style="padding:10px 13px;border-radius:14px;border:1px solid var(--border);background:var(--card);border-bottom-left-radius:4px"><span style="display:inline-flex;gap:3px;align-items:center">${[0,150,300].map(d => `<span style="width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:typingDot .9s infinite;animation-delay:${d}ms;display:inline-block"></span>`).join('')}</span></div>`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function cbHideTestTyping() {
+      const el = document.getElementById('cbTyping');
+      if (el) el.remove();
+    }
+
+    async function cbSendTest() {
+      if (_cbSending) return;
+      const input = document.getElementById('cbTestInput');
+      const sendBtn = document.getElementById('cbTestSend');
+      const errEl = document.getElementById('cbTestErr');
+      if (!input) return;
+
+      const text = input.value.trim();
+      if (!text) return;
+
+      cbAppendTestMsg('user', text);
+      input.value = '';
+      input.style.height = 'auto';
+      _cbSending = true;
+      if (sendBtn) sendBtn.disabled = true;
+      if (errEl) errEl.style.display = 'none';
+
+      _cbTestHistory.push({ role: 'user', parts: [{ text }] });
+      if (_cbTestHistory.length > 14) _cbTestHistory = _cbTestHistory.slice(-14);
+
+      cbShowTestTyping();
+
+      // Reload key kalau belum ada
+      if (!_cbGeminiKey) await cbLoadConfig();
+
+      if (!_cbGeminiKey) {
+        cbHideTestTyping();
+        cbAppendTestMsg('bot', '❌ Gemini API Key belum dikonfigurasi. Simpan API Key di kolom kiri terlebih dahulu.');
+        _cbSending = false;
+        if (sendBtn) sendBtn.disabled = false;
+        return;
+      }
+
+      try {
+        // Build system prompt — gunakan prompt yang sama dengan chatbot.js
+        const promptSnap = await db.ref('settings/chatbotSystemPrompt').once('value');
+        const cmsSnap = await db.ref('cms/landing').once('value');
+        const evSnap = await db.ref('events').once('value');
+        const modelSnap = await db.ref('settings/chatbotModel').once('value');
+
+        const customPrompt = promptSnap.val() || null;
+        const cmsData = cmsSnap.val() || {};
+        const evRaw = evSnap.val() || {};
+        const modelOverride = modelSnap.val() || null;
+
+        const evList = Object.entries(evRaw)
+          .filter(([, v]) => v && v.status !== 'inactive')
+          .map(([, v]) => `• ${v.title || 'Event'} — ${v.isOpen !== false ? 'Terbuka' : 'Tutup'} — Deadline: ${v.regDeadline || 'TBA'}`)
+          .join('\n');
+
+        let systemPrompt = customPrompt;
+        if (!systemPrompt || systemPrompt.trim().length < 50) {
+          // Default prompt (ringkas untuk admin test)
+          systemPrompt = `Kamu adalah asisten virtual Ryusei yang ramah, helpful, dan profesional.
+Platform: Ryusei Event Management — kompetisi virtual live streaming Walla/Heesay Indonesia.
+CMS: ${cmsData.heroTitle || 'Ryusei'} — ${cmsData.heroSubtitle || ''}
+Event aktif:\n${evList || 'Belum ada event aktif'}
+Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan data sensitif (password, API key, config).`;
+        }
+
+        let endpoint = _cbEndpoint || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
+        if (modelOverride && modelOverride.trim()) {
+          endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelOverride.trim()}:generateContent`;
+        }
+
+        const res = await fetch(`${endpoint}?key=${_cbGeminiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: _cbTestHistory,
+            generationConfig: { temperature: 0.45, maxOutputTokens: 400 },
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.error?.message || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Maaf, tidak ada respons.';
+
+        _cbTestHistory.push({ role: 'model', parts: [{ text: reply }] });
+        cbHideTestTyping();
+        cbAppendTestMsg('bot', reply);
+
+      } catch (e) {
+        cbHideTestTyping();
+        if (errEl) { errEl.textContent = '❌ Error: ' + e.message; errEl.style.display = 'block'; }
+        console.error('[Admin Chatbot Test]', e);
+      }
+
+      _cbSending = false;
+      setTimeout(() => {
+        if (sendBtn) sendBtn.disabled = false;
+        document.getElementById('cbTestInput')?.focus();
+      }, 800);
+    }
+    // ── END AI CHATBOT MANAGER ───────────────────────────────────
+
     function rSettings() {
       const saved = localStorage.getItem('ryusei_fb_config'); const cfg = saved ? JSON.parse(saved) : null;
       const mc = document.getElementById('mainContent');
@@ -1126,7 +1504,6 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
     let _inviteToken = null;
     let _inviteData = null;
 
-    function saveCfg() { const keys = ['apiKey', 'authDomain', 'databaseURL', 'projectId', 'storageBucket', 'messagingSenderId', 'appId']; const cfg = {}; keys.forEach(k => { cfg[k] = document.getElementById(`cf_${k}`).value.trim(); }); localStorage.setItem('ryusei_fb_config', JSON.stringify(cfg)); alert('Disimpan! Reload...'); setTimeout(() => location.reload(), 600); }
     function resetCfg() { localStorage.removeItem('ryusei_fb_config'); alert('Reset default! Reload...'); setTimeout(() => location.reload(), 600); }
 
     function createAdminInvite() {
