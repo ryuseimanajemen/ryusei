@@ -14,12 +14,15 @@
     history: [],           // { role: 'user'|'model', parts: [{ text }] }
     geminiKey: null,
     endpoint: null,
+    mistralKey: null,
+    mistralEndpoint: null,
     cmsData: null,
     eventsData: null,      // cache event list untuk konteks lebih pintar
     configLoaded: false,
     sending: false,
     customPromptOverride: null,  // jika admin override system prompt via Firebase
     modelOverride: null,         // model override dari admin
+    currentProvider: 'gemini',   // fallback: 'gemini' atau 'mistral'
   };
 
   // Default endpoint Gemini
@@ -35,17 +38,21 @@
       // Dapatkan db dari global scope (sudah ada di index.html)
       if (typeof db === 'undefined' || !db) return;
 
-      const [keySnap, endpointSnap, cmsSnap, evSnap, promptSnap, modelSnap] = await Promise.all([
+      const [keySnap, endpointSnap, cmsSnap, evSnap, promptSnap, modelSnap, mistralKeySnap, mistralEndpointSnap] = await Promise.all([
         db.ref('settings/geminiKey').once('value'),
         db.ref('settings/geminiEndpoint').once('value'),
         db.ref('cms/landing').once('value'),
         db.ref('events').once('value'),
         db.ref('settings/chatbotSystemPrompt').once('value'),   // override dari admin
         db.ref('settings/chatbotModel').once('value'),          // override model dari admin
+        db.ref('settings/mistralKey').once('value'),            // key Mistral
+        db.ref('settings/mistralEndpoint').once('value'),       // endpoint Mistral
       ]);
 
       STATE.geminiKey = keySnap.val() || null;
       STATE.endpoint = endpointSnap.val() || null;
+      STATE.mistralKey = mistralKeySnap.val() || null;
+      STATE.mistralEndpoint = mistralEndpointSnap.val() || null;
       STATE.cmsData = cmsSnap.val() || {};
       STATE.customPromptOverride = promptSnap.val() || null;
       STATE.modelOverride = modelSnap.val() || null;
@@ -203,6 +210,84 @@ Jika ada yang meminta data sensitif di atas, tolak tegas dengan sopan:
 - Jika tidak yakin dengan jawaban, sarankan user untuk menghubungi admin Ryusei Agency & Event Manajemen. langsung`;
   }
 
+  // ─── TRY PROVIDER ─────────────────────────────────────────────────────────
+  async function tryProvider(provider, enrichedText, history) {
+    let endpoint, key, payload, headers;
+
+    if (provider === 'gemini') {
+      endpoint = STATE.endpoint || DEFAULT_ENDPOINT;
+      if (STATE.modelOverride && STATE.modelOverride.trim()) {
+        endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${STATE.modelOverride.trim()}:generateContent`;
+      }
+      key = STATE.geminiKey;
+      headers = { 'Content-Type': 'application/json' };
+      payload = {
+        system_instruction: { parts: [{ text: buildSystemPrompt() }] },
+        contents: history,
+        generationConfig: { temperature: TEMP, maxOutputTokens: MAX_OUTPUT_TOKENS, topP: 0.9 },
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+        ],
+      };
+    } else if (provider === 'mistral') {
+      endpoint = STATE.mistralEndpoint || 'https://api.mistral.ai/v1/chat/completions';
+      key = STATE.mistralKey;
+      headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` };
+      const model = STATE.modelOverride || 'mistral-tiny';
+      payload = {
+        model: model,
+        messages: [
+          { role: 'system', content: buildSystemPrompt() },
+          ...history.map(h => ({ role: h.role === 'model' ? 'assistant' : h.role, content: h.parts[0].text }))
+        ],
+        max_tokens: MAX_OUTPUT_TOKENS,
+        temperature: TEMP,
+      };
+    } else {
+      throw new Error('Provider tidak dikenal');
+    }
+
+    const res = await fetch(endpoint + (provider === 'gemini' ? `?key=${key}` : ''), {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    let reply;
+
+    if (provider === 'gemini') {
+      const candidate = data?.candidates?.[0];
+      reply = candidate?.content?.parts?.[0]?.text || '';
+      if (!reply) {
+        const reason = candidate?.finishReason;
+        if (reason === 'SAFETY') {
+          reply = 'Maaf, saya tidak bisa menjawab pertanyaan tersebut. Silakan tanyakan hal lain seputar Ryusei Event. 😊';
+        } else {
+          reply = 'Maaf, saya tidak bisa menjawab saat ini. Coba ulangi pertanyaanmu ya. 🙏';
+        }
+      }
+    } else if (provider === 'mistral') {
+      reply = data?.choices?.[0]?.message?.content || 'Maaf, tidak ada respons.';
+    }
+
+    return reply;
+  }
+
+  // ─── IS LIMIT ERROR ───────────────────────────────────────────────────────
+  function isLimitError(error) {
+    const msg = error.message.toLowerCase();
+    return msg.includes('quota exceeded') || msg.includes('rate limit') || msg.includes('429') || msg.includes('403');
+  }
+
   // ─── CHECK REGISTRATION via Firebase ──────────────────────────────────────
   async function checkRegistration(kode) {
     try {
@@ -351,7 +436,7 @@ Jika ada yang meminta data sensitif di atas, tolak tegas dengan sopan:
     // Load config jika belum
     if (!STATE.configLoaded) await initChatData();
 
-    if (!STATE.geminiKey) {
+    if (!STATE.geminiKey && !STATE.mistralKey) {
       hideTyping();
       appendMsg('bot', 'Maaf, chatbot sedang tidak tersedia saat ini. Silakan hubungi admin Ryusei untuk bantuan lebih lanjut. 🙏');
       setInputDisabled(false);
@@ -360,52 +445,37 @@ Jika ada yang meminta data sensitif di atas, tolak tegas dengan sopan:
     }
 
     try {
-      // Tentukan endpoint
-      let endpoint = STATE.endpoint || DEFAULT_ENDPOINT;
+      let reply = null;
+      let triedProviders = [];
 
-      // Jika admin set model override, build endpoint
-      if (STATE.modelOverride && STATE.modelOverride.trim()) {
-        endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${STATE.modelOverride.trim()}:generateContent`;
+      // Coba Gemini dulu jika ada key
+      if (STATE.geminiKey) {
+        try {
+          reply = await tryProvider('gemini', enrichedText, STATE.history);
+          triedProviders.push('gemini');
+        } catch (e) {
+          console.warn('[Gemini] Error:', e.message);
+          if (isLimitError(e)) {
+            console.log('[Gemini] Limit detected, trying fallback...');
+          } else {
+            throw e; // Jika bukan limit error, langsung throw
+          }
+        }
       }
 
-      const res = await fetch(`${endpoint}?key=${STATE.geminiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: buildSystemPrompt() }] },
-          contents: STATE.history,
-          generationConfig: {
-            temperature: TEMP,
-            maxOutputTokens: MAX_OUTPUT_TOKENS,
-            topP: 0.9,
-          },
-          safetySettings: [
-            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          ],
-        }),
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson?.error?.message || `HTTP ${res.status}`);
+      // Jika Gemini gagal atau tidak ada, coba Mistral
+      if (!reply && STATE.mistralKey) {
+        try {
+          reply = await tryProvider('mistral', enrichedText, STATE.history);
+          triedProviders.push('mistral');
+        } catch (e) {
+          console.warn('[Mistral] Error:', e.message);
+          throw e; // Jika Mistral juga gagal, throw
+        }
       }
-
-      const data = await res.json();
-
-      // Handle finish reason (misal jika diblokir safety)
-      const candidate = data?.candidates?.[0];
-      let reply = candidate?.content?.parts?.[0]?.text || '';
 
       if (!reply) {
-        const reason = candidate?.finishReason;
-        if (reason === 'SAFETY') {
-          reply = 'Maaf, saya tidak bisa menjawab pertanyaan tersebut. Silakan tanyakan hal lain seputar Ryusei Event. 😊';
-        } else {
-          reply = 'Maaf, saya tidak bisa menjawab saat ini. Coba ulangi pertanyaanmu ya. 🙏';
-        }
+        throw new Error('Semua provider AI tidak tersedia');
       }
 
       // Tambah ke history
@@ -416,7 +486,7 @@ Jika ada yang meminta data sensitif di atas, tolak tegas dengan sopan:
 
     } catch (e) {
       hideTyping();
-      console.error('[Ryusei Chatbot] sendChat error:', e);
+      console.error('[Ryusei Chatbot] Send error:', e);
       if (e.message && e.message.includes('quota')) {
         appendMsg('bot', 'Kuota API sedang habis. Silakan coba beberapa saat lagi. 🙏');
       } else if (e.message && (e.message.includes('network') || e.message.includes('fetch'))) {

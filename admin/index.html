@@ -127,39 +127,87 @@
 
     /* ── LOADING SCREEN ── */
     #ryusei-loader {
-      position: fixed; inset: 0; z-index: 9999;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
       background: #030712;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
       transition: opacity .5s ease, visibility .5s ease;
     }
-    #ryusei-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    #ryusei-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     .loader-logo {
-      width: 72px; height: 72px; border-radius: 20px;
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
       background: linear-gradient(135deg, #ec4899, #a855f7);
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-weight: 900; font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 32px;
       animation: loaderPulse 1.6s ease-in-out infinite;
     }
+
     .loader-bar-wrap {
-      width: 200px; height: 4px; border-radius: 99px;
-      background: rgba(255,255,255,.1); overflow: hidden;
+      width: 200px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, .1);
+      overflow: hidden;
     }
+
     .loader-bar {
-      height: 100%; width: 30%;
+      height: 100%;
+      width: 30%;
       background: linear-gradient(90deg, #ec4899, #a855f7);
       border-radius: 99px;
       animation: loaderSlide 1.4s ease-in-out infinite;
     }
-    .loader-text { font-size: 13px; color: #9ca3af; font-family: system-ui, sans-serif; letter-spacing: .04em; }
-    @keyframes loaderPulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(236,72,153,.4); }
-      50% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(236,72,153,0); }
+
+    .loader-text {
+      font-size: 13px;
+      color: #9ca3af;
+      font-family: system-ui, sans-serif;
+      letter-spacing: .04em;
     }
+
+    @keyframes loaderPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(236, 72, 153, .4);
+      }
+
+      50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 16px rgba(236, 72, 153, 0);
+      }
+    }
+
     @keyframes loaderSlide {
-      0% { transform: translateX(-100%); }
-      50% { transform: translateX(200%); }
-      100% { transform: translateX(-100%); }
+      0% {
+        transform: translateX(-100%);
+      }
+
+      50% {
+        transform: translateX(200%);
+      }
+
+      100% {
+        transform: translateX(-100%);
+      }
     }
   </style>
 </head>
@@ -169,7 +217,9 @@
   <!-- LOADING SCREEN -->
   <div id="ryusei-loader">
     <div class="loader-logo">尺</div>
-    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+    <div class="loader-bar-wrap">
+      <div class="loader-bar"></div>
+    </div>
     <p class="loader-text" id="loaderMsg">Memverifikasi sesi admin…</p>
   </div>
 
@@ -246,27 +296,41 @@
           →</button>
         <p id="loginErr" style="color:#f87171;font-size:12px;text-align:center;margin-top:10px;display:none"></p>
         <div style="text-align:center;margin-top:12px">
-          <button onclick="openForgotPassword()" style="background:none;border:none;color:#a855f7;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px">Lupa Password?</button>
+          <button onclick="openForgotPassword()"
+            style="background:none;border:none;color:#a855f7;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px">Lupa
+            Password?</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- FORGOT PASSWORD MODAL -->
-  <div id="forgotModal" style="position:fixed;inset:0;background:rgba(3,7,18,.85);display:none;align-items:center;justify-content:center;z-index:70;padding:20px">
-    <div style="width:100%;max-width:360px;background:#111827;border:1px solid #1f2937;border-radius:20px;padding:24px;position:relative">
-      <button onclick="closeForgotPassword()" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:8px;border:1px solid #374151;background:transparent;color:#6b7280;cursor:pointer;font-size:14px">✕</button>
+  <div id="forgotModal"
+    style="position:fixed;inset:0;background:rgba(3,7,18,.85);display:none;align-items:center;justify-content:center;z-index:70;padding:20px">
+    <div
+      style="width:100%;max-width:360px;background:#111827;border:1px solid #1f2937;border-radius:20px;padding:24px;position:relative">
+      <button onclick="closeForgotPassword()"
+        style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:8px;border:1px solid #374151;background:transparent;color:#6b7280;cursor:pointer;font-size:14px">✕</button>
       <div style="text-align:center;margin-bottom:18px">
-        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px">🔑</div>
+        <div
+          style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px">
+          🔑</div>
         <h2 style="color:#fff;font-size:16px;font-weight:800">Lupa Password</h2>
-        <p style="color:#6b7280;font-size:12px;margin-top:4px">Masukkan email akun admin Anda. Link reset password akan dikirim.</p>
+        <p style="color:#6b7280;font-size:12px;margin-top:4px">Masukkan email akun admin Anda. Link reset password akan
+          dikirim.</p>
       </div>
       <div style="margin-bottom:14px">
-        <label style="display:block;font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email</label>
-        <input type="email" id="forgotEmail" placeholder="admin@ryusei.com" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder:text-gray-600 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all" style="outline:none;font-family:inherit;width:100%;box-sizing:border-box" onkeydown="if(event.key==='Enter')sendResetEmail()" />
+        <label
+          style="display:block;font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email</label>
+        <input type="email" id="forgotEmail" placeholder="admin@ryusei.com"
+          class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder:text-gray-600 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
+          style="outline:none;font-family:inherit;width:100%;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')sendResetEmail()" />
       </div>
       <p id="forgotMsg" style="font-size:12px;text-align:center;margin-bottom:10px;display:none"></p>
-      <button onclick="sendResetEmail()" style="width:100%;padding:11px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">Kirim Link Reset →</button>
+      <button onclick="sendResetEmail()"
+        style="width:100%;padding:11px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">Kirim
+        Link Reset →</button>
     </div>
   </div>
 
@@ -281,7 +345,8 @@
           style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:18px">
           🔐</div>
         <h2 style="font-size:20px;font-weight:900;margin-bottom:6px">Aktivasi Akun Admin</h2>
-        <p style="color:#9ca3af;font-size:13px">Anda diundang sebagai admin. Lengkapi data di bawah untuk membuat akun login.</p>
+        <p style="color:#9ca3af;font-size:13px">Anda diundang sebagai admin. Lengkapi data di bawah untuk membuat akun
+          login.</p>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;color:#fff">
         <div style="display:flex;gap:12px;background:#0f172a;border-radius:12px;padding:12px 14px;align-items:center">
@@ -293,20 +358,28 @@
           </div>
         </div>
         <div>
-          <label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email Nyata Anda *</label>
+          <label
+            style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email
+            Nyata Anda *</label>
           <input type="email" id="inviteRealEmail" class="form-input" placeholder="email-anda@domain.com" />
-          <p style="font-size:11px;color:#6b7280;margin-top:5px">Gunakan email aktif — ini akan menjadi username login Anda.</p>
+          <p style="font-size:11px;color:#6b7280;margin-top:5px">Gunakan email aktif — ini akan menjadi username login
+            Anda.</p>
         </div>
         <div>
-          <label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Password Baru *</label>
+          <label
+            style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Password
+            Baru *</label>
           <input type="password" id="invitePass" class="form-input" placeholder="Minimal 6 karakter..." />
         </div>
         <div>
-          <label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Konfirmasi Password *</label>
+          <label
+            style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Konfirmasi
+            Password *</label>
           <input type="password" id="invitePassConfirm" class="form-input" placeholder="Ulangi kata sandi..." />
         </div>
         <p id="inviteErr" style="color:#f87171;font-size:12px;display:none"></p>
-        <button onclick="acceptInvite()" class="btn-grad" style="width:100%;justify-content:center">✅ Buat Akun Admin</button>
+        <button onclick="acceptInvite()" class="btn-grad" style="width:100%;justify-content:center">✅ Buat Akun
+          Admin</button>
         <p id="inviteSuccess" style="color:#34d399;font-size:12px;display:none;text-align:center"></p>
       </div>
     </div>
@@ -349,11 +422,14 @@
         <button onclick="showPage('cms')" class="sidebar-item" data-page="cms"
           style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>🖼️</span>Landing
           Page CMS</button><button onclick="showPage('chatbot')" class="sidebar-item" data-page="chatbot"
-          style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>🤖</span>AI Chatbot</button><button onclick="showPage('settings')" class="sidebar-item" data-page="settings"
+          style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>🤖</span>AI
+          Chatbot</button><button onclick="showPage('settings')" class="sidebar-item" data-page="settings"
           style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>⚙️</span>Settings</button>
       </nav>
       <div style="padding:10px;border-top:1px solid var(--border)">
-        <div onclick="showPage('profile')" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(236,72,153,.08)'" onmouseout="this.style.background='transparent'">
+        <div onclick="showPage('profile')"
+          style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;transition:background .15s"
+          onmouseover="this.style.background='rgba(236,72,153,.08)'" onmouseout="this.style.background='transparent'">
           <div
             style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">
             A</div>
@@ -638,8 +714,8 @@
           else if (sortVal === 'oldest') filtered.sort((a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0));
           else if (sortVal === 'title') filtered.sort((a, b) => (a[1].title || '').localeCompare(b[1].title || '', 'id'));
           else if (sortVal === 'peserta') filtered.sort((a, b) => (countMap[b[0]] || 0) - (countMap[a[0]] || 0));
-          else if (sortVal === 'active') filtered.sort((a, b) => { const sa = (a[1].status||'active')==='active'?0:1, sb = (b[1].status||'active')==='active'?0:1; return sa - sb; });
-          else if (sortVal === 'inactive') filtered.sort((a, b) => { const sa = (a[1].status||'active')==='inactive'?0:1, sb = (b[1].status||'active')==='inactive'?0:1; return sa - sb; });
+          else if (sortVal === 'active') filtered.sort((a, b) => { const sa = (a[1].status || 'active') === 'active' ? 0 : 1, sb = (b[1].status || 'active') === 'active' ? 0 : 1; return sa - sb; });
+          else if (sortVal === 'inactive') filtered.sort((a, b) => { const sa = (a[1].status || 'active') === 'inactive' ? 0 : 1, sb = (b[1].status || 'active') === 'inactive' ? 0 : 1; return sa - sb; });
 
           if (!filtered.length) { div.innerHTML = '<div class="card-admin" style="padding:40px;text-align:center;color:var(--text2);font-size:13px">Tidak ada event yang cocok dengan filter</div>'; return; }
 
@@ -1111,6 +1187,8 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
     let _cbGeminiKey = null;
     let _cbEndpoint = null;
     let _cbModelOverride = null;
+    let _cbMistralKey = null;
+    let _cbMistralEndpoint = null;
     let _cbSending = false;
 
     async function rChatbot() {
@@ -1158,6 +1236,24 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
         <p id="cbSaveMsg" style="font-size:12px;text-align:center;margin-top:8px;display:none"></p>
       </div>
 
+      <!-- Mistral Key -->
+      <div class="card-admin" style="padding:18px">
+        <h3 style="font-weight:700;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:6px">🌪️ Konfigurasi Mistral API (Fallback)</h3>
+        <div style="margin-bottom:10px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">MISTRAL API KEY</label>
+          <div style="position:relative">
+            <input type="password" id="cbMistralKeyInput" class="form-input" placeholder="..." style="padding-right:80px"/>
+            <button onclick="cbToggleMistralKeyVis()" id="cbMistralKeyVis" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;color:var(--text2);font-weight:600;padding:4px 6px">Lihat</button>
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">CUSTOM ENDPOINT (opsional)</label>
+          <input type="text" id="cbMistralEndpointInput" class="form-input" placeholder="https://api.mistral.ai/v1/chat/completions"/>
+        </div>
+        <button onclick="cbSaveMistralConfig()" style="width:100%;padding:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">💾 Simpan Mistral ke Firebase</button>
+        <p id="cbMistralSaveMsg" style="font-size:12px;text-align:center;margin-top:8px;display:none"></p>
+      </div>
+
       <!-- System Prompt Override -->
       <div class="card-admin" style="padding:18px">
         <h3 style="font-weight:700;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:6px">📝 System Prompt Override</h3>
@@ -1195,10 +1291,11 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
     <h3 style="font-weight:700;font-size:13px;margin-bottom:10px">ℹ️ Cara Kerja Chatbot Ryusei</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
       ${[
-        ['📄 chatbot.js', 'File logika chatbot yang terpisah dari index.html. Berisi system prompt, deteksi kode registrasi, format pesan, dan semua logika AI.'],
-        ['🔥 Firebase RTDB', 'Gemini Key, endpoint, dan system prompt override disimpan di Firebase settings/. Chatbot load config ini saat pertama dibuka.'],
-        ['🧠 Context Cerdas', 'Chatbot otomatis inject daftar event aktif, data CMS landing page, dan data registrasi (jika user kirim kode) ke dalam prompt.'],
-      ].map(([t, d]) => `<div style="background:var(--bg2);border-radius:12px;padding:12px"><p style="font-weight:700;font-size:12px;margin-bottom:4px">${t}</p><p style="font-size:11px;color:var(--text2);line-height:1.6">${d}</p></div>`).join('')}
+          ['📄 chatbot.js', 'File logika chatbot yang terpisah dari index.html. Berisi system prompt, deteksi kode registrasi, format pesan, dan semua logika AI.'],
+          ['🔥 Firebase RTDB', 'Gemini & Mistral Key, endpoint, dan system prompt override disimpan di Firebase settings/. Chatbot load config ini saat pertama dibuka.'],
+          ['🔄 Auto Fallback', 'Jika Gemini limit/quota habis, chatbot otomatis ganti ke Mistral AI sebagai backup.'],
+          ['🧠 Context Cerdas', 'Chatbot otomatis inject daftar event aktif, data CMS landing page, dan data registrasi (jika user kirim kode) ke dalam prompt.'],
+        ].map(([t, d]) => `<div style="background:var(--bg2);border-radius:12px;padding:12px"><p style="font-weight:700;font-size:12px;margin-bottom:4px">${t}</p><p style="font-size:11px;color:var(--text2);line-height:1.6">${d}</p></div>`).join('')}
     </div>
   </div>
 
@@ -1219,25 +1316,33 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
 
     async function cbLoadConfig() {
       try {
-        const [keySnap, endSnap, promptSnap, modelSnap] = await Promise.all([
+        const [keySnap, endSnap, promptSnap, modelSnap, mistralKeySnap, mistralEndSnap] = await Promise.all([
           db.ref('settings/geminiKey').once('value'),
           db.ref('settings/geminiEndpoint').once('value'),
           db.ref('settings/chatbotSystemPrompt').once('value'),
           db.ref('settings/chatbotModel').once('value'),
+          db.ref('settings/mistralKey').once('value'),
+          db.ref('settings/mistralEndpoint').once('value'),
         ]);
         _cbGeminiKey = keySnap.val() || null;
         _cbEndpoint = endSnap.val() || null;
         _cbModelOverride = modelSnap.val() || null;
+        _cbMistralKey = mistralKeySnap.val() || null;
+        _cbMistralEndpoint = mistralEndSnap.val() || null;
 
         const keyInput = document.getElementById('cbKeyInput');
         const endInput = document.getElementById('cbEndpointInput');
         const promptInput = document.getElementById('cbPromptInput');
         const modelInput = document.getElementById('cbModelInput');
+        const mistralKeyInput = document.getElementById('cbMistralKeyInput');
+        const mistralEndInput = document.getElementById('cbMistralEndpointInput');
 
         if (keyInput && _cbGeminiKey) keyInput.value = _cbGeminiKey;
         if (endInput && _cbEndpoint) endInput.value = _cbEndpoint;
         if (promptInput) promptInput.value = promptSnap.val() || '';
         if (modelInput) modelInput.value = modelSnap.val() || '';
+        if (mistralKeyInput && _cbMistralKey) mistralKeyInput.value = _cbMistralKey;
+        if (mistralEndInput && _cbMistralEndpoint) mistralEndInput.value = _cbMistralEndpoint;
 
         // Update status indicator
         cbSetStatus(_cbGeminiKey ? true : false);
@@ -1271,6 +1376,14 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       btn.textContent = input.type === 'password' ? 'Lihat' : 'Sembunyikan';
     }
 
+    function cbToggleMistralKeyVis() {
+      const input = document.getElementById('cbMistralKeyInput');
+      const btn = document.getElementById('cbMistralKeyVis');
+      if (!input || !btn) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.textContent = input.type === 'password' ? 'Lihat' : 'Sembunyikan';
+    }
+
     async function cbSaveConfig() {
       const key = document.getElementById('cbKeyInput')?.value.trim();
       const end = document.getElementById('cbEndpointInput')?.value.trim();
@@ -1294,6 +1407,30 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
         _cbModelOverride = model || null;
         if (msg) { msg.textContent = '✅ Config berhasil disimpan ke Firebase!'; msg.style.color = '#34d399'; msg.style.display = 'block'; }
         cbSetStatus(true);
+        setTimeout(() => { if (msg) msg.style.display = 'none'; }, 3000);
+      } catch (e) {
+        if (msg) { msg.textContent = '❌ Gagal: ' + e.message; msg.style.color = '#f87171'; msg.style.display = 'block'; }
+      }
+    }
+
+    async function cbSaveMistralConfig() {
+      const key = document.getElementById('cbMistralKeyInput')?.value.trim();
+      const end = document.getElementById('cbMistralEndpointInput')?.value.trim();
+      const msg = document.getElementById('cbMistralSaveMsg');
+
+      if (!key) {
+        if (msg) { msg.textContent = '❌ API Key tidak boleh kosong'; msg.style.color = '#f87171'; msg.style.display = 'block'; }
+        return;
+      }
+      try {
+        const updates = { 'settings/mistralKey': key };
+        if (end) updates['settings/mistralEndpoint'] = end;
+        else updates['settings/mistralEndpoint'] = null;
+
+        await db.ref().update(updates);
+        _cbMistralKey = key;
+        _cbMistralEndpoint = end || null;
+        if (msg) { msg.textContent = '✅ Config Mistral berhasil disimpan ke Firebase!'; msg.style.color = '#34d399'; msg.style.display = 'block'; }
         setTimeout(() => { if (msg) msg.style.display = 'none'; }, 3000);
       } catch (e) {
         if (msg) { msg.textContent = '❌ Gagal: ' + e.message; msg.style.color = '#f87171'; msg.style.display = 'block'; }
@@ -1332,7 +1469,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       div.style.cssText = 'display:flex;' + (isBot ? '' : 'justify-content:flex-end');
       const bubble = document.createElement('div');
       bubble.style.cssText = `max-width:85%;padding:10px 13px;border-radius:14px;font-size:12px;line-height:1.55;word-break:break-word;border-bottom-${isBot ? 'left' : 'right'}-radius:4px;` + (isBot ? 'border:1px solid var(--border);background:var(--card);color:var(--text)' : 'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff');
-      bubble.innerHTML = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<>"]+)/g,'<a href="$1" target="_blank" style="color:#ec4899;text-decoration:underline">$1</a>');
+      bubble.innerHTML = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>').replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1" target="_blank" style="color:#ec4899;text-decoration:underline">$1</a>');
       div.appendChild(bubble);
       box.appendChild(div);
       box.scrollTop = box.scrollHeight;
@@ -1344,7 +1481,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       const div = document.createElement('div');
       div.id = 'cbTyping';
       div.style.cssText = 'display:flex';
-      div.innerHTML = `<div style="padding:10px 13px;border-radius:14px;border:1px solid var(--border);background:var(--card);border-bottom-left-radius:4px"><span style="display:inline-flex;gap:3px;align-items:center">${[0,150,300].map(d => `<span style="width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:typingDot .9s infinite;animation-delay:${d}ms;display:inline-block"></span>`).join('')}</span></div>`;
+      div.innerHTML = `<div style="padding:10px 13px;border-radius:14px;border:1px solid var(--border);background:var(--card);border-bottom-left-radius:4px"><span style="display:inline-flex;gap:3px;align-items:center">${[0, 150, 300].map(d => `<span style="width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:typingDot .9s infinite;animation-delay:${d}ms;display:inline-block"></span>`).join('')}</span></div>`;
       box.appendChild(div);
       box.scrollTop = box.scrollHeight;
     }
