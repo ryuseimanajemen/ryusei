@@ -621,7 +621,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
   "ketentuan": "5 poin ketentuan & aturan peserta yang relevan, pisahkan dengan newline (\\n), format: 1. ... \\n2. ... dst"
 }`;
 
-        const res = await fetch(
+        
       const endpoint = _geminiEndpoint || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
         const res = await fetch(
           `${endpoint}?key=${key}`,
