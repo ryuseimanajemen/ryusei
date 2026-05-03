@@ -142,7 +142,9 @@
           style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-weight:900;font-size:17px">
           🔥</div>
         <h2 style="color:#fff;font-size:17px;font-weight:900;margin-bottom:4px">Firebase Setup</h2>
-        <p style="color:#6b7280;font-size:12px">Upload <code style="background:#1f2937;padding:1px 5px;border-radius:4px;color:#ec4899">ryusei-config.json</code> berisi Firebase config + Gemini key</p>
+        <p style="color:#6b7280;font-size:12px">Upload <code
+            style="background:#1f2937;padding:1px 5px;border-radius:4px;color:#ec4899">ryusei-config.json</code> berisi
+          Firebase config + Gemini key</p>
       </div>
       <div id="secretDropzone" onclick="document.getElementById('secretFileInput').click()"
         style="border:2px dashed #374151;border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px"
@@ -579,38 +581,38 @@
   </div>`);
     }
     // ── GEMINI AUTO-GENERATE ─────────────────────────────────────
-let _geminiKey = null;
-let _geminiEndpoint = null;
-async function getGeminiKey() {
-  if (_geminiKey && _geminiEndpoint) return _geminiKey;
-  try {
-    const [keySnap, endpointSnap] = await Promise.all([
-      db.ref('settings/geminiKey').once('value'),
-      db.ref('settings/geminiEndpoint').once('value')
-    ]);
-    _geminiKey = keySnap.val();
-    _geminiEndpoint = endpointSnap.val();
-  } catch (e) { _geminiKey = null; _geminiEndpoint = null; }
-  return _geminiKey;
-}
+    let _geminiKey = null;
+    let _geminiEndpoint = null;
+    async function getGeminiKey() {
+      if (_geminiKey && _geminiEndpoint) return _geminiKey;
+      try {
+        const [keySnap, endpointSnap] = await Promise.all([
+          db.ref('settings/geminiKey').once('value'),
+          db.ref('settings/geminiEndpoint').once('value')
+        ]);
+        _geminiKey = keySnap.val();
+        _geminiEndpoint = endpointSnap.val();
+      } catch (e) { _geminiKey = null; _geminiEndpoint = null; }
+      return _geminiKey;
+    }
 
-async function autoGenEvent() {
-  const judul = document.getElementById('eT').value.trim();
-  if (!judul) { alert('Isi judul event dulu!'); return; }
+    async function autoGenEvent() {
+      const judul = document.getElementById('eT').value.trim();
+      if (!judul) { alert('Isi judul event dulu!'); return; }
 
-  const btn = document.getElementById('btnAutoGen');
-  btn.disabled = true;
-  btn.textContent = '⏳ Generating...';
+      const btn = document.getElementById('btnAutoGen');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
 
-  const key = await getGeminiKey();
-  if (!key) {
-    alert('Gemini API Key belum diset.\nMasuk ke Firebase Console → settings/geminiKey');
-    btn.disabled = false; btn.textContent = '✨ Auto-Generate';
-    return;
-  }
+      const key = await getGeminiKey();
+      if (!key) {
+        alert('Gemini API Key belum diset.\nMasuk ke Firebase Console → settings/geminiKey');
+        btn.disabled = false; btn.textContent = '✨ Auto-Generate';
+        return;
+      }
 
-  try {
-    const prompt = `Kamu adalah copywriter event kompetisi profesional Indonesia.
+      try {
+        const prompt = `Kamu adalah copywriter event kompetisi profesional Indonesia.
 Buat konten untuk event bernama: "${judul}"
 
 Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
@@ -619,44 +621,44 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
   "ketentuan": "5 poin ketentuan & aturan peserta yang relevan, pisahkan dengan newline (\\n), format: 1. ... \\n2. ... dst"
 }`;
 
-    const res = await fetch(
+        const res = await fetch(
       const endpoint = _geminiEndpoint || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
-const res = await fetch(
-  `${endpoint}?key=${key}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
-        })
+        const res = await fetch(
+          `${endpoint}?key=${key}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 512 }
+            })
+          }
+        );
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err?.error?.message || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        // Bersihkan markdown code block kalau ada
+        raw = raw.replace(/```json|```/g, '').trim();
+        const parsed = JSON.parse(raw);
+
+        if (parsed.deskripsi) document.getElementById('eD').value = parsed.deskripsi;
+        if (parsed.ketentuan) document.getElementById('eK').value = parsed.ketentuan;
+
+        btn.textContent = '✅ Done!';
+        setTimeout(() => { btn.disabled = false; btn.textContent = '✨ Auto-Generate'; }, 2000);
+
+      } catch (e) {
+        console.error('Gemini error:', e);
+        alert('Gagal generate: ' + e.message);
+        btn.disabled = false; btn.textContent = '✨ Auto-Generate';
       }
-    );
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
-
-    const data = await res.json();
-    let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    // Bersihkan markdown code block kalau ada
-    raw = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(raw);
-
-    if (parsed.deskripsi) document.getElementById('eD').value = parsed.deskripsi;
-    if (parsed.ketentuan) document.getElementById('eK').value = parsed.ketentuan;
-
-    btn.textContent = '✅ Done!';
-    setTimeout(() => { btn.disabled = false; btn.textContent = '✨ Auto-Generate'; }, 2000);
-
-  } catch (e) {
-    console.error('Gemini error:', e);
-    alert('Gagal generate: ' + e.message);
-    btn.disabled = false; btn.textContent = '✨ Auto-Generate';
-  }
-}
-// ── END GEMINI ───────────────────────────────────────────────
+    // ── END GEMINI ───────────────────────────────────────────────
     async function saveEv(eid) {
       const imgData = document.getElementById('eImgData') ? document.getElementById('eImgData').value : '';
       const imgUrl = document.getElementById('eI') ? document.getElementById('eI').value.trim() : '';
@@ -857,7 +859,7 @@ const res = await fetch(
     </div>
     <div style="margin-bottom:16px">
       <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">HERO ICON TEXT (jika tidak ada gambar)</label>
-      <input type="text" id="cHeroIconTxt" class="form-input" placeholder="竜 (default karakter kanji)"/>
+      <input type="text" id="cHeroIconTxt" class="form-input" placeholder="尺 (default karakter kanji)"/>
     </div>
     <h3 style="font-weight:700;font-size:14px;margin-bottom:14px;padding-top:16px;border-top:1px solid var(--border)">About Section</h3>
     <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
@@ -885,7 +887,7 @@ const res = await fetch(
         const d = s.val() || {};
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
         set('cHT', d.heroTitle); set('cHS', d.heroSubtitle); set('cAT', d.aboutTitle); set('cAD', d.aboutDesc); set('cCD', d.contactDesc); set('cWA', d.waUrl); set('cDC', d.dcUrl); set('cIG', d.igUrl);
-        set('cHeroImgUrl', d.heroImage || ''); set('cHeroIconTxt', d.heroIconText || '竜');
+        set('cHeroImgUrl', d.heroImage || ''); set('cHeroIconTxt', d.heroIconText || '尺');
         if (d.heroImage) {
           const thumb = document.getElementById('heroImgThumb'); const prev = document.getElementById('heroImgPreview');
           if (thumb && prev) { thumb.src = d.heroImage; prev.style.display = 'block'; }
@@ -915,7 +917,7 @@ const res = await fetch(
     async function saveCMS() {
       const g = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
       const heroImg = g('cHeroImgUrl') || g('cHeroImg') || '';
-      await db.ref('cms/landing').set({ heroTitle: g('cHT'), heroSubtitle: g('cHS'), heroImage: heroImg, heroIconText: g('cHeroIconTxt') || '竜', aboutTitle: g('cAT'), aboutDesc: g('cAD'), contactDesc: g('cCD'), waUrl: g('cWA'), dcUrl: g('cDC'), igUrl: g('cIG'), updatedAt: Date.now() });
+      await db.ref('cms/landing').set({ heroTitle: g('cHT'), heroSubtitle: g('cHS'), heroImage: heroImg, heroIconText: g('cHeroIconTxt') || '尺', aboutTitle: g('cAT'), aboutDesc: g('cAD'), contactDesc: g('cCD'), waUrl: g('cWA'), dcUrl: g('cDC'), igUrl: g('cIG'), updatedAt: Date.now() });
       alert('✅ Disimpan! Landing page akan terupdate otomatis.');
     }
     // ── SETTINGS ──
@@ -1092,7 +1094,7 @@ const res = await fetch(
         return;
       }
       _secretCfg = null;
-_secretGeminiKey = null;
+      _secretGeminiKey = null;
       document.getElementById('secretModal').style.display = 'flex';
       document.getElementById('secretPreview').style.display = 'none';
       document.getElementById('secretErr').style.display = 'none';
@@ -1104,45 +1106,45 @@ _secretGeminiKey = null;
     function closeSecretModal() { document.getElementById('secretModal').style.display = 'none'; }
     function handleSecretDrop(e) { const f = e.dataTransfer.files[0]; if (f) handleSecretFile(f); }
     function handleSecretFile(f) {
-  if (!f || !f.name.endsWith('.json')) { showSecretErr('File harus .json'); return; }
-  const r = new FileReader();
-  r.onload = ev => {
-    try {
-      const parsed = JSON.parse(ev.target.result);
+      if (!f || !f.name.endsWith('.json')) { showSecretErr('File harus .json'); return; }
+      const r = new FileReader();
+      r.onload = ev => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
 
-      // Support format lama (hanya fbConfig) dan format baru (fbConfig + geminiKey)
-      let cfg = parsed.firebaseConfig || parsed;
-      let geminiKey = parsed.geminiKey || null;
+          // Support format lama (hanya fbConfig) dan format baru (fbConfig + geminiKey)
+          let cfg = parsed.firebaseConfig || parsed;
+          let geminiKey = parsed.geminiKey || null;
 
-      const req = ['apiKey', 'authDomain', 'databaseURL', 'projectId'];
-      const miss = req.filter(k => !cfg[k]);
-      if (miss.length) { showSecretErr('Firebase config tidak lengkap: ' + miss.join(', ')); return; }
+          const req = ['apiKey', 'authDomain', 'databaseURL', 'projectId'];
+          const miss = req.filter(k => !cfg[k]);
+          if (miss.length) { showSecretErr('Firebase config tidak lengkap: ' + miss.join(', ')); return; }
 
-      _secretCfg = cfg;
-      _secretGeminiKey = geminiKey;
+          _secretCfg = cfg;
+          _secretGeminiKey = geminiKey;
 
-      // Tampilkan preview
-      const previewObj = { firebaseConfig: cfg };
-      if (geminiKey) previewObj.geminiKey = geminiKey.substring(0, 8) + '••••••••••••••••••••••••••••';
-      document.getElementById('secretPreview').style.display = 'block';
-      document.getElementById('secretPreview').textContent = JSON.stringify(previewObj, null, 2);
-      document.getElementById('secretErr').style.display = 'none';
-      document.getElementById('secretStatus').style.display = 'none';
+          // Tampilkan preview
+          const previewObj = { firebaseConfig: cfg };
+          if (geminiKey) previewObj.geminiKey = geminiKey.substring(0, 8) + '••••••••••••••••••••••••••••';
+          document.getElementById('secretPreview').style.display = 'block';
+          document.getElementById('secretPreview').textContent = JSON.stringify(previewObj, null, 2);
+          document.getElementById('secretErr').style.display = 'none';
+          document.getElementById('secretStatus').style.display = 'none';
 
-      // Info kalau geminiKey ada atau tidak
-      if (geminiKey) {
-        showSecretStatus('✅ Firebase config + Gemini key terdeteksi', true);
-      } else {
-        showSecretStatus('⚠️ Hanya Firebase config (tanpa Gemini key)', false);
-      }
+          // Info kalau geminiKey ada atau tidak
+          if (geminiKey) {
+            showSecretStatus('✅ Firebase config + Gemini key terdeteksi', true);
+          } else {
+            showSecretStatus('⚠️ Hanya Firebase config (tanpa Gemini key)', false);
+          }
 
-      const btn = document.getElementById('secretBtn');
-      btn.disabled = false; btn.style.background = 'linear-gradient(135deg,#ec4899,#a855f7)';
-      btn.style.color = '#fff'; btn.style.cursor = 'pointer';
-    } catch (e) { showSecretErr('JSON tidak valid: ' + e.message); }
-  };
-  r.readAsText(f);
-}
+          const btn = document.getElementById('secretBtn');
+          btn.disabled = false; btn.style.background = 'linear-gradient(135deg,#ec4899,#a855f7)';
+          btn.style.color = '#fff'; btn.style.cursor = 'pointer';
+        } catch (e) { showSecretErr('JSON tidak valid: ' + e.message); }
+      };
+      r.readAsText(f);
+    }
     function showSecretErr(msg) { const e = document.getElementById('secretErr'); e.textContent = msg; e.style.display = 'block'; }
     function showSecretStatus(msg, ok) {
       const s = document.getElementById('secretStatus');
@@ -1162,10 +1164,10 @@ _secretGeminiKey = null;
         const tempDb = firebase.database();
         // Push config ke Firebase database settings/fbConfig
         await tempDb.ref('settings/fbConfig').set(_secretCfg);
-// Simpan geminiKey ke DB kalau ada
-if (_secretGeminiKey) {
-  await tempDb.ref('settings/geminiKey').set(_secretGeminiKey);
-}
+        // Simpan geminiKey ke DB kalau ada
+        if (_secretGeminiKey) {
+          await tempDb.ref('settings/geminiKey').set(_secretGeminiKey);
+        }
         // Simpan juga ke localStorage
         localStorage.setItem('ryusei_fb_config', JSON.stringify(_secretCfg));
         showSecretStatus('✅ Config berhasil disimpan ke Firebase!', true);
