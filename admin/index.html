@@ -124,10 +124,55 @@
       border: 1px solid var(--border);
       border-radius: 16px
     }
+
+    /* ── LOADING SCREEN ── */
+    #ryusei-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #030712;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      transition: opacity .5s ease, visibility .5s ease;
+    }
+    #ryusei-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-logo {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 900; font-size: 32px;
+      animation: loaderPulse 1.6s ease-in-out infinite;
+    }
+    .loader-bar-wrap {
+      width: 200px; height: 4px; border-radius: 99px;
+      background: rgba(255,255,255,.1); overflow: hidden;
+    }
+    .loader-bar {
+      height: 100%; width: 30%;
+      background: linear-gradient(90deg, #ec4899, #a855f7);
+      border-radius: 99px;
+      animation: loaderSlide 1.4s ease-in-out infinite;
+    }
+    .loader-text { font-size: 13px; color: #9ca3af; font-family: system-ui, sans-serif; letter-spacing: .04em; }
+    @keyframes loaderPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(236,72,153,.4); }
+      50% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(236,72,153,0); }
+    }
+    @keyframes loaderSlide {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(200%); }
+      100% { transform: translateX(-100%); }
+    }
   </style>
 </head>
 
 <body style="min-height:100vh">
+
+  <!-- LOADING SCREEN -->
+  <div id="ryusei-loader">
+    <div class="loader-logo">尺</div>
+    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+    <p class="loader-text" id="loaderMsg">Memverifikasi sesi admin…</p>
+  </div>
+
 
   <!-- LOGIN -->
   <!-- SECRET SETUP MODAL -->
@@ -200,7 +245,28 @@
           style="width:100%;padding:12px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer">Masuk
           →</button>
         <p id="loginErr" style="color:#f87171;font-size:12px;text-align:center;margin-top:10px;display:none"></p>
+        <div style="text-align:center;margin-top:12px">
+          <button onclick="openForgotPassword()" style="background:none;border:none;color:#a855f7;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px">Lupa Password?</button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- FORGOT PASSWORD MODAL -->
+  <div id="forgotModal" style="position:fixed;inset:0;background:rgba(3,7,18,.85);display:none;align-items:center;justify-content:center;z-index:70;padding:20px">
+    <div style="width:100%;max-width:360px;background:#111827;border:1px solid #1f2937;border-radius:20px;padding:24px;position:relative">
+      <button onclick="closeForgotPassword()" style="position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:8px;border:1px solid #374151;background:transparent;color:#6b7280;cursor:pointer;font-size:14px">✕</button>
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px">🔑</div>
+        <h2 style="color:#fff;font-size:16px;font-weight:800">Lupa Password</h2>
+        <p style="color:#6b7280;font-size:12px;margin-top:4px">Masukkan email akun admin Anda. Link reset password akan dikirim.</p>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email</label>
+        <input type="email" id="forgotEmail" placeholder="admin@ryusei.com" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder:text-gray-600 focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all" style="outline:none;font-family:inherit;width:100%;box-sizing:border-box" onkeydown="if(event.key==='Enter')sendResetEmail()" />
+      </div>
+      <p id="forgotMsg" style="font-size:12px;text-align:center;margin-bottom:10px;display:none"></p>
+      <button onclick="sendResetEmail()" style="width:100%;padding:11px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">Kirim Link Reset →</button>
     </div>
   </div>
 
@@ -214,30 +280,33 @@
         <div
           style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:18px">
           🔐</div>
-        <h2 style="font-size:20px;font-weight:900;margin-bottom:6px">Aktivasi Admin Baru</h2>
-        <p style="color:#9ca3af;font-size:13px">Masukkan kata sandi untuk menyelesaikan pembuatan akun admin.</p>
+        <h2 style="font-size:20px;font-weight:900;margin-bottom:6px">Aktivasi Akun Admin</h2>
+        <p style="color:#9ca3af;font-size:13px">Anda diundang sebagai admin. Lengkapi data di bawah untuk membuat akun login.</p>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px;color:#fff">
-        <div>
-          <p style="font-size:12px;color:#9ca3af;margin-bottom:4px">Nama</p>
-          <p id="inviteNameLabel" style="font-weight:700;font-size:14px;color:#fff"></p>
+        <div style="display:flex;gap:12px;background:#0f172a;border-radius:12px;padding:12px 14px;align-items:center">
+          <div style="font-size:20px">👤</div>
+          <div>
+            <p style="font-size:11px;color:#6b7280;margin-bottom:2px">Diundang sebagai</p>
+            <p id="inviteNameLabel" style="font-weight:700;font-size:14px;color:#fff"></p>
+            <p id="invitePhoneLabel" style="font-size:12px;color:#9ca3af"></p>
+          </div>
         </div>
         <div>
-          <p style="font-size:12px;color:#9ca3af;margin-bottom:4px">Nomor WA / Telepon</p>
-          <p id="invitePhoneLabel" style="font-weight:700;font-size:14px;color:#fff"></p>
+          <label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email Nyata Anda *</label>
+          <input type="email" id="inviteRealEmail" class="form-input" placeholder="email-anda@domain.com" />
+          <p style="font-size:11px;color:#6b7280;margin-top:5px">Gunakan email aktif — ini akan menjadi username login Anda.</p>
         </div>
         <div>
-          <p style="font-size:12px;color:#9ca3af;margin-bottom:4px">Email Admin Auto</p>
-          <p id="inviteEmailLabel" style="font-weight:700;font-size:14px;color:#fff;word-break:break-all"></p>
+          <label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Password Baru *</label>
+          <input type="password" id="invitePass" class="form-input" placeholder="Minimal 6 karakter..." />
         </div>
-        <div><label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px">Password Baru
-            *</label><input type="password" id="invitePass" class="form-input" placeholder="Kata sandi baru..." /></div>
-        <div><label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px">Konfirmasi
-            Password *</label><input type="password" id="invitePassConfirm" class="form-input"
-            placeholder="Ulangi kata sandi..." /></div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Konfirmasi Password *</label>
+          <input type="password" id="invitePassConfirm" class="form-input" placeholder="Ulangi kata sandi..." />
+        </div>
         <p id="inviteErr" style="color:#f87171;font-size:12px;display:none"></p>
-        <button onclick="acceptInvite()" class="btn-grad" style="width:100%;justify-content:center">✅ Buat Akun
-          Admin</button>
+        <button onclick="acceptInvite()" class="btn-grad" style="width:100%;justify-content:center">✅ Buat Akun Admin</button>
         <p id="inviteSuccess" style="color:#34d399;font-size:12px;display:none;text-align:center"></p>
       </div>
     </div>
@@ -283,18 +352,18 @@
           style="width:100%;display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:none;background:transparent;text-align:left;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px"><span>⚙️</span>Settings</button>
       </nav>
       <div style="padding:10px;border-top:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:10px;padding:8px">
+        <div onclick="showPage('profile')" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='rgba(236,72,153,.08)'" onmouseout="this.style.background='transparent'">
           <div
             style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700">
             A</div>
           <div style="flex:1;min-width:0">
             <p style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
               id="uEmail">Admin</p>
-            <p style="font-size:11px;color:var(--text2)">Administrator</p>
+            <p style="font-size:11px;color:var(--text2)">Klik untuk profil</p>
           </div>
           <button onclick="doLogout()"
             style="width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;color:var(--text2)"
-            title="Logout">↩</button>
+            title="Logout" onclick="event.stopPropagation()">↩</button>
         </div>
       </div>
     </div>
@@ -379,18 +448,29 @@
         firebase.initializeApp(cfg); db = firebase.database(); auth = firebase.auth();
         auth.onAuthStateChanged(async u => {
           if (u) {
+            setLoaderMsg('Memuat dashboard…');
             document.getElementById('loginScreen').style.display = 'none';
             const a = document.getElementById('appShell'); a.style.display = 'flex';
             document.getElementById('uEmail').textContent = u.email || 'Admin';
             await determineAdminRole(u);
             showPage('dashboard');
+            hideLoader();
           } else {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('appShell').style.display = 'none';
+            hideLoader();
           }
         });
         handleInviteUrl();
       } catch (e) { console.error(e); }
+    }
+    function setLoaderMsg(msg) {
+      const el = document.getElementById('loaderMsg');
+      if (el) el.textContent = msg;
+    }
+    function hideLoader() {
+      const loader = document.getElementById('ryusei-loader');
+      if (loader) loader.classList.add('hidden');
     }
     async function doLogin() {
       const em = document.getElementById('loginEmail').value.trim(), pw = document.getElementById('loginPass').value, err = document.getElementById('loginErr');
@@ -399,7 +479,7 @@
     }
     function doLogout() { auth.signOut(); }
     // Navigation
-    const pageTitles = { dashboard: 'Dashboard', events: 'Manajemen Event', participants: 'Peserta', judges: 'Juri', scores: 'Leaderboard', cms: 'Landing Page CMS', settings: 'Settings' };
+    const pageTitles = { dashboard: 'Dashboard', events: 'Manajemen Event', participants: 'Peserta', judges: 'Juri', scores: 'Leaderboard', cms: 'Landing Page CMS', settings: 'Settings', profile: 'Profil Admin' };
     let _currentPage = null;
     function cleanupListeners() {
       // Detach all real-time listeners before switching page to avoid memory leaks
@@ -443,6 +523,7 @@
         else if (page === 'scores') rScores();
         else if (page === 'cms') rCMS();
         else if (page === 'settings') rSettings();
+        else if (page === 'profile') rProfile();
       }, 40);
     }
     // ── DASHBOARD ──
@@ -507,7 +588,26 @@
     // ── EVENTS ──
     function rEvents() {
       const mc = document.getElementById('mainContent');
-      mc.innerHTML = `<div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn-grad" onclick="oEM()">+ Tambah Event</button></div><div id="evL" class="space-y-3"></div>`;
+      mc.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <select id="evSort" onchange="loadEL()" class="form-input" style="padding:8px 12px;font-size:12px;min-width:160px">
+              <option value="newest">📅 Terbaru</option>
+              <option value="oldest">📅 Terlama</option>
+              <option value="title">🔤 A–Z Judul</option>
+              <option value="peserta">👥 Peserta Terbanyak</option>
+              <option value="active">🟢 Aktif Dulu</option>
+              <option value="inactive">🔴 Nonaktif Dulu</option>
+            </select>
+            <select id="evFilter" onchange="loadEL()" class="form-input" style="padding:8px 12px;font-size:12px;min-width:140px">
+              <option value="">Semua Status</option>
+              <option value="active">Aktif saja</option>
+              <option value="inactive">Nonaktif saja</option>
+            </select>
+          </div>
+          <button class="btn-grad" onclick="oEM()">+ Tambah Event</button>
+        </div>
+        <div id="evL" class="space-y-3"></div>`;
       loadEL();
     }
     let _evListener = null;
@@ -520,19 +620,44 @@
           const regs = regSnap.val() || {};
           const arr = Object.entries(evs);
           if (!arr.length) { div.innerHTML = '<div class="card-admin" style="padding:48px;text-align:center;color:var(--text2)"><div style="font-size:48px;margin-bottom:12px">🎭</div><p style="font-size:14px">Belum ada event. Tambah event baru!</p></div>'; return; }
-          div.innerHTML = arr.map(([k, v]) => {
-            const count = Object.values(regs).filter(r => r && r.eventId === k).length;
+          // Apply filter
+          const filterVal = document.getElementById('evFilter')?.value || '';
+          let filtered = arr;
+          if (filterVal) filtered = arr.filter(([k, v]) => (v.status || 'active') === filterVal);
+
+          // Compute peserta count per event
+          const countMap = {};
+          arr.forEach(([k]) => { countMap[k] = Object.values(regs).filter(r => r && r.eventId === k).length; });
+
+          // Apply sort
+          const sortVal = document.getElementById('evSort')?.value || 'newest';
+          if (sortVal === 'newest') filtered.sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+          else if (sortVal === 'oldest') filtered.sort((a, b) => (a[1].createdAt || 0) - (b[1].createdAt || 0));
+          else if (sortVal === 'title') filtered.sort((a, b) => (a[1].title || '').localeCompare(b[1].title || '', 'id'));
+          else if (sortVal === 'peserta') filtered.sort((a, b) => (countMap[b[0]] || 0) - (countMap[a[0]] || 0));
+          else if (sortVal === 'active') filtered.sort((a, b) => { const sa = (a[1].status||'active')==='active'?0:1, sb = (b[1].status||'active')==='active'?0:1; return sa - sb; });
+          else if (sortVal === 'inactive') filtered.sort((a, b) => { const sa = (a[1].status||'active')==='inactive'?0:1, sb = (b[1].status||'active')==='inactive'?0:1; return sa - sb; });
+
+          if (!filtered.length) { div.innerHTML = '<div class="card-admin" style="padding:40px;text-align:center;color:var(--text2);font-size:13px">Tidak ada event yang cocok dengan filter</div>'; return; }
+
+          div.innerHTML = filtered.map(([k, v]) => {
+            const count = countMap[k] || 0;
+            const isActive = (v.status || 'active') === 'active';
+            const statusBg = isActive ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.08)';
+            const statusColor = isActive ? '#16a34a' : '#dc2626';
+            const statusLabel = isActive ? '🟢 Aktif' : '🔴 Nonaktif';
             return `
-    <div class="card-admin" style="padding:14px 16px;display:flex;align-items:center;gap:14px">
+    <div class="card-admin" style="padding:14px 16px;display:flex;align-items:center;gap:14px;border-left:3px solid ${isActive ? '#16a34a' : '#dc2626'}">
       <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(168,85,247,.2));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎭</div>
       <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;flex-wrap:wrap">
           <p style="font-weight:700;font-size:14px">${v.title}</p>
-          <span style="padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(34,197,94,.1);color:#16a34a">${v.status || 'active'}</span>
+          <span style="padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:${statusBg};color:${statusColor}">${statusLabel}</span>
         </div>
         <p style="font-size:12px;color:var(--text2)">${v.date || 'Belum ada tanggal'} · ${count} peserta</p>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="toggleEvStatus('${k}','${v.status || 'active'}')" style="width:32px;height:32px;border-radius:8px;border:1px solid ${isActive ? 'rgba(245,158,11,.4)' : 'rgba(34,197,94,.4)'};background:${isActive ? 'rgba(245,158,11,.08)' : 'rgba(34,197,94,.08)'};cursor:pointer;font-size:14px" title="${isActive ? 'Nonaktifkan' : 'Aktifkan'}">${isActive ? '⏸' : '▶️'}</button>
         <button onclick="oEM('${k}')" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);cursor:pointer;font-size:14px" title="Edit">✏️</button>
         <button onclick="delEv('${k}')" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);cursor:pointer;font-size:14px" title="Hapus">🗑️</button>
       </div>
@@ -574,8 +699,14 @@
     </div>
     <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">BENEFIT / HADIAH</label><textarea id="eB" rows="2" class="form-input" style="resize:none">${ev.benefit}</textarea></div>
     <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">KETENTUAN & ATURAN</label><textarea id="eK" rows="3" class="form-input" style="resize:none">${ev.ketentuan}</textarea></div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">STATUS EVENT</label>
+      <select id="eStatus" class="form-input">
+        <option value="active" \${ev.status !== 'inactive' ? 'selected' : ''}>🟢 Aktif — terbuka untuk pendaftaran</option>
+        <option value="inactive" \${ev.status === 'inactive' ? 'selected' : ''}>🔴 Nonaktif — tersembunyi dari publik</option>
+      </select>
+    </div>
     <div style="display:flex;gap:10px;padding-top:6px">
-      <button onclick="saveEv('${eid}')" class="btn-grad" style="flex:1;justify-content:center">${eid ? 'Simpan Perubahan' : 'Buat Event'}</button>
+      <button onclick="saveEv('\${eid}')" class="btn-grad" style="flex:1;justify-content:center">\${eid ? 'Simpan Perubahan' : 'Buat Event'}</button>
       <button onclick="closeM()" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer;font-size:13px;color:var(--text2)">Batal</button>
     </div>
   </div>`);
@@ -671,9 +802,19 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
       const imgData = document.getElementById('eImgData') ? document.getElementById('eImgData').value : '';
       const imgUrl = document.getElementById('eI') ? document.getElementById('eI').value.trim() : '';
       const finalImg = imgData || imgUrl;
-      const data = { title: document.getElementById('eT').value.trim(), description: document.getElementById('eD').value.trim(), date: document.getElementById('eDt').value, regDeadline: document.getElementById('eDl').value, image: finalImg, benefit: document.getElementById('eB').value.trim(), ketentuan: document.getElementById('eK').value.trim(), status: 'active', criteria: CRIT };
+      const evStatus = document.getElementById('eStatus') ? document.getElementById('eStatus').value : 'active';
+      const data = { title: document.getElementById('eT').value.trim(), description: document.getElementById('eD').value.trim(), date: document.getElementById('eDt').value, regDeadline: document.getElementById('eDl').value, image: finalImg, benefit: document.getElementById('eB').value.trim(), ketentuan: document.getElementById('eK').value.trim(), status: evStatus, criteria: CRIT };
       if (!data.title) { alert('Judul wajib!'); return; }
-      await db.ref(`events/${eid || db.ref('events').push().key}`).set(data); closeM(); loadEL();
+      if (eid) {
+        // preserve createdAt when editing
+        const snap = await db.ref(`events/${eid}/createdAt`).once('value');
+        if (snap.val()) data.createdAt = snap.val();
+        await db.ref(`events/${eid}`).set(data);
+      } else {
+        data.createdAt = Date.now();
+        await db.ref(`events/${db.ref('events').push().key}`).set(data);
+      }
+      closeM(); loadEL();
     }
     function previewEventImg(input) {
       const file = input.files[0]; if (!file) return;
@@ -688,7 +829,13 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
       };
       reader.readAsDataURL(file);
     }
-    async function delEv(k) { if (!confirm('Hapus event?')) return; await db.ref(`events/${k}`).remove(); loadEL(); }
+    async function toggleEvStatus(k, currentStatus) {
+      const newStatus = (currentStatus === 'active') ? 'inactive' : 'active';
+      const label = newStatus === 'active' ? 'mengaktifkan' : 'menonaktifkan';
+      if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} event ini?`)) return;
+      await db.ref(`events/${k}/status`).set(newStatus);
+    }
+    async function delEv(k) { if (!confirm('Hapus event ini? Semua data terkait tidak ikut terhapus.')) return; await db.ref(`events/${k}`).remove(); }
     // ── PARTICIPANTS ──
     function rParts() {
       const mc = document.getElementById('mainContent');
@@ -1002,15 +1149,21 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
         const entries = Object.entries(invites).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
         if (!entries.length) { list.innerHTML = '<p style="font-size:12px;color:var(--text2)">Belum ada undangan admin</p>'; return; }
         list.innerHTML = entries.map(([token, data]) => {
-          const status = data.used ? '✅ Digunakan' : '⏳ Menunggu';
+          const isUsed = !!data.used;
+          const statusColor = isUsed ? '#34d399' : '#f59e0b';
+          const statusLabel = isUsed ? '✅ Digunakan' : '⏳ Menunggu';
           const link = `${location.origin}${location.pathname}?invite=${encodeURIComponent(token)}`;
-          return `<div style="padding:12px 14px;border:1px solid var(--border);border-radius:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          return `<div style="padding:12px 14px;border:1px solid var(--border);border-radius:14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
             <div style="flex:1;min-width:0">
               <p style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${data.name} · ${data.phone}</p>
-              <p style="font-size:11px;color:var(--text2);word-break:break-all">${link}</p>
-              <p style="font-size:11px;color:${data.used ? '#34d399' : '#f59e0b'};margin-top:4px">${status}</p>
+              ${data.usedBy ? `<p style="font-size:11px;color:var(--text2);margin-bottom:2px">${data.usedBy}</p>` : ''}
+              <p style="font-size:11px;color:var(--text2);word-break:break-all;margin-bottom:4px">${link}</p>
+              <span style="padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:${isUsed ? 'rgba(52,211,153,.1)' : 'rgba(245,158,11,.1)'};color:${statusColor}">${statusLabel}</span>
             </div>
-            <button onclick="copyInviteLink('${link}')" style="padding:8px 10px;border:none;border-radius:10px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;cursor:pointer;font-size:12px">Salin</button>
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+              <button onclick="copyInviteLink('${link}')" style="padding:7px 12px;border:none;border-radius:8px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;cursor:pointer;font-size:12px;font-weight:600">Salin</button>
+              <button onclick="deleteAdminInvite('${token}')" style="padding:7px 12px;border:1px solid rgba(239,68,68,.4);border-radius:8px;background:rgba(239,68,68,.08);color:#ef4444;cursor:pointer;font-size:12px;font-weight:600">Hapus</button>
+            </div>
           </div>`;
         }).join('');
       }).catch(() => {
@@ -1019,6 +1172,13 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
     }
 
     function copyInviteLink(link) { navigator.clipboard.writeText(link).then(() => alert('Link undangan disalin!')); }
+    async function deleteAdminInvite(token) {
+      if (!confirm('Hapus undangan ini? Link undangan akan tidak berlaku lagi.')) return;
+      try {
+        await db.ref(`settings/adminInvites/${token}`).remove();
+        loadAdminInvites();
+      } catch (e) { alert('Gagal menghapus: ' + e.message); }
+    }
 
     function getInviteTokenFromUrl() { return new URLSearchParams(location.search).get('invite') || null; }
     function handleInviteUrl() {
@@ -1038,7 +1198,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
       if (!screen) return;
       document.getElementById('inviteNameLabel').textContent = data.name || '—';
       document.getElementById('invitePhoneLabel').textContent = data.phone || '—';
-      document.getElementById('inviteEmailLabel').textContent = data.email || `admin+${token}@ryusei.local`;
+      document.getElementById('inviteRealEmail').value = '';
       document.getElementById('invitePass').value = '';
       document.getElementById('invitePassConfirm').value = '';
       document.getElementById('inviteErr').style.display = 'none';
@@ -1050,29 +1210,33 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
     function closeInviteScreen() { const screen = document.getElementById('inviteScreen'); if (screen) screen.style.display = 'none'; document.body.style.overflow = ''; }
 
     async function acceptInvite() {
+      const realEmail = document.getElementById('inviteRealEmail')?.value.trim() || '';
       const pass = document.getElementById('invitePass')?.value || '';
       const pass2 = document.getElementById('invitePassConfirm')?.value || '';
       const errEl = document.getElementById('inviteErr');
+      errEl.style.display = 'none';
+      if (!realEmail) { errEl.textContent = 'Email wajib diisi'; errEl.style.display = 'block'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(realEmail)) { errEl.textContent = 'Format email tidak valid'; errEl.style.display = 'block'; return; }
       if (!pass || !pass2) { errEl.textContent = 'Password wajib diisi'; errEl.style.display = 'block'; return; }
+      if (pass.length < 6) { errEl.textContent = 'Password minimal 6 karakter'; errEl.style.display = 'block'; return; }
       if (pass !== pass2) { errEl.textContent = 'Password tidak cocok'; errEl.style.display = 'block'; return; }
       if (!_inviteToken || !_inviteData) { errEl.textContent = 'Undangan tidak valid atau sudah digunakan'; errEl.style.display = 'block'; return; }
-      const email = _inviteData.email || `admin+${_inviteToken}@ryusei.local`;
       try {
-        const credential = await auth.createUserWithEmailAndPassword(email, pass);
-        await db.ref(`settings/adminInvites/${_inviteToken}`).update({ used: true, usedAt: Date.now(), usedBy: email });
+        const credential = await auth.createUserWithEmailAndPassword(realEmail, pass);
+        await db.ref(`settings/adminInvites/${_inviteToken}`).update({ used: true, usedAt: Date.now(), usedBy: realEmail });
         if (credential.user && credential.user.uid) {
-          await db.ref(`settings/adminUsers/${credential.user.uid}`).set({ email, role: 'staff', createdAt: Date.now(), inviteToken: _inviteToken });
+          await db.ref(`settings/adminUsers/${credential.user.uid}`).set({ email: realEmail, name: _inviteData.name || '', role: 'staff', createdAt: Date.now(), inviteToken: _inviteToken });
         }
         const success = document.getElementById('inviteSuccess');
-        if (success) { success.textContent = 'Akun admin berhasil dibuat. Silakan login dengan email dan password ini.'; success.style.display = 'block'; }
-        const err = document.getElementById('inviteErr'); if (err) err.style.display = 'none';
+        if (success) { success.textContent = `✅ Akun berhasil dibuat! Login dengan email: ${realEmail}`; success.style.display = 'block'; }
         setTimeout(() => {
           closeInviteScreen();
           history.replaceState(null, '', location.pathname);
-          if (document.getElementById('loginEmail')) document.getElementById('loginEmail').value = email;
-        }, 1800);
+          if (document.getElementById('loginEmail')) document.getElementById('loginEmail').value = realEmail;
+        }, 2000);
       } catch (e) {
-        errEl.textContent = e.message || 'Gagal membuat akun admin'; errEl.style.display = 'block';
+        const msg = e.code === 'auth/email-already-in-use' ? 'Email sudah digunakan akun lain. Gunakan email berbeda.' : (e.message || 'Gagal membuat akun admin');
+        errEl.textContent = msg; errEl.style.display = 'block';
       }
     }
     async function toggleLeaderboardPublish(eid, publish) {
@@ -1081,6 +1245,92 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
         alert(publish ? '✅ Hasil berhasil dipublikasikan.' : '✅ Publikasi hasil dibatalkan.');
       } catch (e) {
         alert('Gagal mengubah status publikasi: ' + e.message);
+      }
+    }
+    // ── PROFILE ADMIN ──
+    function rProfile() {
+      const mc = document.getElementById('mainContent');
+      const user = auth.currentUser;
+      const email = user ? user.email : '';
+      mc.innerHTML = `
+        <div style="max-width:520px;margin:0 auto">
+          <div class="card-admin" style="padding:24px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+              <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700">A</div>
+              <div>
+                <p style="font-size:15px;font-weight:800">${email}</p>
+                <p style="font-size:12px;color:var(--text2)">Administrator</p>
+              </div>
+            </div>
+            <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px">
+            <h3 style="font-size:13px;font-weight:700;margin-bottom:14px">Ganti Email</h3>
+            <div style="margin-bottom:12px">
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email Baru</label>
+              <input type="email" id="newEmailInput" placeholder="email-baru@domain.com" class="form-input" />
+            </div>
+            <div style="margin-bottom:14px">
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Konfirmasi Password Saat Ini</label>
+              <input type="password" id="reAuthPass" placeholder="········" class="form-input" />
+            </div>
+            <p id="profileMsg" style="font-size:12px;text-align:center;margin-bottom:10px;display:none"></p>
+            <button onclick="doChangeEmail()" style="padding:10px 20px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">Simpan Email Baru →</button>
+          </div>
+          <div class="card-admin" style="padding:24px">
+            <h3 style="font-size:13px;font-weight:700;margin-bottom:6px">Reset Password</h3>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Link reset password akan dikirim ke email Anda saat ini: <strong style="color:var(--text)">${email}</strong></p>
+            <p id="profileResetMsg" style="font-size:12px;text-align:center;margin-bottom:10px;display:none"></p>
+            <button onclick="doProfileReset()" style="padding:10px 20px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:10px;font-weight:600;font-size:13px;cursor:pointer">Kirim Link Reset Password</button>
+          </div>
+        </div>`;
+    }
+    async function doChangeEmail() {
+      const newEmail = document.getElementById('newEmailInput').value.trim();
+      const pass = document.getElementById('reAuthPass').value;
+      const msg = document.getElementById('profileMsg');
+      msg.style.display = 'none';
+      if (!newEmail || !pass) { msg.textContent = 'Email baru dan password wajib diisi'; msg.style.color = '#f87171'; msg.style.display = 'block'; return; }
+      try {
+        const user = auth.currentUser;
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, pass);
+        await user.reauthenticateWithCredential(credential);
+        await user.updateEmail(newEmail);
+        document.getElementById('uEmail').textContent = newEmail;
+        msg.textContent = '✅ Email berhasil diubah ke ' + newEmail;
+        msg.style.color = '#34d399'; msg.style.display = 'block';
+        document.getElementById('newEmailInput').value = '';
+        document.getElementById('reAuthPass').value = '';
+      } catch (e) {
+        msg.textContent = '❌ ' + (e.code === 'auth/wrong-password' ? 'Password salah' : e.message);
+        msg.style.color = '#f87171'; msg.style.display = 'block';
+      }
+    }
+    async function doProfileReset() {
+      const msg = document.getElementById('profileResetMsg');
+      try {
+        await auth.sendPasswordResetEmail(auth.currentUser.email);
+        msg.textContent = '✅ Link reset dikirim ke email Anda'; msg.style.color = '#34d399'; msg.style.display = 'block';
+      } catch (e) { msg.textContent = '❌ ' + e.message; msg.style.color = '#f87171'; msg.style.display = 'block'; }
+    }
+    // ── LUPA PASSWORD (Login Screen) ──
+    function openForgotPassword() {
+      document.getElementById('forgotEmail').value = document.getElementById('loginEmail').value || '';
+      document.getElementById('forgotMsg').style.display = 'none';
+      document.getElementById('forgotModal').style.display = 'flex';
+    }
+    function closeForgotPassword() { document.getElementById('forgotModal').style.display = 'none'; }
+    document.getElementById('forgotModal').addEventListener('click', e => { if (e.target === document.getElementById('forgotModal')) closeForgotPassword(); });
+    async function sendResetEmail() {
+      const em = document.getElementById('forgotEmail').value.trim();
+      const msg = document.getElementById('forgotMsg');
+      msg.style.display = 'none';
+      if (!em) { msg.textContent = 'Masukkan email terlebih dahulu'; msg.style.color = '#f87171'; msg.style.display = 'block'; return; }
+      if (!auth) { msg.textContent = 'Firebase belum dikonfigurasi'; msg.style.color = '#f87171'; msg.style.display = 'block'; return; }
+      try {
+        await auth.sendPasswordResetEmail(em);
+        msg.textContent = '✅ Link reset dikirim! Cek email Anda.'; msg.style.color = '#34d399'; msg.style.display = 'block';
+      } catch (e) {
+        msg.textContent = '❌ ' + (e.code === 'auth/user-not-found' ? 'Email tidak ditemukan' : e.message);
+        msg.style.color = '#f87171'; msg.style.display = 'block';
       }
     }
     // ── MODAL ──
@@ -1196,11 +1446,13 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
 
     // ── INIT ──
     (async () => {
+      // Fallback: sembunyikan loader setelah 12 detik
+      setTimeout(hideLoader, 12000);
       // 1. Coba localStorage
       const saved = localStorage.getItem('ryusei_fb_config');
-      if (saved) { try { initFB(JSON.parse(saved)); return; } catch (e) { } }
+      if (saved) { try { setLoaderMsg('Menyambungkan database…'); initFB(JSON.parse(saved)); return; } catch (e) { } }
       // 2. Fetch dari Firebase settings/fbConfig — butuh bootstrap config dulu
-      // Coba fetch firebase-config.json (boleh kosong, hanya untuk bootstrap awal)
+      setLoaderMsg('Mengambil konfigurasi Firebase…');
       try {
         const res = await fetch('../firebase-config.json', { cache: 'no-store' });
         if (res.ok) {
@@ -1226,6 +1478,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan:
       // Login screen tetap tampil, tapi firebase tidak aktif
       document.getElementById('loginErr').textContent = '⚙️ Firebase belum dikonfigurasi. Klik icon R sebanyak 5x untuk setup.';
       document.getElementById('loginErr').style.display = 'block';
+      hideLoader();
     })();
   </script>
 </body>

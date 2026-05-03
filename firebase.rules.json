@@ -2,37 +2,62 @@
   "rules": {
     ".read": false,
     ".write": false,
+
     "events": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "registrations": {
-      ".read": true,
-      ".write": true
+      ".read": "auth != null",
+      ".write": true,
+      "$regId": {
+        ".read": true
+      }
     },
     "judges": {
-      ".read": true,
-      ".write": true
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$judgeId": {
+        ".read": true
+      }
     },
     "scores": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "cms": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "stats": {
       ".read": true,
-      ".write": true
+      ".write": "auth != null"
     },
     "settings": {
-      ".read": true,
-      ".write": true
+      "fbConfig": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "geminiKey": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "geminiEndpoint": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "adminUsers": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "$other": {
+        ".read": true,
+        ".write": "auth != null"
+      }
     },
     "pw_resets": {
-      ".read": true,
-      ".write": true
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

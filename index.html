@@ -395,10 +395,58 @@
         display: none !important
       }
     }
+
+    /* ── LOADING SCREEN ── */
+    #ryusei-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #030712;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      transition: opacity .5s ease, visibility .5s ease;
+    }
+    #ryusei-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-logo {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 900; font-size: 32px;
+      animation: loaderPulse 1.6s ease-in-out infinite;
+    }
+    .loader-bar-wrap {
+      width: 200px; height: 4px; border-radius: 99px;
+      background: rgba(255,255,255,.1); overflow: hidden;
+    }
+    .loader-bar {
+      height: 100%; width: 30%;
+      background: linear-gradient(90deg, #ec4899, #a855f7);
+      border-radius: 99px;
+      animation: loaderSlide 1.4s ease-in-out infinite;
+    }
+    .loader-text {
+      font-size: 13px; color: #9ca3af; font-family: system-ui, sans-serif;
+      letter-spacing: .04em;
+    }
+    @keyframes loaderPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(236,72,153,.4); }
+      50% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(236,72,153,0); }
+    }
+    @keyframes loaderSlide {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(200%); }
+      100% { transform: translateX(-100%); }
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- LOADING SCREEN -->
+  <div id="ryusei-loader">
+    <div class="loader-logo">尺</div>
+    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+    <p class="loader-text" id="loaderMsg">Menghubungkan ke Firebase…</p>
+  </div>
+
 
   <!-- NAVBAR -->
   <nav id="navbar" style="position:fixed;top:0;left:0;right:0;z-index:50;transition:all .3s">
@@ -760,7 +808,12 @@
             if (res.ok) { const j = await res.json(); if (j && j.apiKey) cfg = j; }
           } catch (e) { }
         }
-        if (!cfg) { console.warn('Firebase belum dikonfigurasi.'); return; }
+        if (!cfg) {
+          setLoaderMsg('⚠️ Firebase belum dikonfigurasi.');
+          setTimeout(hideLoader, 2500);
+          return;
+        }
+        setLoaderMsg('Menyambungkan database…');
         if (!firebase.apps.length) firebase.initializeApp(cfg);
         db = firebase.database();
         // Coba ambil config final dari DB (kalau ada)
@@ -776,8 +829,23 @@
             localStorage.setItem('ryusei_fb_config', JSON.stringify(dbCfg));
           }
         } catch (e) { }
+        setLoaderMsg('Memuat konten…');
         loadAll();
-      } catch (e) { console.error(e); }
+        // Hide loader after first data arrives (max 5s)
+        setTimeout(hideLoader, 800);
+      } catch (e) {
+        console.error(e);
+        setLoaderMsg('⚠️ Gagal memuat. Coba refresh.');
+        setTimeout(hideLoader, 3000);
+      }
+    }
+    function setLoaderMsg(msg) {
+      const el = document.getElementById('loaderMsg');
+      if (el) el.textContent = msg;
+    }
+    function hideLoader() {
+      const loader = document.getElementById('ryusei-loader');
+      if (loader) loader.classList.add('hidden');
     }
     function loadAll() {
       db.ref('cms/landing').on('value', s => {
@@ -986,6 +1054,7 @@
         }
         _lbScoresListener = eid;
         db.ref(`scores/${eid}`).on('value', async snap => {
+          try {
           const scores = snap.val() || {}; const rs = await db.ref('registrations').once('value'); const regs = rs.val() || {};
           const parts = {};
           Object.entries(scores).forEach(([jid, jv]) => { Object.entries(jv).forEach(([pc, ps]) => { if (!parts[pc]) { parts[pc] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[pc].t[c] = (parts[pc].t[c] || 0) + (ps[c] || 0); }); parts[pc].jc++; }); });
@@ -1010,6 +1079,11 @@
         <p style="font-size:11px;color:var(--text2)">${p.jc} juri</p>
       </div>
     </div>`).join('');
+          } catch(e) {
+            console.error('Leaderboard error:', e);
+            const d3 = document.getElementById('lbData');
+            if (d3) d3.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Gagal memuat leaderboard. Coba lagi.</p>';
+          }
         });
       }).catch(() => {
         document.getElementById('lbData').innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Tidak dapat memuat leaderboard.</p>';

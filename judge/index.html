@@ -164,10 +164,55 @@
       background: linear-gradient(135deg, #ec4899, #a855f7);
       color: #fff
     }
+
+    /* ── LOADING SCREEN ── */
+    #ryusei-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #030712;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      transition: opacity .5s ease, visibility .5s ease;
+    }
+    #ryusei-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-logo {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 900; font-size: 32px;
+      animation: loaderPulse 1.6s ease-in-out infinite;
+    }
+    .loader-bar-wrap {
+      width: 200px; height: 4px; border-radius: 99px;
+      background: rgba(255,255,255,.1); overflow: hidden;
+    }
+    .loader-bar {
+      height: 100%; width: 30%;
+      background: linear-gradient(90deg, #ec4899, #a855f7);
+      border-radius: 99px;
+      animation: loaderSlide 1.4s ease-in-out infinite;
+    }
+    .loader-text { font-size: 13px; color: #9ca3af; font-family: system-ui, sans-serif; letter-spacing: .04em; }
+    @keyframes loaderPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(236,72,153,.4); }
+      50% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(236,72,153,0); }
+    }
+    @keyframes loaderSlide {
+      0% { transform: translateX(-100%); }
+      50% { transform: translateX(200%); }
+      100% { transform: translateX(-100%); }
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- LOADING SCREEN -->
+  <div id="ryusei-loader">
+    <div class="loader-logo">尺</div>
+    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+    <p class="loader-text" id="loaderMsg">Menghubungkan ke Firebase…</p>
+  </div>
+
 
   <!-- LOGIN -->
   <div id="loginView" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">
@@ -191,6 +236,12 @@
         </div>
         <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="judgeLogin()">Masuk →</button>
         <p id="jErr" style="color:#ef4444;font-size:12px;text-align:center;margin-top:10px;display:none"></p>
+        <div id="forgotJudge" style="text-align:center;margin-top:12px;display:none">
+          <p style="font-size:12px;color:var(--text2)">🔑 Lupa password? Hubungi administrator untuk reset password Anda.</p>
+        </div>
+        <div style="text-align:center;margin-top:10px">
+          <button onclick="document.getElementById('forgotJudge').style.display=document.getElementById('forgotJudge').style.display==='none'?'block':'none'" style="background:none;border:none;color:#a855f7;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px">Lupa Password?</button>
+        </div>
       </div>
       <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:16px">ID dan password diberikan oleh
         administrator</p>
@@ -306,7 +357,12 @@
             if (res.ok) { const j = await res.json(); if (j && j.apiKey) cfg = j; }
           } catch (e) { }
         }
-        if (!cfg) { console.warn('Firebase belum dikonfigurasi.'); return; }
+        if (!cfg) {
+          setLoaderMsg('⚠️ Firebase belum dikonfigurasi.');
+          setTimeout(hideLoader, 2500);
+          return;
+        }
+        setLoaderMsg('Menyambungkan database…');
         if (!firebase.apps.length) firebase.initializeApp(cfg);
         db = firebase.database();
         try {
@@ -316,7 +372,20 @@
         } catch (e) { }
         const urlId = new URLSearchParams(location.search).get('id');
         if (urlId) { document.getElementById('jLoginId').value = urlId; }
-      } catch (e) { console.error(e); }
+        hideLoader();
+      } catch (e) {
+        console.error(e);
+        setLoaderMsg('⚠️ Gagal memuat. Coba refresh.');
+        setTimeout(hideLoader, 3000);
+      }
+    }
+    function setLoaderMsg(msg) {
+      const el = document.getElementById('loaderMsg');
+      if (el) el.textContent = msg;
+    }
+    function hideLoader() {
+      const loader = document.getElementById('ryusei-loader');
+      if (loader) loader.classList.add('hidden');
     }
     let _scoreRTListener = null;
     let _leaderboardListener = null;
@@ -534,6 +603,7 @@
       if (_myResultsListener) { db.ref(`scores/${_myResultsListener}`).off('value'); _myResultsListener = null; }
       _myResultsListener = `${currentEventId}/${judgeId}`;
       db.ref(`scores/${currentEventId}/${judgeId}`).on('value', async sSnap => {
+        try {
         const sc = sSnap.val() || {};
         const rSnap = await db.ref('registrations').once('value'); const regs = rSnap.val() || {};
         const div = document.getElementById('myResults'); if (!div) return;
@@ -553,6 +623,11 @@
         </div>
       </div>`;
         }).join('');
+        } catch(e) {
+          console.error('My results error:', e);
+          const d = document.getElementById('myResults');
+          if (d) d.innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Gagal memuat hasil. Coba refresh.</p>';
+        }
       });
     }
     async function loadJudgeLB() {
@@ -560,6 +635,7 @@
       if (_leaderboardListener) { db.ref(`scores/${_leaderboardListener}`).off('value'); _leaderboardListener = null; }
       _leaderboardListener = currentEventId;
       db.ref(`scores/${currentEventId}`).on('value', async snap => {
+        try {
         const allScores = snap.val() || {}; const rSnap = await db.ref('registrations').once('value'); const regs = rSnap.val() || {};
         const parts = {};
         Object.values(allScores).forEach(jScores => { Object.entries(jScores).forEach(([code, sc]) => { if (!parts[code]) { parts[code] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[code].t[c] = (parts[code].t[c] || 0) + (sc[c] || 0); }); parts[code].jc++; }); });
@@ -575,8 +651,14 @@
       <div style="flex:1"><p style="font-weight:700;font-size:14px">${p.username}</p><p style="font-size:11px;color:var(--text2)">${p.jc} juri telah menilai</p></div>
       <p style="font-size:22px;font-weight:900;color:${i === 0 ? '#eab308' : i === 1 ? '#9ca3af' : i === 2 ? '#d97706' : 'var(--text)'}">${p.avg.toFixed(2)}</p>
     </div>`).join('');
+        } catch(e) {
+          console.error('Leaderboard error:', e);
+          const d = document.getElementById('lbContent');
+          if (d) d.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Gagal memuat leaderboard.</p>';
+        }
       });
     }
+    setTimeout(hideLoader, 10000);
     init();
   </script>
 </body>
