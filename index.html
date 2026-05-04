@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/ryusei/assets/fav/favicon-16x16.png">
   <link rel="manifest" href="/ryusei/assets/fav/site.webmanifest">
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Ryusei Event Management</title>
+  <title>Ryusei Agency & Event Management</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="css/tailwind.min.css" />
@@ -398,42 +398,87 @@
 
     /* ── LOADING SCREEN ── */
     #ryusei-loader {
-      position: fixed; inset: 0; z-index: 9999;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
       background: #030712;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
       transition: opacity .5s ease, visibility .5s ease;
     }
-    #ryusei-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    #ryusei-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     .loader-logo {
-      width: 72px; height: 72px; border-radius: 20px;
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
       background: linear-gradient(135deg, #ec4899, #a855f7);
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-weight: 900; font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 32px;
       animation: loaderPulse 1.6s ease-in-out infinite;
     }
+
     .loader-bar-wrap {
-      width: 200px; height: 4px; border-radius: 99px;
-      background: rgba(255,255,255,.1); overflow: hidden;
+      width: 200px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, .1);
+      overflow: hidden;
     }
+
     .loader-bar {
-      height: 100%; width: 30%;
+      height: 100%;
+      width: 30%;
       background: linear-gradient(90deg, #ec4899, #a855f7);
       border-radius: 99px;
       animation: loaderSlide 1.4s ease-in-out infinite;
     }
+
     .loader-text {
-      font-size: 13px; color: #9ca3af; font-family: system-ui, sans-serif;
+      font-size: 13px;
+      color: #9ca3af;
+      font-family: system-ui, sans-serif;
       letter-spacing: .04em;
     }
+
     @keyframes loaderPulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(236,72,153,.4); }
-      50% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(236,72,153,0); }
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(236, 72, 153, .4);
+      }
+
+      50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 16px rgba(236, 72, 153, 0);
+      }
     }
+
     @keyframes loaderSlide {
-      0% { transform: translateX(-100%); }
-      50% { transform: translateX(200%); }
-      100% { transform: translateX(-100%); }
+      0% {
+        transform: translateX(-100%);
+      }
+
+      50% {
+        transform: translateX(200%);
+      }
+
+      100% {
+        transform: translateX(-100%);
+      }
     }
   </style>
 </head>
@@ -443,7 +488,9 @@
   <!-- LOADING SCREEN -->
   <div id="ryusei-loader">
     <div class="loader-logo">尺</div>
-    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+    <div class="loader-bar-wrap">
+      <div class="loader-bar"></div>
+    </div>
     <p class="loader-text" id="loaderMsg">Menghubungkan ke Firebase…</p>
   </div>
 
@@ -522,7 +569,8 @@
           </h1>
           <p id="heroSubtitle"
             style="font-size:18px;color:var(--text2);margin:28px 0 36px;line-height:1.75;max-width:500px">Platform
-            Terpadu Untuk Manajemen Agency, Event, Virtual Live Streaming, Pendaftaran Peserta, dan Sistem Penilaian Real-Time.
+            Terpadu Untuk Manajemen Agency, Event, Virtual Live Streaming, Pendaftaran Peserta, dan Sistem Penilaian
+            Real-Time.
           </p>
           <div style="display:flex;flex-wrap:wrap;gap:12px">
             <a href="#events" class="btn-primary">Lihat Event →</a>
@@ -576,7 +624,8 @@
       <div style="text-align:center;margin-bottom:56px">
         <h2 id="aboutTitle">Tentang <span class="gradient-text">Ryusei</span></h2>
         <p id="aboutDesc" style="color:var(--text2);max-width:600px;margin:16px auto;font-size:17px;line-height:1.7">
-          Platform profesional untuk mengelola event & agency dengan event live streaming virtual dengan sistem scoring real-time dan manajemen
+          Platform profesional untuk mengelola event & agency dengan event live streaming virtual dengan sistem scoring
+          real-time dan manajemen
           peserta yang canggih.</p>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" class="grid-3">
@@ -756,14 +805,18 @@
           <span style="font-weight:700;font-size:13px">RYUSEI Agency & Event Management</span>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:12px">
-          <a href="tos.html" style="color:var(--text2);text-decoration:none;transition:color .2s" onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">Terms of Service</a>
-          <a>  •  </a>
-          <a href="fitur.html" style="color:var(--text2);text-decoration:none;transition:color .2s" onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">Fitur</a>
-          <a>  •  </a>
-          <a href="tutorial.html" style="color:var(--text2);text-decoration:none;transition:color .2s" onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">Tutorial</a>
-          <a>  •  </a>
-          <a href="live-private-club.html" style="color:var(--text2);text-decoration:none;transition:color .2s" onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">Live Privat Club</a>
-          
+          <a href="tos.html" style="color:var(--text2);text-decoration:none;transition:color .2s"
+            onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">Terms of Service</a>
+          <a> • </a>
+          <a href="fitur.html" style="color:var(--text2);text-decoration:none;transition:color .2s"
+            onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">Fitur</a>
+          <a> • </a>
+          <a href="tutorial.html" style="color:var(--text2);text-decoration:none;transition:color .2s"
+            onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">Tutorial</a>
+          <a> • </a>
+          <a href="live-private-club.html" style="color:var(--text2);text-decoration:none;transition:color .2s"
+            onmouseover="this.style.color='#ec4899'" onmouseout="this.style.color='var(--text2)'">Live Privat Club</a>
+
         </div>
       </div>
       <p style="font-size:12px;color:var(--text2)">© 2026 Ryusei Agency & Event Management. All rights reserved.</p>
@@ -958,6 +1011,15 @@
       });
     }
     function genCode() { return Math.random().toString(36).substr(2, 8).toUpperCase(); }
+    function formatDateTime(ts) { return ts ? new Date(ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'; }
+    async function writeAppLog(type, details, code, actor) {
+      if (!db) return;
+      try {
+        await db.ref('logs').push({ type: type || 'info', details: details || '', code: code || null, actor: actor || 'participant', timestamp: Date.now() });
+      } catch (e) {
+        console.warn('[Log] write failed', e);
+      }
+    }
     async function submitReg() {
       if (!db) { alert('Database belum terhubung'); return; }
       const eid = document.getElementById('regEvent').value, u = document.getElementById('regUsername').value.trim(), l = document.getElementById('regLink').value.trim(), t = document.getElementById('regTime').value;
@@ -966,8 +1028,9 @@
       if (btn) { btn.textContent = 'Mendaftarkan...'; btn.disabled = true; }
       try {
         const code = genCode();
-        await db.ref(`registrations/${code}`).set({ eventId: eid, username: u, link: l, performTime: t, code, status: 'pending', registeredAt: Date.now() });
+        await db.ref(`registrations/${code}`).set({ eventId: eid, username: u, link: l, performTime: t, code, status: 'pending', registeredAt: Date.now(), lastChangedBy: 'participant', lastChangedAt: Date.now() });
         await db.ref(`events/${eid}/participants/${code}`).set(true);
+        await writeAppLog('registration', `Peserta mendaftar event ${eid} sebagai ${u} dengan jam perform ${t}`, code, u);
         showRegSuccessModal(code, u);
       } catch (e) {
         alert('Gagal mendaftar: ' + e.message);
@@ -1034,14 +1097,53 @@
         const sc = { pending: 'rgba(245,158,11,.1)', approved: 'rgba(34,197,94,.1)', rejected: 'rgba(239,68,68,.1)' };
         const tc = { pending: '#f59e0b', approved: '#16a34a', rejected: '#dc2626' };
         const tl = { pending: 'Menunggu Persetujuan', approved: 'Disetujui ✓', rejected: 'Ditolak ✗' };
+        const eventTitle = window._eventsData?.[d.eventId]?.title || d.eventId || 'Event tidak diketahui';
+        const changedInfo = d.lastChangedBy ? `<p style="font-size:12px;color:var(--text2);margin-top:10px">Perubahan terakhir oleh <strong>${d.lastChangedBy === 'admin' ? 'Admin' : 'Peserta'}</strong> pada ${formatDateTime(d.lastChangedAt)}</p>` : '';
         res.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span style="font-weight:700;font-size:15px">${d.username}</span>
         <span style="padding:4px 12px;border-radius:99px;background:${sc[d.status] || sc.pending};color:${tc[d.status] || tc.pending};font-size:12px;font-weight:700">${tl[d.status] || d.status}</span>
       </div>
-      <p style="font-size:12px;color:var(--text2)">Jam Perform: ${d.performTime || '—'} WIB</p>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Event: ${eventTitle}</p>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Jam Perform: ${d.performTime || '—'} WIB</p>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Link Profil: ${d.link ? `<a href="${d.link}" target="_blank" style="color:#60a5fa;text-decoration:none">${d.link}</a>` : '–'}</p>
+      ${changedInfo}
+      <div style="margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:16px;background:rgba(236,72,153,.04)">
+        <h4 style="font-size:14px;font-weight:700;margin-bottom:12px">Edit Data Pendaftaran</h4>
+        <div style="display:grid;gap:12px">
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Username</label><input id="editRegUsername" class="form-input" value="${(d.username||'').replace(/"/g,'&quot;')}" /></div>
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Link Profil</label><input id="editRegLink" class="form-input" value="${(d.link||'').replace(/"/g,'&quot;')}" /></div>
+          <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Jam Perform (WIB)</label><input type="time" id="editRegTime" class="form-input" value="${d.performTime || ''}" /></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><button onclick="updateRegistrationByParticipant('${code}')" style="padding:12px 16px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;cursor:pointer;font-weight:700">Simpan Perubahan</button><span style="align-self:center;font-size:12px;color:var(--text2)">Perubahan akan dicatat dan dapat dilihat admin.</span></div>
+        </div>
+      </div>
     </div>`;
       } catch (e) { res.innerHTML = `<p style="color:#ef4444;font-size:13px">Error: ${e.message}</p>`; }
+    }
+    async function updateRegistrationByParticipant(code) {
+      if (!db) return;
+      const username = document.getElementById('editRegUsername')?.value.trim();
+      const link = document.getElementById('editRegLink')?.value.trim();
+      const performTime = document.getElementById('editRegTime')?.value;
+      if (!username || !link || !performTime) { alert('Semua field edit wajib diisi!'); return; }
+      try {
+        const snap = await db.ref(`registrations/${code}`).once('value');
+        const current = snap.val();
+        if (!current) { alert('Data tidak ditemukan.'); return; }
+        const updates = { lastChangedBy: 'participant', lastChangedAt: Date.now() };
+        const changes = [];
+        if (current.username !== username) { updates.username = username; changes.push(`username: ${current.username || '—'} → ${username}`); }
+        if (current.link !== link) { updates.link = link; changes.push(`link: ${current.link || '—'} → ${link}`); }
+        if (current.performTime !== performTime) { updates.performTime = performTime; changes.push(`jam perform: ${current.performTime || '—'} → ${performTime}`); }
+        if (!changes.length) { alert('Tidak ada perubahan yang disimpan.'); return; }
+        updates.lastChangedNote = `Peserta mengubah: ${changes.join('; ')}`;
+        await db.ref(`registrations/${code}`).update(updates);
+        await writeAppLog('participant_edit', `Peserta mengubah pendaftaran ${code}: ${changes.join('; ')}`, code, username);
+        document.getElementById('statusResult').innerHTML = `<div style="padding:16px;border:1px solid rgba(34,197,94,.2);border-radius:14px;background:rgba(34,197,94,.08);color:#166534;font-size:13px">Perubahan berhasil dicatat. Tunggu konfirmasi admin jika diperlukan.</div>`;
+        setTimeout(() => checkStatus(), 800);
+      } catch (e) {
+        alert('Gagal menyimpan perubahan: ' + e.message);
+      }
     }
     function loadLB(eid) {
       if (!eid || !db) { document.getElementById('lbData').innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Pilih event untuk melihat leaderboard</p>'; return; }
@@ -1061,17 +1163,17 @@
         _lbScoresListener = eid;
         db.ref(`scores/${eid}`).on('value', async snap => {
           try {
-          const scores = snap.val() || {}; const rs = await db.ref('registrations').once('value'); const regs = rs.val() || {};
-          const parts = {};
-          Object.entries(scores).forEach(([jid, jv]) => { Object.entries(jv).forEach(([pc, ps]) => { if (!parts[pc]) { parts[pc] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[pc].t[c] = (parts[pc].t[c] || 0) + (ps[c] || 0); }); parts[pc].jc++; }); });
-          const ranked = Object.entries(parts).map(([code, data]) => {
-            const avg = data.jc > 0 ? CRIT.reduce((s, c) => s + (data.t[c] / data.jc), 0) / CRIT.length : 0;
-            return { code, username: regs[code]?.username || code, avg, t: data.t, jc: data.jc };
-          }).sort((a, b) => b.avg - a.avg);
-          const div2 = document.getElementById('lbData');
-          if (!ranked.length) { div2.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Belum ada skor</p>'; return; }
-          const medals = ['🥇', '🥈', '🥉'];
-          div2.innerHTML = ranked.map((p, i) => `
+            const scores = snap.val() || {}; const rs = await db.ref('registrations').once('value'); const regs = rs.val() || {};
+            const parts = {};
+            Object.entries(scores).forEach(([jid, jv]) => { Object.entries(jv).forEach(([pc, ps]) => { if (!parts[pc]) { parts[pc] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[pc].t[c] = (parts[pc].t[c] || 0) + (ps[c] || 0); }); parts[pc].jc++; }); });
+            const ranked = Object.entries(parts).map(([code, data]) => {
+              const avg = data.jc > 0 ? CRIT.reduce((s, c) => s + (data.t[c] / data.jc), 0) / CRIT.length : 0;
+              return { code, username: regs[code]?.username || code, avg, t: data.t, jc: data.jc };
+            }).sort((a, b) => b.avg - a.avg);
+            const div2 = document.getElementById('lbData');
+            if (!ranked.length) { div2.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Belum ada skor</p>'; return; }
+            const medals = ['🥇', '🥈', '🥉'];
+            div2.innerHTML = ranked.map((p, i) => `
     <div style="background:var(--card);border:1px solid ${i < 3 ? 'rgba(236,72,153,.3)' : 'var(--border)'};border-radius:16px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:16px">
       <div style="width:44px;height:44px;border-radius:12px;${i < 3 ? 'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff' : 'background:var(--bg2);color:var(--text2)'};display:flex;align-items:center;justify-content:center;font-size:${i < 3 ? '22px' : '16px'};font-weight:900;flex-shrink:0">${i < 3 ? medals[i] : i + 1}</div>
       <div style="flex:1;min-width:0">
@@ -1085,7 +1187,7 @@
         <p style="font-size:11px;color:var(--text2)">${p.jc} juri</p>
       </div>
     </div>`).join('');
-          } catch(e) {
+          } catch (e) {
             console.error('Leaderboard error:', e);
             const d3 = document.getElementById('lbData');
             if (d3) d3.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Gagal memuat leaderboard. Coba lagi.</p>';
@@ -1150,7 +1252,7 @@
     }
     init();
 
-    
+
   </script>
 
   <!-- EVENT DETAIL MODAL -->
@@ -1163,184 +1265,275 @@
   </div>
 
   <!-- ── RYUSEI CHATBOT ──────────────────────────────────────── -->
-<div id="chatWidget">
-  <!-- Bubble toggle -->
-  <button id="chatToggle" title="Tanya Ryusei AI">
-    <span id="chatToggleIcon">💬</span>
-  </button>
+  <div id="chatWidget">
+    <!-- Bubble toggle -->
+    <button id="chatToggle" title="Tanya Ryusei AI">
+      <span id="chatToggleIcon">💬</span>
+    </button>
 
-  <!-- Chat window -->
-  <div id="chatWindow">
-    <div id="chatHeader">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div id="chatAvatar">尺</div>
-        <div>
-          <div style="font-weight:700;font-size:14px">Ryusei Assistant</div>
-          <div style="font-size:11px;opacity:.75">● Online</div>
+    <!-- Chat window -->
+    <div id="chatWindow">
+      <div id="chatHeader">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="chatAvatar">尺</div>
+          <div>
+            <div style="font-weight:700;font-size:14px">Ryusei Assistant</div>
+            <div style="font-size:11px;opacity:.75">● Online</div>
+          </div>
+        </div>
+        <button id="chatClose">✕</button>
+      </div>
+
+      <div id="chatMessages">
+        <div class="chat-msg bot">
+          <div class="chat-bubble">Halo! 👋 Saya asisten Virtual Ryusei Agency & Event Manajemen. Ada yang bisa saya
+            bantu seputar Ryusei Agency & Event Manajemen?</div>
         </div>
       </div>
-      <button id="chatClose">✕</button>
-    </div>
 
-    <div id="chatMessages">
-      <div class="chat-msg bot">
-        <div class="chat-bubble">Halo! 👋 Saya asisten Virtual Ryusei Agency & Event Manajemen. Ada yang bisa saya bantu seputar Ryusei Agency & Event Manajemen?</div>
+      <div id="chatInputArea">
+        <textarea id="chatInput" placeholder="Ketik pertanyaan..." rows="1" maxlength="500"></textarea>
+        <button id="chatSend">➤</button>
       </div>
     </div>
-
-    <div id="chatInputArea">
-      <textarea id="chatInput" placeholder="Ketik pertanyaan..." rows="1" maxlength="500"></textarea>
-      <button id="chatSend">➤</button>
-    </div>
   </div>
-</div>
-<!-- Chatbot logic — dipisah ke chatbot.js agar mudah di-maintain & di-update -->
-<script src="chatbot.js"></script>
+  <!-- Chatbot logic — dipisah ke chatbot.js agar mudah di-maintain & di-update -->
+  <script src="chatbot.js"></script>
 
-<style>
-#chatWidget {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 9999;
-  font-family: system-ui, sans-serif;
-}
-#chatToggle {
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ec4899, #a855f7);
-  border: none; cursor: pointer;
-  box-shadow: 0 4px 20px rgba(236,72,153,.45);
-  font-size: 24px;
-  display: flex; align-items: center; justify-content: center;
-  transition: transform .2s, box-shadow .2s;
-}
-#chatToggle:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(236,72,153,.6); }
-#chatWindow {
-  display: none;
-  position: absolute;
-  bottom: 68px; right: 0;
-  width: 340px;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 8px 40px rgba(0,0,0,.22);
-  background: var(--bg, #fff);
-  border: 1px solid var(--border, #e5e7eb);
-  flex-direction: column;
-  animation: chatSlideUp .25s ease;
-}
-#chatWindow.open { display: flex; }
-@keyframes chatSlideUp {
-  from { opacity:0; transform: translateY(16px) scale(.97); }
-  to   { opacity:1; transform: translateY(0) scale(1); }
-}
-#chatHeader {
-  background: linear-gradient(135deg, #ec4899, #a855f7);
-  padding: 14px 16px;
-  display: flex; align-items: center; justify-content: space-between;
-  color: #fff;
-}
-#chatAvatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-}
-#chatClose {
-  background: none; border: none; color: #fff;
-  font-size: 16px; cursor: pointer; opacity: .8;
-  padding: 4px 8px; border-radius: 6px;
-  transition: opacity .2s, background .2s;
-}
-#chatClose:hover { opacity: 1; background: rgba(255,255,255,.15); }
-#chatMessages {
-  flex: 1;
-  padding: 14px;
-  overflow-y: auto;
-  min-height: 280px;
-  max-height: 360px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: var(--bg2, #f9fafb);
-}
-.chat-msg { display: flex; }
-.chat-msg.bot { justify-content: flex-start; }
-.chat-msg.user { justify-content: flex-end; }
-.chat-bubble {
-  max-width: 82%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  font-size: 13px;
-  line-height: 1.55;
-  word-break: break-word;
-}
-.chat-msg.bot .chat-bubble {
-  background: var(--card, #fff);
-  color: var(--text, #111);
-  border: 1px solid var(--border, #e5e7eb);
-  border-bottom-left-radius: 4px;
-}
-.chat-msg.user .chat-bubble {
-  background: linear-gradient(135deg, #ec4899, #a855f7);
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
-.chat-typing span {
-  display: inline-block;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #9ca3af;
-  animation: typingDot .9s infinite;
-}
-.chat-typing span:nth-child(2) { animation-delay: .15s; }
-.chat-typing span:nth-child(3) { animation-delay: .3s; }
-@keyframes typingDot {
-  0%,60%,100% { transform: translateY(0); opacity:.4; }
-  30% { transform: translateY(-5px); opacity:1; }
-}
-#chatInputArea {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 10px 12px;
-  border-top: 1px solid var(--border, #e5e7eb);
-  background: var(--bg, #fff);
-}
-#chatInput {
-  flex: 1;
-  padding: 9px 14px;
-  border-radius: 16px;
-  border: 1px solid var(--border, #e5e7eb);
-  background: var(--bg2, #f9fafb);
-  color: var(--text, #111);
-  font-size: 13px;
-  outline: none;
-  transition: border-color .2s;
-  resize: none;
-  overflow-y: hidden;
-  min-height: 36px;
-  max-height: 120px;
-  line-height: 1.4;
-  font-family: system-ui, sans-serif;
-  display: block;
-}
-#chatInput:focus { border-color: #ec4899; }
-#chatSend {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ec4899, #a855f7);
-  border: none; color: #fff;
-  font-size: 15px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: transform .15s;
-}
-#chatSend:hover { transform: scale(1.1); }
-#chatSend:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-</style>
-<!-- ── END CHATBOT HTML ──────────────────────────────────────── -->
+  <style>
+    #chatWidget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      font-family: system-ui, sans-serif;
+    }
+
+    #chatToggle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(236, 72, 153, .45);
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    #chatToggle:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 28px rgba(236, 72, 153, .6);
+    }
+
+    #chatWindow {
+      display: none;
+      position: absolute;
+      bottom: 68px;
+      right: 0;
+      width: 340px;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, .22);
+      background: var(--bg, #fff);
+      border: 1px solid var(--border, #e5e7eb);
+      flex-direction: column;
+      animation: chatSlideUp .25s ease;
+    }
+
+    #chatWindow.open {
+      display: flex;
+    }
+
+    @keyframes chatSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    #chatHeader {
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #fff;
+    }
+
+    #chatAvatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    #chatClose {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      opacity: .8;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: opacity .2s, background .2s;
+    }
+
+    #chatClose:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, .15);
+    }
+
+    #chatMessages {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      min-height: 280px;
+      max-height: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--bg2, #f9fafb);
+    }
+
+    .chat-msg {
+      display: flex;
+    }
+
+    .chat-msg.bot {
+      justify-content: flex-start;
+    }
+
+    .chat-msg.user {
+      justify-content: flex-end;
+    }
+
+    .chat-bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .chat-msg.bot .chat-bubble {
+      background: var(--card, #fff);
+      color: var(--text, #111);
+      border: 1px solid var(--border, #e5e7eb);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-msg.user .chat-bubble {
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-typing span {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #9ca3af;
+      animation: typingDot .9s infinite;
+    }
+
+    .chat-typing span:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .chat-typing span:nth-child(3) {
+      animation-delay: .3s;
+    }
+
+    @keyframes typingDot {
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+        opacity: .4;
+      }
+
+      30% {
+        transform: translateY(-5px);
+        opacity: 1;
+      }
+    }
+
+    #chatInputArea {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border, #e5e7eb);
+      background: var(--bg, #fff);
+    }
+
+    #chatInput {
+      flex: 1;
+      padding: 9px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--border, #e5e7eb);
+      background: var(--bg2, #f9fafb);
+      color: var(--text, #111);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+      resize: none;
+      overflow-y: hidden;
+      min-height: 36px;
+      max-height: 120px;
+      line-height: 1.4;
+      font-family: system-ui, sans-serif;
+      display: block;
+    }
+
+    #chatInput:focus {
+      border-color: #ec4899;
+    }
+
+    #chatSend {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      border: none;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform .15s;
+    }
+
+    #chatSend:hover {
+      transform: scale(1.1);
+    }
+
+    #chatSend:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+  </style>
+  <!-- ── END CHATBOT HTML ──────────────────────────────────────── -->
 </body>
 
 </html>
