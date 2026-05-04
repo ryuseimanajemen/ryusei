@@ -1023,7 +1023,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       openM(jid ? 'Edit Juri' : 'Tambah Juri', `<div style="display:flex;flex-direction:column;gap:12px">
     <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">NAMA JURI *</label><input type="text" id="jN" value="${j.name}" class="form-input" placeholder="Nama lengkap..."/></div>
     <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">EMAIL</label><input type="email" id="jE" value="${j.email}" class="form-input" placeholder="juri@email.com"/></div>
-    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">PASSWORD PANEL</label><input type="text" id="jP" value="${j.password}" class="form-input" style="font-family:monospace" placeholder="password juri..."/></div>
+    <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">PASSWORD PANEL</label><div style="position:relative"><input type="password" id="jP" value="${j.password}" class="form-input" style="font-family:monospace;padding-right:72px" placeholder="password juri..."/><button type="button" onclick="toggleJudgePasswordVis(this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;padding:4px 6px">Lihat</button></div></div>
     <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">ASSIGN KE EVENT</label>
     <div style="border:1px solid var(--border);border-radius:10px;padding:8px;max-height:160px;overflow-y:auto" id="jEW">
       ${Object.entries(evs).map(([k, v]) => `<label style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;transition:background .2s" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background='transparent'">
@@ -1249,6 +1249,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
         <div style="margin-bottom:14px">
           <label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">CUSTOM ENDPOINT (opsional)</label>
           <input type="text" id="cbMistralEndpointInput" class="form-input" placeholder="https://api.mistral.ai/v1/chat/completions"/>
+          <p style="font-size:11px;color:var(--text2);margin-top:6px">Tips: gunakan endpoint default <code style="background:rgba(148,163,184,.12);padding:2px 4px;border-radius:4px">https://api.mistral.ai/v1/chat/completions</code>. Endpoint <code style="background:rgba(148,163,184,.12);padding:2px 4px;border-radius:4px">/v1/chat</code> sering menyebabkan error CORS.</p>
         </div>
         <button onclick="cbSaveMistralConfig()" style="width:100%;padding:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">💾 Simpan Mistral ke Firebase</button>
         <p id="cbMistralSaveMsg" style="font-size:12px;text-align:center;margin-top:8px;display:none"></p>
@@ -1379,6 +1380,18 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       return msg.includes('quota exceeded') || msg.includes('rate limit') || msg.includes('429') || msg.includes('403');
     }
 
+    function normalizeMistralEndpoint(url) {
+      if (!url) return null;
+      const trimmed = url.trim();
+      if (trimmed.endsWith('/v1/chat')) {
+        return 'https://api.mistral.ai/v1/chat/completions';
+      }
+      if (trimmed.includes('api.mistral.ai/v1/chat') && !trimmed.includes('/completions')) {
+        return trimmed.replace(/\/v1\/chat.*$/, '/v1/chat/completions');
+      }
+      return trimmed;
+    }
+
     async function cbRefreshConfig() {
       const txt = document.getElementById('cbStatusText');
       if (txt) { txt.textContent = 'Memuat ulang config...'; txt.style.color = 'var(--text2)'; }
@@ -1396,6 +1409,13 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
     function cbToggleMistralKeyVis() {
       const input = document.getElementById('cbMistralKeyInput');
       const btn = document.getElementById('cbMistralKeyVis');
+      if (!input || !btn) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.textContent = input.type === 'password' ? 'Lihat' : 'Sembunyikan';
+    }
+
+    function toggleJudgePasswordVis(btn) {
+      const input = document.getElementById('jP');
       if (!input || !btn) return;
       input.type = input.type === 'password' ? 'text' : 'password';
       btn.textContent = input.type === 'password' ? 'Lihat' : 'Sembunyikan';
@@ -1440,14 +1460,18 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
         return;
       }
       try {
+        const normalizedEndpoint = normalizeMistralEndpoint(end);
         const updates = { 'settings/mistralKey': key };
-        if (end) updates['settings/mistralEndpoint'] = end;
+        if (normalizedEndpoint) updates['settings/mistralEndpoint'] = normalizedEndpoint;
         else updates['settings/mistralEndpoint'] = null;
 
         await db.ref().update(updates);
         _cbMistralKey = key;
-        _cbMistralEndpoint = end || null;
+        _cbMistralEndpoint = normalizedEndpoint || null;
         if (msg) { msg.textContent = '✅ Config Mistral berhasil disimpan ke Firebase!'; msg.style.color = '#34d399'; msg.style.display = 'block'; }
+        if (document.getElementById('cbMistralEndpointInput')) {
+          document.getElementById('cbMistralEndpointInput').value = normalizedEndpoint || '';
+        }
         setTimeout(() => { if (msg) msg.style.display = 'none'; }, 3000);
       } catch (e) {
         if (msg) { msg.textContent = '❌ Gagal: ' + e.message; msg.style.color = '#f87171'; msg.style.display = 'block'; }
@@ -1641,11 +1665,21 @@ Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan 
 
       } catch (e) {
         cbHideTestTyping();
-        if (errEl) { errEl.textContent = '❌ Error: ' + e.message; errEl.style.display = 'block'; }
-        console.error('[Admin Chatbot Test]', e);
-        if (providerUsed === 'gemini' && _cbMistralKey) {
-          cbSetStatus(true, '⚠️ Gemini error, Mistral tersedia sebagai fallback.');
+        const message = String(e?.message || 'Gagal memuat respons');
+        let display = message;
+        if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('fetch')) {
+          display = '❌ Koneksi ke API gagal. Mistral/Gemini mungkin diblokir oleh CORS atau jaringan.';
+          cbSetStatus(false, '⚠️ Admin test: browser tidak bisa akses API langsung (CORS/network).');
+        } else if (message.includes('403') || message.includes('429')) {
+          display = '❌ API key limit atau quota habis. Coba ganti provider atau tunggu beberapa saat.';
+          cbSetStatus(false, '⚠️ Admin test: API key limit/quota terdeteksi.');
+        } else {
+          if (providerUsed === 'gemini' && _cbMistralKey) {
+            cbSetStatus(true, '⚠️ Gemini error, Mistral tersedia sebagai fallback.');
+          }
         }
+        if (errEl) { errEl.textContent = display; errEl.style.display = 'block'; }
+        console.error('[Admin Chatbot Test]', e);
       }
 
       _cbSending = false;
@@ -1683,6 +1717,7 @@ Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan 
     <div style="display:flex;flex-direction:column;gap:12px">
       <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">Nama Admin *</label><input type="text" id="inviteName" class="form-input" placeholder="Nama lengkap..."/></div>
       <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px">Nomor WA / Telepon *</label><input type="text" id="invitePhone" class="form-input" placeholder="+628123456789"/></div>
+      <div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="inviteIsJudge" style="width:16px;height:16px"/><label for="inviteIsJudge" style="font-size:12px;color:var(--text2)">Jadikan akun admin ini juga sebagai juri</label></div>
       <button onclick="createAdminInvite()" class="btn-grad" style="width:fit-content">📩 Buat Link Undangan</button>
     </div>
     <div style="margin-top:18px">
@@ -1710,10 +1745,11 @@ Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan 
     function createAdminInvite() {
       const name = document.getElementById('inviteName')?.value.trim();
       const phone = document.getElementById('invitePhone')?.value.trim();
+      const canJudge = !!document.getElementById('inviteIsJudge')?.checked;
       if (!name || !phone) { alert('Nama dan nomor WA/telepon wajib diisi'); return; }
       const token = `adm_${Math.random().toString(36).substr(2, 6)}_${Date.now()}`;
       const email = `admin+${token}@ryusei.local`;
-      const payload = { name, phone, email, createdAt: Date.now(), used: false, role: 'staff' };
+      const payload = { name, phone, email, createdAt: Date.now(), used: false, role: 'staff', canJudge };
       db.ref(`settings/adminInvites/${token}`).set(payload).then(() => {
         loadAdminInvites();
         alert('Link undangan admin dibuat. Copy link di daftar undangan.');
@@ -1731,11 +1767,13 @@ Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan 
           const isUsed = !!data.used;
           const statusColor = isUsed ? '#34d399' : '#f59e0b';
           const statusLabel = isUsed ? '✅ Digunakan' : '⏳ Menunggu';
+          const extraLabel = data.canJudge ? '<p style="font-size:11px;color:#10b981;margin-top:4px">Role: Admin + Juri</p>' : '';
           const link = `${location.origin}${location.pathname}?invite=${encodeURIComponent(token)}`;
           return `<div style="padding:12px 14px;border:1px solid var(--border);border-radius:14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
             <div style="flex:1;min-width:0">
               <p style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${data.name} · ${data.phone}</p>
               ${data.usedBy ? `<p style="font-size:11px;color:var(--text2);margin-bottom:2px">${data.usedBy}</p>` : ''}
+              ${extraLabel}
               <p style="font-size:11px;color:var(--text2);word-break:break-all;margin-bottom:4px">${link}</p>
               <span style="padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:${isUsed ? 'rgba(52,211,153,.1)' : 'rgba(245,158,11,.1)'};color:${statusColor}">${statusLabel}</span>
             </div>
@@ -1804,7 +1842,9 @@ Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan 
         const credential = await auth.createUserWithEmailAndPassword(realEmail, pass);
         await db.ref(`settings/adminInvites/${_inviteToken}`).update({ used: true, usedAt: Date.now(), usedBy: realEmail });
         if (credential.user && credential.user.uid) {
-          await db.ref(`settings/adminUsers/${credential.user.uid}`).set({ email: realEmail, name: _inviteData.name || '', role: 'staff', createdAt: Date.now(), inviteToken: _inviteToken });
+          const roles = { admin: true };
+          if (_inviteData.canJudge) { roles.judge = true; }
+          await db.ref(`settings/adminUsers/${credential.user.uid}`).set({ email: realEmail, name: _inviteData.name || '', role: 'staff', roles, createdAt: Date.now(), inviteToken: _inviteToken });
         }
         const success = document.getElementById('inviteSuccess');
         if (success) { success.textContent = `✅ Akun berhasil dibuat! Login dengan email: ${realEmail}`; success.style.display = 'block'; }

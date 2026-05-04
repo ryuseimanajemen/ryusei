@@ -15,6 +15,7 @@
   <!-- Firebase CDN (compat version) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <style>
     :root {
       --bg: #fff;
@@ -167,39 +168,87 @@
 
     /* ── LOADING SCREEN ── */
     #ryusei-loader {
-      position: fixed; inset: 0; z-index: 9999;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
       background: #030712;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
       transition: opacity .5s ease, visibility .5s ease;
     }
-    #ryusei-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    #ryusei-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     .loader-logo {
-      width: 72px; height: 72px; border-radius: 20px;
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
       background: linear-gradient(135deg, #ec4899, #a855f7);
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-weight: 900; font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 32px;
       animation: loaderPulse 1.6s ease-in-out infinite;
     }
+
     .loader-bar-wrap {
-      width: 200px; height: 4px; border-radius: 99px;
-      background: rgba(255,255,255,.1); overflow: hidden;
+      width: 200px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, .1);
+      overflow: hidden;
     }
+
     .loader-bar {
-      height: 100%; width: 30%;
+      height: 100%;
+      width: 30%;
       background: linear-gradient(90deg, #ec4899, #a855f7);
       border-radius: 99px;
       animation: loaderSlide 1.4s ease-in-out infinite;
     }
-    .loader-text { font-size: 13px; color: #9ca3af; font-family: system-ui, sans-serif; letter-spacing: .04em; }
-    @keyframes loaderPulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(236,72,153,.4); }
-      50% { transform: scale(1.06); box-shadow: 0 0 0 16px rgba(236,72,153,0); }
+
+    .loader-text {
+      font-size: 13px;
+      color: #9ca3af;
+      font-family: system-ui, sans-serif;
+      letter-spacing: .04em;
     }
+
+    @keyframes loaderPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(236, 72, 153, .4);
+      }
+
+      50% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 16px rgba(236, 72, 153, 0);
+      }
+    }
+
     @keyframes loaderSlide {
-      0% { transform: translateX(-100%); }
-      50% { transform: translateX(200%); }
-      100% { transform: translateX(-100%); }
+      0% {
+        transform: translateX(-100%);
+      }
+
+      50% {
+        transform: translateX(200%);
+      }
+
+      100% {
+        transform: translateX(-100%);
+      }
     }
   </style>
 </head>
@@ -209,7 +258,9 @@
   <!-- LOADING SCREEN -->
   <div id="ryusei-loader">
     <div class="loader-logo">尺</div>
-    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+    <div class="loader-bar-wrap">
+      <div class="loader-bar"></div>
+    </div>
     <p class="loader-text" id="loaderMsg">Menghubungkan ke Firebase…</p>
   </div>
 
@@ -234,13 +285,24 @@
             style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Password</label>
           <input type="password" id="jLoginPass" placeholder="••••••••" class="form-input" />
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="judgeLogin()">Masuk →</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="judgeLogin()">Masuk sebagai Juri →</button>
+        <div style="margin:16px 0;text-align:center;color:var(--text2);font-size:12px">atau</div>
+        <div style="margin-bottom:14px"><label
+            style="display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Email Admin</label>
+          <input type="email" id="jLoginEmail" placeholder="Email admin..." class="form-input" />
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="judgeAdminLogin()">Masuk sebagai Admin Juri →</button>
+        <p id="jAdminHint" style="font-size:12px;color:var(--text2);text-align:center;margin-top:10px">Untuk akun admin yang diberikan izin juri.</p>
         <p id="jErr" style="color:#ef4444;font-size:12px;text-align:center;margin-top:10px;display:none"></p>
         <div id="forgotJudge" style="text-align:center;margin-top:12px;display:none">
-          <p style="font-size:12px;color:var(--text2)">🔑 Lupa password? Hubungi administrator untuk reset password Anda.</p>
+          <p style="font-size:12px;color:var(--text2)">🔑 Lupa password? Hubungi administrator untuk reset password
+            Anda.</p>
         </div>
         <div style="text-align:center;margin-top:10px">
-          <button onclick="document.getElementById('forgotJudge').style.display=document.getElementById('forgotJudge').style.display==='none'?'block':'none'" style="background:none;border:none;color:#a855f7;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px">Lupa Password?</button>
+          <button
+            onclick="document.getElementById('forgotJudge').style.display=document.getElementById('forgotJudge').style.display==='none'?'block':'none'"
+            style="background:none;border:none;color:#a855f7;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px">Lupa
+            Password?</button>
         </div>
       </div>
       <p style="text-align:center;font-size:12px;color:var(--text2);margin-top:16px">ID dan password diberikan oleh
@@ -332,7 +394,7 @@
     const CRIT = ['interactivity', 'immersion', 'creativity', 'improvisation', 'costume'];
     const CLAB = ['Interactivity', 'Immersion', 'Creativity', 'Improvisation', 'Costume'];
     const CDESC = ['Kemampuan mengajak & melibatkan interaksi', 'Konsistensi & penghayatan karakter', 'Keunikan konsep & pengalaman', 'Respons cepat & adaptasi situasi', 'Kualitas visual & akurasi kostum'];
-    let db = null, judgeId = null, judgeData = null, currentEventId = null;
+    let db = null, auth = null, judgeId = null, judgeData = null, currentEventId = null;
 
     // Theme
     const root = document.documentElement;
@@ -365,6 +427,24 @@
         setLoaderMsg('Menyambungkan database…');
         if (!firebase.apps.length) firebase.initializeApp(cfg);
         db = firebase.database();
+        auth = firebase.auth();
+        auth.onAuthStateChanged(async function (user) {
+          if (!user) return;
+          try {
+            const snap = await db.ref(`settings/adminUsers/${user.uid}`).once('value');
+            const admin = snap.val();
+            if (admin && admin.roles && admin.roles.judge) {
+              judgeId = user.uid;
+              judgeData = { name: admin.name || 'Admin Juri', events: admin.events || [] };
+              document.getElementById('loginView').style.display = 'none';
+              document.getElementById('mainView').style.display = 'block';
+              document.getElementById('jNameDisplay').textContent = judgeData.name;
+              loadJudgeEvents();
+            }
+          } catch (e) {
+            console.error('Auth judge check failed', e);
+          }
+        });
         try {
           const snap = await db.ref('settings/fbConfig').once('value');
           const dbCfg = snap.val();
@@ -415,13 +495,44 @@
         loadJudgeEvents();
       } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
     }
-    // Make judgeLogin globally accessible
+    async function judgeAdminLogin() {
+      const email = document.getElementById('jLoginEmail').value.trim();
+      const pass = document.getElementById('jLoginPass').value;
+      const err = document.getElementById('jErr'); err.style.display = 'none';
+      if (!email || !pass) { err.textContent = 'Email dan password wajib diisi'; err.style.display = 'block'; return; }
+      try {
+        const credential = await auth.signInWithEmailAndPassword(email, pass);
+        const user = credential.user || auth.currentUser;
+        if (!user) { throw new Error('Gagal autentikasi'); }
+        const snap = await db.ref(`settings/adminUsers/${user.uid}`).once('value');
+        const admin = snap.val();
+        if (!admin || !admin.roles || !admin.roles.judge) {
+          await auth.signOut();
+          err.textContent = 'Akun tidak memiliki izin juri';
+          err.style.display = 'block';
+          return;
+        }
+        judgeId = user.uid;
+        judgeData = { name: admin.name || 'Juri', events: admin.events || [] };
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('mainView').style.display = 'block';
+        document.getElementById('jNameDisplay').textContent = judgeData.name;
+        loadJudgeEvents();
+      } catch (e) {
+        const msg = e.code === 'auth/user-not-found' ? 'Email tidak terdaftar' : e.code === 'auth/wrong-password' ? 'Password salah' : e.message || 'Login gagal';
+        err.textContent = msg;
+        err.style.display = 'block';
+      }
+    }
+    // Make judge login functions globally accessible
     window.judgeLogin = judgeLogin;
+    window.judgeAdminLogin = judgeAdminLogin;
     function judgeLogout() {
       // Cleanup all listeners
       if (_scoreRTListener) { try { db.ref(`scores/${_scoreRTListener}`).off('value'); } catch (e) { }; _scoreRTListener = null; }
       if (_myResultsListener) { try { db.ref(`scores/${_myResultsListener}`).off('value'); } catch (e) { }; _myResultsListener = null; }
       judgeId = null; judgeData = null; currentEventId = null;
+      if (auth && auth.currentUser) { auth.signOut().catch(() => { }); }
       document.getElementById('loginView').style.display = 'flex';
       document.getElementById('mainView').style.display = 'none';
     }
@@ -604,13 +715,13 @@
       _myResultsListener = `${currentEventId}/${judgeId}`;
       db.ref(`scores/${currentEventId}/${judgeId}`).on('value', async sSnap => {
         try {
-        const sc = sSnap.val() || {};
-        const rSnap = await db.ref('registrations').once('value'); const regs = rSnap.val() || {};
-        const div = document.getElementById('myResults'); if (!div) return;
-        if (!Object.keys(sc).length) { div.innerHTML = '<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Belum ada penilaian</p>'; return; }
-        div.innerHTML = Object.entries(sc).map(([code, scores]) => {
-          const avg = CRIT.reduce((s, c) => s + (scores[c] || 0), 0) / CRIT.length;
-          return `<div class="participant-card scored" style="margin-bottom:10px">
+          const sc = sSnap.val() || {};
+          const rSnap = await db.ref('registrations').once('value'); const regs = rSnap.val() || {};
+          const div = document.getElementById('myResults'); if (!div) return;
+          if (!Object.keys(sc).length) { div.innerHTML = '<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Belum ada penilaian</p>'; return; }
+          div.innerHTML = Object.entries(sc).map(([code, scores]) => {
+            const avg = CRIT.reduce((s, c) => s + (scores[c] || 0), 0) / CRIT.length;
+            return `<div class="participant-card scored" style="margin-bottom:10px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <p style="font-weight:700">${regs[code]?.username || code}</p>
           <p style="font-size:20px;font-weight:900;color:#ec4899">${avg.toFixed(2)}</p>
@@ -622,8 +733,8 @@
           </div>`).join('')}
         </div>
       </div>`;
-        }).join('');
-        } catch(e) {
+          }).join('');
+        } catch (e) {
           console.error('My results error:', e);
           const d = document.getElementById('myResults');
           if (d) d.innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Gagal memuat hasil. Coba refresh.</p>';
@@ -636,22 +747,22 @@
       _leaderboardListener = currentEventId;
       db.ref(`scores/${currentEventId}`).on('value', async snap => {
         try {
-        const allScores = snap.val() || {}; const rSnap = await db.ref('registrations').once('value'); const regs = rSnap.val() || {};
-        const parts = {};
-        Object.values(allScores).forEach(jScores => { Object.entries(jScores).forEach(([code, sc]) => { if (!parts[code]) { parts[code] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[code].t[c] = (parts[code].t[c] || 0) + (sc[c] || 0); }); parts[code].jc++; }); });
-        const ranked = Object.entries(parts).map(([code, d]) => { const avg = d.jc > 0 ? CRIT.reduce((s, c) => s + (d.t[c] / d.jc), 0) / CRIT.length : 0; return { code, username: regs[code]?.username || code, avg, jc: d.jc }; }).sort((a, b) => b.avg - a.avg);
-        const medals = ['🥇', '🥈', '🥉']; const div = document.getElementById('lbContent');
-        if (!div) return;
-        if (!ranked.length) {
-          div.innerHTML = '<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Belum ada skor</p>';
-          return;
-        }
-        div.innerHTML = ranked.map((p, i) => `<div style="background:var(--card);border:1px solid ${i < 3 ? 'rgba(236,72,153,.3)' : 'var(--border)'};border-radius:14px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
+          const allScores = snap.val() || {}; const rSnap = await db.ref('registrations').once('value'); const regs = rSnap.val() || {};
+          const parts = {};
+          Object.values(allScores).forEach(jScores => { Object.entries(jScores).forEach(([code, sc]) => { if (!parts[code]) { parts[code] = { t: {}, jc: 0 }; } CRIT.forEach(c => { parts[code].t[c] = (parts[code].t[c] || 0) + (sc[c] || 0); }); parts[code].jc++; }); });
+          const ranked = Object.entries(parts).map(([code, d]) => { const avg = d.jc > 0 ? CRIT.reduce((s, c) => s + (d.t[c] / d.jc), 0) / CRIT.length : 0; return { code, username: regs[code]?.username || code, avg, jc: d.jc }; }).sort((a, b) => b.avg - a.avg);
+          const medals = ['🥇', '🥈', '🥉']; const div = document.getElementById('lbContent');
+          if (!div) return;
+          if (!ranked.length) {
+            div.innerHTML = '<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Belum ada skor</p>';
+            return;
+          }
+          div.innerHTML = ranked.map((p, i) => `<div style="background:var(--card);border:1px solid ${i < 3 ? 'rgba(236,72,153,.3)' : 'var(--border)'};border-radius:14px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
       <div style="width:38px;height:38px;border-radius:10px;${i < 3 ? 'background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff' : 'background:var(--bg2);color:var(--text2)'};display:flex;align-items:center;justify-content:center;font-size:${i < 3 ? '18px' : '14px'};font-weight:900;flex-shrink:0">${i < 3 ? medals[i] : i + 1}</div>
       <div style="flex:1"><p style="font-weight:700;font-size:14px">${p.username}</p><p style="font-size:11px;color:var(--text2)">${p.jc} juri telah menilai</p></div>
       <p style="font-size:22px;font-weight:900;color:${i === 0 ? '#eab308' : i === 1 ? '#9ca3af' : i === 2 ? '#d97706' : 'var(--text)'}">${p.avg.toFixed(2)}</p>
     </div>`).join('');
-        } catch(e) {
+        } catch (e) {
           console.error('Leaderboard error:', e);
           const d = document.getElementById('lbContent');
           if (d) d.innerHTML = '<p style="text-align:center;color:var(--text2);padding:40px 0;font-size:14px">Gagal memuat leaderboard.</p>';
