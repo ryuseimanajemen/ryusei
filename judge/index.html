@@ -525,6 +525,7 @@
       if (!email || !pass) { err.textContent = 'Email dan password wajib diisi'; err.style.display = 'block'; return; }
       try {
         const credential = await auth.signInWithEmailAndPassword(email, pass);
+        localStorage.removeItem('ryusei_admin_judge_autologin');
         const user = credential.user || auth.currentUser;
         if (!user) { throw new Error('Gagal autentikasi'); }
         const snap = await db.ref(`settings/adminUsers/${user.uid}`).once('value');
