@@ -601,6 +601,7 @@
       localStorage.setItem('ryusei_admin_judge_autologin', '1');
       const baseUrl = location.href.split('/admin')[0];
       const judgeUrl = `${baseUrl}/judge/?admin=1`;
+      logActivity('admin_navigate_judge', 'Admin membuka panel juri', null, auth?.currentUser?.email || 'admin');
       window.open(judgeUrl, '_blank');
     }
     function formatDateTime(ts) { return ts ? new Date(ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'; }
@@ -1950,8 +1951,18 @@ Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan 
       const payload = { name, phone, email, createdAt: Date.now(), used: false, role: 'staff', canJudge };
       db.ref(`settings/adminInvites/${token}`).set(payload).then(() => {
         loadAdminInvites();
+        logActivity('admin_invite', `Membuat undangan admin baru untuk ${name} (${phone})`, null, auth?.currentUser?.email || 'admin');
         alert('Link undangan admin dibuat. Copy link di daftar undangan.');
       }).catch(e => { alert('Gagal membuat undangan: ' + e.message); });
+    }
+
+    async function deleteAdminInvite(token) {
+      if (!confirm('Hapus undangan ini? Link undangan akan tidak berlaku lagi.')) return;
+      try {
+        await db.ref(`settings/adminInvites/${token}`).remove();
+        logActivity('admin_invite_deleted', `Menghapus undangan admin ${token}`, null, auth?.currentUser?.email || 'admin');
+        loadAdminInvites();
+      } catch (e) { alert('Gagal menghapus: ' + e.message); }
     }
 
     function loadAdminInvites() {
