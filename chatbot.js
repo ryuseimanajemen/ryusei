@@ -288,6 +288,11 @@ Jika ada yang meminta data sensitif di atas, tolak tegas dengan sopan:
     return msg.includes('quota exceeded') || msg.includes('rate limit') || msg.includes('429') || msg.includes('403');
   }
 
+  function isBrowserCORSOrNetworkError(error) {
+    const msg = String(error.message || '').toLowerCase();
+    return msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('cors') || msg.includes('preflight') || msg.includes('access-control');
+  }
+
   // ─── CHECK REGISTRATION via Firebase ──────────────────────────────────────
   async function checkRegistration(kode) {
     try {
@@ -470,7 +475,14 @@ Jika ada yang meminta data sensitif di atas, tolak tegas dengan sopan:
           triedProviders.push('mistral');
         } catch (e) {
           console.warn('[Mistral] Error:', e.message);
-          throw e; // Jika Mistral juga gagal, throw
+          if (isBrowserCORSOrNetworkError(e)) {
+            hideTyping();
+            appendMsg('bot', '❌ Mistral tidak bisa diakses langsung dari browser karena CORS atau pembatasan jaringan. Gunakan backend proxy / Firebase Function untuk Mistral API.');
+            setInputDisabled(false);
+            document.getElementById('chatInput')?.focus();
+            return;
+          }
+          throw e; // Jika Mistral juga gagal karena alasan lain, throw
         }
       }
 
