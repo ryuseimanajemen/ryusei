@@ -136,6 +136,8 @@ ${eventContext}
 Jika pengguna mengirimkan kode pendaftaran, akan ada blok REGISTRATION_DATA yang berisi informasi pendaftaran tersebut.
 - Jika REGISTRATION_DATA tersedia, gunakan informasi lengkap itu untuk menjawab status pendaftaran secara detail.
 - Jika REGISTRATION_DATA bernilai NOT_FOUND atau tidak ada data ditemukan, jawab bahwa kode pendaftaran tidak ditemukan dan minta mereka cek kembali kode tersebut.
+- Penting: Kamu tidak memiliki akses langsung ke Firebase atau database. Semua data pendaftaran berasal dari browser/JS yang memanggil Firebase, lalu meneruskan data tersebut lewat REGISTRATION_DATA.
+- Jangan pernah mengklaim bahwa kamu bisa "mengakses database Firebase langsung"; jelaskan bahwa itu dilakukan oleh sistem Ryusei di sisi aplikasi.
 
 Perbedaan Terminologi:
 - "Ryusei" = nama singkat untuk Ryusei Agency & Event Manajemen
@@ -429,8 +431,13 @@ Jika ada yang meminta data sensitif di atas, tolak tegas dengan sopan:
 
     const input = document.getElementById('chatInput');
     if (!input) return;
-    const text = input.value.trim();
+    let text = input.value.trim();
     if (!text) return;
+
+    const detailTrigger = /^\s*(ya|detail|jelaskan|lebih detail|bisa jelaskan lebih detail)\s*$/i;
+    if (detailTrigger.test(text)) {
+      text = 'Tolong jelaskan lebih detail topik sebelumnya.';
+    }
 
     // Tampilkan pesan user
     appendMsg('user', text);
