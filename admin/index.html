@@ -209,6 +209,28 @@
         transform: translateX(-100%);
       }
     }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+    }
   </style>
 </head>
 
@@ -573,9 +595,20 @@
           actor: actor || (auth?.currentUser?.email || 'system'),
           timestamp: Date.now()
         });
+        showToast(details || type, type.startsWith('login_failed') || type === 'registration_deleted' ? '#dc2626' : '#16a34a');
       } catch (e) {
         console.warn('[Log] write failed', e);
       }
+    }
+    function showToast(msg, color = '#16a34a') {
+      const toast = document.createElement('div');
+      toast.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:5000;padding:14px 18px;background:${color};color:#fff;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.2);animation:slideIn .3s ease;max-width:320px;word-break:break-word`;
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'slideOut .3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
     }
     // Navigation
     const pageTitles = { dashboard: 'Dashboard', events: 'Manajemen Event', participants: 'Peserta', logs: 'Log Aktivitas', judges: 'Juri', scores: 'Leaderboard', cms: 'Landing Page CMS', chatbot: '🤖 AI Chatbot', settings: 'Settings', profile: 'Profil Admin' };
@@ -642,7 +675,7 @@
     <div style="font-size:12px;color:var(--text2);margin-top:4px">${l}</div>
   </div>`).join('')}
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
     <div class="card-admin" style="overflow:hidden">
       <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <h3 style="font-weight:700;font-size:13px">Pendaftaran Terbaru</h3>
@@ -656,6 +689,13 @@
         <button onclick="showPage('events')" style="font-size:12px;color:#ec4899;background:none;border:none;cursor:pointer">Kelola →</button>
       </div>
       <div id="rEvs"></div>
+    </div>
+    <div class="card-admin" style="overflow:hidden">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <h3 style="font-weight:700;font-size:13px">Aktivitas Terbaru</h3>
+        <button onclick="showPage('logs')" style="font-size:12px;color:#ec4899;background:none;border:none;cursor:pointer">Lihat Semua →</button>
+      </div>
+      <div id="rLogs"></div>
     </div>
   </div>`;
       // FIX: Pasang semua listeners SETELAH innerHTML selesai (requestAnimationFrame)
@@ -688,6 +728,18 @@
           div.innerHTML = sorted.map(([code, reg]) => `<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0">${(reg.username || '?')[0].toUpperCase()}</div><div style="flex:1;min-width:0"><p style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${reg.username}</p><p style="font-size:11px;color:var(--text2);font-family:monospace">${code}</p></div><span style="padding:3px 8px;border-radius:99px;font-size:11px;font-weight:700;background:${reg.status === 'approved' ? 'rgba(34,197,94,.1)' : reg.status === 'rejected' ? 'rgba(239,68,68,.1)' : 'rgba(245,158,11,.1)'};color:${reg.status === 'approved' ? '#16a34a' : reg.status === 'rejected' ? '#dc2626' : '#d97706'}">${reg.status === 'approved' ? '✓' : reg.status === 'rejected' ? '✗' : '⏳'}</span></div>`).join('');
         });
         db.ref('judges').on('value', s => { const dJ = document.getElementById('dJ'); if (dJ) dJ.textContent = Object.keys(s.val() || {}).length; });
+        // Aktivitas terbaru di dashboard
+        db.ref('logs').limitToLast(10).on('value', s => {
+          const logs = s.val() || {};
+          const arr = Object.entries(logs).map(([id, l]) => ({ id, ...l })).sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+          const div = document.getElementById('rLogs');
+          if (!div) return;
+          if (!arr.length) { div.innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Belum ada aktivitas</p>'; return; }
+          div.innerHTML = arr.map(log => {
+            const typeLabel = log.type === 'login' ? '🟢 Login' : log.type === 'login_failed' ? '🔴 Login Gagal' : log.type === 'registration' ? '📝 Daftar' : log.type === 'participant_edit' ? '✏️ Edit Peserta' : log.type === 'registration_edit' ? '✏️ Edit Admin' : log.type === 'registration_status' ? '📋 Status' : log.type === 'registration_deleted' ? '🗑️ Hapus' : '📝 ' + log.type;
+            return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)"><span>${typeLabel.split(' ')[0]}</span><div style="flex:1;min-width:0"><p style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${log.details || log.type}</p><p style="font-size:11px;color:var(--text2)">${formatDateTime(log.timestamp)}</p></div></div>`;
+          }).join('');
+        });
       });
     }
     // ── EVENTS ──
