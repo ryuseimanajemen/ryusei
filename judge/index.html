@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="../assets/fav/favicon-16x16.png">
   <link rel="manifest" href="../assets/fav/site.webmanifest">
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Panel Juri — Ryusei Event</title>
+  <title>Panel Juri — Ryusei Agency & Event Manajemen</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../css/tailwind.min.css" />
@@ -451,7 +451,30 @@
           if (dbCfg && dbCfg.apiKey) { localStorage.setItem('ryusei_fb_config', JSON.stringify(dbCfg)); }
         } catch (e) { }
         const urlId = new URLSearchParams(location.search).get('id');
+        const urlAdmin = new URLSearchParams(location.search).get('admin');
         if (urlId) { document.getElementById('jLoginId').value = urlId; }
+        if (urlAdmin) {
+          const stored = localStorage.getItem('ryusei_admin_judge_credentials');
+          if (stored) {
+            try {
+              const creds = JSON.parse(stored);
+              if (creds.email && creds.password && Date.now() - (creds.createdAt || 0) < 12 * 3600 * 1000) {
+                document.getElementById('jLoginEmail').value = creds.email;
+                document.getElementById('jLoginPass').value = creds.password;
+                document.getElementById('jLoginPass').focus();
+                // Auto-submit login untuk admin-juri
+                setTimeout(() => { judgeAdminLogin(); }, 200);
+              } else {
+                document.getElementById('jLoginEmail').value = creds.email || '';
+                document.getElementById('jLoginPass').focus();
+              }
+            } catch (ex) {
+              document.getElementById('jLoginPass').focus();
+            }
+          } else {
+            document.getElementById('jLoginPass').focus();
+          }
+        }
         hideLoader();
       } catch (e) {
         console.error(e);
