@@ -435,7 +435,7 @@
             const admin = snap.val();
             if (admin && admin.roles && admin.roles.judge) {
               judgeId = user.uid;
-              judgeData = { name: admin.name || 'Admin Juri', events: admin.events || [] };
+              judgeData = { name: admin.name || 'Admin Juri', events: admin.events || [], isAdminJudge: true };
               document.getElementById('loginView').style.display = 'none';
               document.getElementById('mainView').style.display = 'block';
               document.getElementById('jNameDisplay').textContent = judgeData.name;
@@ -562,12 +562,16 @@
     }
     async function loadJudgeEvents() {
       var evList = judgeData && judgeData.events ? judgeData.events : [];
+      const evSnap = await db.ref('events').once('value');
+      const evs = evSnap.val() || {};
+      if (!evList.length && judgeData && judgeData.isAdminJudge) {
+        // Jika admin juri belum punya event assigned, tampilkan semua event aktif
+        evList = Object.keys(evs).filter(function (eid) { return evs[eid] && evs[eid].title; });
+      }
       if (!evList.length) {
         document.getElementById('participantList').innerHTML = '<p style="text-align:center;color:var(--text2);padding:48px 0;font-size:14px">Juri belum ditugaskan ke event manapun</p>';
         return;
       }
-      const evSnap = await db.ref('events').once('value');
-      const evs = evSnap.val() || {};
       const sel = document.getElementById('jEventSel');
       sel.innerHTML = '<option value="">-- Pilih Event --</option>';
       evList.forEach(function (eid) {
