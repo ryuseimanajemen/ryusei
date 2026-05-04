@@ -477,6 +477,7 @@
           <h2 id="pageTitle" style="font-size:14px;font-weight:700">Dashboard</h2>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
+          <button id="judgePanelBtn" onclick="goToJudgePanel()" style="display:none;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;cursor:pointer;font-size:12px;font-weight:600">⚖️ Panel Juri</button>
           <button id="tBtn" onclick="toggleAdminTheme()"
             style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:14px">☀️</button>
           <a href="../" style="font-size:12px;color:var(--text2);text-decoration:none"
@@ -505,7 +506,7 @@
     const CRIT = ['interactivity', 'immersion', 'creativity', 'improvisation', 'costume'];
     const CLAB = ['Interactivity', 'Immersion', 'Creativity', 'Improvisation', 'Costume'];
     let db = null, auth = null;
-    let isSuperAdmin = false;
+    let isSuperAdmin = false, isJudgeAdmin = false;
     let hasFirebaseConfig = false;
     let _publishRef = null;
     let _scoresRef = null;
@@ -516,6 +517,9 @@
       if (restricted && (_currentPage === 'cms' || _currentPage === 'settings' || _currentPage === 'chatbot')) {
         showPage('dashboard');
       }
+      // Tampilkan tombol panel juri jika admin juga juri
+      const judgeBtn = document.getElementById('judgePanelBtn');
+      if (judgeBtn) judgeBtn.style.display = isJudgeAdmin ? 'flex' : 'none';
     }
     async function determineAdminRole(user) {
       try {
@@ -528,8 +532,11 @@
           const all = allSnap.val() || {};
           isSuperAdmin = Object.keys(all).length === 0;
         }
+        // Cek apakah admin juga memiliki role juri
+        isJudgeAdmin = data && data.roles && data.roles.judge;
       } catch (e) {
         isSuperAdmin = false;
+        isJudgeAdmin = false;
       }
       applyAdminRole();
     }
@@ -577,13 +584,25 @@
       err.style.display = 'none'; if (!em || !pw) { err.textContent = 'Email & password wajib'; err.style.display = 'block'; return; }
       try {
         await auth.signInWithEmailAndPassword(em, pw);
+        localStorage.setItem('ryusei_admin_judge_credentials', JSON.stringify({ email: em, password: pw, createdAt: Date.now() }));
         logActivity('login', `Login berhasil oleh ${em}`, null, em);
       } catch (e) {
         logActivity('login_failed', `Login gagal oleh ${em}: ${e.message}`, null, em);
         err.textContent = e.message; err.style.display = 'block';
       }
     }
-    function doLogout() { auth.signOut(); }
+    function doLogout() { auth.signOut(); localStorage.removeItem('ryusei_admin_judge_credentials'); localStorage.removeItem('ryusei_admin_judge_autologin'); }
+    function goToJudgePanel() {
+      const creds = localStorage.getItem('ryusei_admin_judge_credentials');
+      if (!creds) {
+        alert('Kredensial admin belum tersedia. Silakan login kembali terlebih dahulu.');
+        return;
+      }
+      localStorage.setItem('ryusei_admin_judge_autologin', '1');
+      const baseUrl = location.href.split('/admin')[0];
+      const judgeUrl = `${baseUrl}/judge/?admin=1`;
+      window.open(judgeUrl, '_blank');
+    }
     function formatDateTime(ts) { return ts ? new Date(ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'; }
     async function logActivity(type, details, code, actor) {
       if (!db) return;
