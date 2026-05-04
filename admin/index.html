@@ -553,11 +553,32 @@
     async function doLogin() {
       const em = document.getElementById('loginEmail').value.trim(), pw = document.getElementById('loginPass').value, err = document.getElementById('loginErr');
       err.style.display = 'none'; if (!em || !pw) { err.textContent = 'Email & password wajib'; err.style.display = 'block'; return; }
-      try { await auth.signInWithEmailAndPassword(em, pw); } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+      try {
+        await auth.signInWithEmailAndPassword(em, pw);
+        logActivity('login', `Login berhasil oleh ${em}`, null, em);
+      } catch (e) {
+        logActivity('login_failed', `Login gagal oleh ${em}: ${e.message}`, null, em);
+        err.textContent = e.message; err.style.display = 'block';
+      }
     }
     function doLogout() { auth.signOut(); }
+    function formatDateTime(ts) { return ts ? new Date(ts).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '-'; }
+    async function logActivity(type, details, code, actor) {
+      if (!db) return;
+      try {
+        await db.ref('logs').push({
+          type: type || 'info',
+          details: details || '',
+          code: code || null,
+          actor: actor || (auth?.currentUser?.email || 'system'),
+          timestamp: Date.now()
+        });
+      } catch (e) {
+        console.warn('[Log] write failed', e);
+      }
+    }
     // Navigation
-    const pageTitles = { dashboard: 'Dashboard', events: 'Manajemen Event', participants: 'Peserta', judges: 'Juri', scores: 'Leaderboard', cms: 'Landing Page CMS', chatbot: '🤖 AI Chatbot', settings: 'Settings', profile: 'Profil Admin' };
+    const pageTitles = { dashboard: 'Dashboard', events: 'Manajemen Event', participants: 'Peserta', logs: 'Log Aktivitas', judges: 'Juri', scores: 'Leaderboard', cms: 'Landing Page CMS', chatbot: '🤖 AI Chatbot', settings: 'Settings', profile: 'Profil Admin' };
     let _currentPage = null;
     function cleanupListeners() {
       // Detach all real-time listeners before switching page to avoid memory leaks
@@ -576,6 +597,10 @@
       if (_inviteListener) {
         try { db.ref('settings/adminInvites').off('value', _inviteListener); } catch (e) { };
         _inviteListener = null;
+      }
+      if (_logListener) {
+        try { db.ref('logs').off('value', _logListener); } catch (e) { };
+        _logListener = null;
       }
       if (_publishRef) {
         try { _publishRef.off('value'); } catch (e) { };
@@ -601,6 +626,7 @@
         else if (page === 'scores') rScores();
         else if (page === 'cms') rCMS();
         else if (page === 'chatbot') rChatbot();
+        else if (page === 'logs') rLogs();
         else if (page === 'settings') rSettings();
         else if (page === 'profile') rProfile();
       }, 40);
@@ -969,8 +995,10 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
         <p style="font-size:13px;font-weight:700">${r.username}</p>
         <p style="font-size:11px;color:var(--text2)">Kode: <span style="font-family:monospace;color:#ec4899">${code}</span> · Perform: ${r.performTime || '—'} WIB</p>
         ${r.link ? `<a href="${r.link}" target="_blank" style="font-size:11px;color:#60a5fa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:200px">${r.link}</a>` : ''}
+        ${r.lastChangedBy ? `<p style="margin-top:8px;font-size:11px;color:var(--text2)">Terakhir diubah oleh <strong>${r.lastChangedBy === 'admin' ? 'Admin' : 'Peserta'}</strong> pada ${formatDateTime(r.lastChangedAt)}</p>` : ''}
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap">
+        <button onclick="oREdit('${code}')" style="padding:6px 12px;background:rgba(59,130,246,.08);color:#2563eb;border:1px solid rgba(59,130,246,.2);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">✏️ Edit</button>
         ${r.status !== 'approved' ? `<button onclick="upRS('${code}','approved')" style="padding:6px 12px;background:rgba(34,197,94,.1);color:#16a34a;border:1px solid rgba(34,197,94,.3);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">✓ Approve</button>` : ''}
         ${r.status !== 'rejected' ? `<button onclick="upRS('${code}','rejected')" style="padding:6px 12px;background:rgba(239,68,68,.1);color:#dc2626;border:1px solid rgba(239,68,68,.3);border-radius:8px;cursor:pointer;font-size:12px;font-weight:700">✗ Reject</button>` : ''}
         ${r.status === 'approved' ? `<span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(34,197,94,.1);color:#16a34a">✓ Approved</span>` : ''}
@@ -979,8 +1007,106 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
     </div>`).join('');
       });
     }
-    async function upRS(code, status) { await db.ref(`registrations/${code}/status`).set(status); }
-    async function delR(code, eid) { if (!confirm('Hapus?')) return; await db.ref(`registrations/${code}`).remove(); if (eid) await db.ref(`events/${eid}/participants/${code}`).remove(); loadPL(); }
+    function rLogs() {
+      const mc = document.getElementById('mainContent');
+      mc.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <select id="logTypeFilter" class="form-input" style="min-width:180px">
+          <option value="">Semua Tipe</option>
+          <option value="login">Login Berhasil</option>
+          <option value="login_failed">Login Gagal</option>
+          <option value="registration">Peserta Daftar</option>
+          <option value="participant_edit">Edit Peserta</option>
+          <option value="registration_edit">Edit Admin</option>
+          <option value="registration_status">Status Pendaftaran</option>
+          <option value="registration_deleted">Hapus Pendaftaran</option>
+        </select>
+        <input id="logSearch" class="form-input" placeholder="Cari detail log..." style="flex:1;min-width:180px" />
+      </div><div id="logList"></div>`;
+      document.getElementById('logTypeFilter').addEventListener('change', loadLogs);
+      document.getElementById('logSearch').addEventListener('input', loadLogs);
+      loadLogs();
+    }
+    function loadLogs() {
+      if (_logListener) { db.ref('logs').off('value', _logListener); _logListener = null; }
+      const filter = document.getElementById('logTypeFilter')?.value || '';
+      const query = document.getElementById('logSearch')?.value.toLowerCase() || '';
+      _logListener = db.ref('logs').limitToLast(200).on('value', s => {
+        const rows = s.val() || {};
+        const arr = Object.entries(rows).map(([id, item]) => ({ id, ...item })).sort((a, b) => b.timestamp - a.timestamp)
+          .filter(item => {
+            if (filter && item.type !== filter) return false;
+            if (!query) return true;
+            return String(item.details || '').toLowerCase().includes(query) || String(item.actor || '').toLowerCase().includes(query) || String(item.code || '').toLowerCase().includes(query);
+          });
+        const list = document.getElementById('logList');
+        if (!list) return;
+        if (!arr.length) {
+          list.innerHTML = '<div class="card-admin" style="padding:40px;text-align:center;color:var(--text2);font-size:13px">Belum ada log aktivitas.</div>';
+          return;
+        }
+        list.innerHTML = arr.map(log => `
+          <div class="card-admin" style="padding:16px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+              <div><strong style="font-size:14px">${log.type.replace(/_/g, ' ').toUpperCase()}</strong></div>
+              <div style="font-size:12px;color:var(--text2)">${formatDateTime(log.timestamp)}</div>
+            </div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:8px">${log.details || ''}</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text2)"><span>Actor: ${log.actor || 'system'}</span><span>${log.code ? 'Kode: ' + log.code : ''}</span></div>
+          </div>`).join('');
+      });
+    }
+    async function upRS(code, status) {
+      const now = Date.now();
+      await db.ref(`registrations/${code}`).update({ status, lastChangedBy: 'admin', lastChangedAt: now });
+      logActivity('registration_status', `Admin mengubah status pendaftaran ${code} menjadi ${status}`, code, auth?.currentUser?.email || 'admin');
+    }
+    async function delR(code, eid) {
+      if (!confirm('Hapus?')) return;
+      await db.ref(`registrations/${code}`).remove();
+      if (eid) await db.ref(`events/${eid}/participants/${code}`).remove();
+      logActivity('registration_deleted', `Admin menghapus pendaftaran ${code}`, code, auth?.currentUser?.email || 'admin');
+      loadPL();
+    }
+    async function oREdit(code) {
+      const snap = await db.ref(`registrations/${code}`).once('value');
+      const reg = snap.val();
+      if (!reg) { alert('Data pendaftaran tidak ditemukan.'); return; }
+      const evSnap = await db.ref(`events/${reg.eventId}`).once('value');
+      const ev = evSnap.val() || {};
+      openM('Edit Pendaftaran Peserta', `<div style="display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:12px;color:var(--text2);">Event: <strong>${ev.title || reg.eventId}</strong></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Username</label><input id="regEditUsername" class="form-input" value="${(reg.username || '').replace(/"/g, '&quot;')}"/></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Link Profil</label><input id="regEditLink" class="form-input" value="${(reg.link || '').replace(/"/g, '&quot;')}"/></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Jam Perform (WIB)</label><input id="regEditTime" type="time" class="form-input" value="${reg.performTime || ''}"/></div>
+        <div><label style="display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">Status</label><select id="regEditStatus" class="form-input"><option value="pending" ${reg.status === 'pending' ? 'selected' : ''}>Pending</option><option value="approved" ${reg.status === 'approved' ? 'selected' : ''}>Approved</option><option value="rejected" ${reg.status === 'rejected' ? 'selected' : ''}>Rejected</option></select></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+          <button onclick="closeM()" style="padding:10px 16px;border:1px solid var(--border);border-radius:10px;background:transparent;cursor:pointer">Batal</button>
+          <button onclick="saveRegChanges('${code}')" style="padding:10px 16px;background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:10px;cursor:pointer">Simpan Perubahan</button>
+        </div>
+      </div>`);
+    }
+    async function saveRegChanges(code) {
+      const username = document.getElementById('regEditUsername')?.value.trim();
+      const link = document.getElementById('regEditLink')?.value.trim();
+      const performTime = document.getElementById('regEditTime')?.value;
+      const status = document.getElementById('regEditStatus')?.value;
+      if (!username || !link || !performTime) { alert('Username, link, dan jam perform wajib diisi.'); return; }
+      const snap = await db.ref(`registrations/${code}`).once('value');
+      const reg = snap.val();
+      if (!reg) { alert('Data pendaftaran tidak ditemukan.'); return; }
+      const updates = { lastChangedBy: 'admin', lastChangedAt: Date.now() };
+      const changes = [];
+      if (reg.username !== username) { updates.username = username; changes.push(`username: ${reg.username || '—'} → ${username}`); }
+      if (reg.link !== link) { updates.link = link; changes.push(`link: ${reg.link || '—'} → ${link}`); }
+      if (reg.performTime !== performTime) { updates.performTime = performTime; changes.push(`jam perform: ${reg.performTime || '—'} → ${performTime}`); }
+      if (reg.status !== status) { updates.status = status; changes.push(`status: ${reg.status || '—'} → ${status}`); }
+      if (!changes.length) { alert('Tidak ada perubahan yang disimpan.'); return; }
+      updates.lastChangedNote = `Admin mengubah: ${changes.join('; ')}`;
+      await db.ref(`registrations/${code}`).update(updates);
+      closeM();
+      logActivity('registration_edit', `Admin mengedit pendaftaran ${code}: ${changes.join('; ')}`, code, auth?.currentUser?.email || 'admin');
+      loadPL();
+    }
     // ── JUDGES ──
     function rJudges() {
       const mc = document.getElementById('mainContent');
@@ -988,6 +1114,7 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       loadJL();
     }
     let _judgeListener = null;
+    let _logListener = null;
     function loadJL() {
       if (_judgeListener) { db.ref('judges').off('value', _judgeListener); _judgeListener = null; }
       _judgeListener = db.ref('judges').on('value', async snap => {
