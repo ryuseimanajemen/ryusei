@@ -608,11 +608,14 @@
     async function logActivity(type, details, code, actor) {
       if (!db) return;
       try {
+        const adminName = auth?.currentUser?.email || 'system';
+        const actorDisplay = actor || adminName;
         await db.ref('logs').push({
           type: type || 'info',
           details: details || '',
           code: code || null,
-          actor: actor || (auth?.currentUser?.email || 'system'),
+          actor: actorDisplay,
+          adminName: adminName,
           timestamp: Date.now()
         });
         showToast(details || type, type.startsWith('login_failed') || type === 'registration_deleted' ? '#dc2626' : '#16a34a');
@@ -665,6 +668,10 @@
       }
     }
     function showPage(page) {
+      if (page === 'logs' && !isSuperAdmin) {
+        alert('⛔ Akses ditolak. Halaman Log Aktivitas hanya untuk Super Admin / IT.');
+        return;
+      }
       if (_currentPage === page) return;
       cleanupListeners();
       _currentPage = page;
@@ -1060,9 +1067,9 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
         arr.sort((a, b) => b[1].registeredAt - a[1].registeredAt);
         const div = document.getElementById('pL'); if (!div) { if (_partListener) { db.ref('registrations').off('value', _partListener); _partListener = null; } return; }
         if (!arr.length) { div.innerHTML = '<div class="card-admin" style="padding:40px;text-align:center;color:var(--text2);font-size:13px">Tidak ada peserta</div>'; return; }
-        div.innerHTML = arr.map(([code, r]) => `
+        div.innerHTML = arr.map(([code, r], idx) => `
     <div class="card-admin" style="padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">${(r.username || '?')[0].toUpperCase()}</div>
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">#${idx + 1}</div>
       <div style="flex:1;min-width:0">
         <p style="font-size:13px;font-weight:700">${r.username}</p>
         <p style="font-size:11px;color:var(--text2)">Kode: <span style="font-family:monospace;color:#ec4899">${code}</span> · Perform: ${r.performTime || '—'} WIB</p>
@@ -1080,6 +1087,15 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
       });
     }
     function rLogs() {
+      if (!isSuperAdmin) {
+        const mc = document.getElementById('mainContent');
+        mc.innerHTML = `<div class="card-admin" style="padding:48px 20px;text-align:center">
+          <p style="font-size:28px;margin-bottom:12px">🔒</p>
+          <p style="font-weight:700;font-size:14px;color:var(--text)">Akses Terbatas</p>
+          <p style="color:var(--text2);font-size:13px;margin-top:8px">Halaman Log Aktivitas hanya dapat diakses oleh Super Admin / IT.</p>
+        </div>`;
+        return;
+      }
       const mc = document.getElementById('mainContent');
       mc.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
         <select id="logTypeFilter" class="form-input" style="min-width:180px">
@@ -1091,6 +1107,8 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
           <option value="registration_edit">Edit Admin</option>
           <option value="registration_status">Status Pendaftaran</option>
           <option value="registration_deleted">Hapus Pendaftaran</option>
+          <option value="profile_update">Update Profil</option>
+          <option value="score_submit">Penilaian</option>
         </select>
         <input id="logSearch" class="form-input" placeholder="Cari detail log..." style="flex:1;min-width:180px" />
       </div><div id="logList"></div>`;
@@ -1123,7 +1141,10 @@ Balas HANYA dalam format JSON berikut, tanpa markdown, tanpa penjelasan tambahan
               <div style="font-size:12px;color:var(--text2)">${formatDateTime(log.timestamp)}</div>
             </div>
             <div style="font-size:13px;color:var(--text2);margin-bottom:8px">${log.details || ''}</div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text2)"><span>Actor: ${log.actor || 'system'}</span><span>${log.code ? 'Kode: ' + log.code : ''}</span></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text2)">
+              <span style="background:rgba(236,72,153,.1);padding:2px 8px;border-radius:4px;font-weight:600">👤 ${(log.adminName || log.actor || 'system').replace(/@.*/, '')}</span>
+              <span>${log.code ? '📋 Kode: ' + log.code : ''}</span>
+            </div>
           </div>`).join('');
       });
     }
@@ -2122,6 +2143,7 @@ Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan 
         const credential = firebase.auth.EmailAuthProvider.credential(user.email, pass);
         await user.reauthenticateWithCredential(credential);
         await user.updateEmail(newEmail);
+        logActivity('profile_update', `Admin mengubah email dari ${user.email} menjadi ${newEmail}`, null, auth?.currentUser?.email || 'admin');
         document.getElementById('uEmail').textContent = newEmail;
         msg.textContent = '✅ Email berhasil diubah ke ' + newEmail;
         msg.style.color = '#34d399'; msg.style.display = 'block';
@@ -2135,7 +2157,9 @@ Jawab dalam Bahasa Indonesia. Ringkas, ramah, dan profesional. Jangan ungkapkan 
     async function doProfileReset() {
       const msg = document.getElementById('profileResetMsg');
       try {
-        await auth.sendPasswordResetEmail(auth.currentUser.email);
+        const resetEmail = auth.currentUser.email;
+        await auth.sendPasswordResetEmail(resetEmail);
+        logActivity('profile_update', `Admin melakukan password reset untuk ${resetEmail}`, null, auth?.currentUser?.email || 'admin');
         msg.textContent = '✅ Link reset dikirim ke email Anda'; msg.style.color = '#34d399'; msg.style.display = 'block';
       } catch (e) { msg.textContent = '❌ ' + e.message; msg.style.color = '#f87171'; msg.style.display = 'block'; }
     }
